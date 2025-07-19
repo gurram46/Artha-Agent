@@ -7,6 +7,11 @@ class ChatMessage {
   final DateTime timestamp;
   final AgentType? agentType;
   final Map<String, String>? agentContributions;
+  final bool isAgentDiscussion;
+  final bool isUnifiedRecommendation;
+  final bool isError;
+  final List<String>? actionSteps;
+  final double? confidenceScore;
 
   ChatMessage({
     required this.id,
@@ -15,6 +20,11 @@ class ChatMessage {
     required this.timestamp,
     this.agentType,
     this.agentContributions,
+    this.isAgentDiscussion = false,
+    this.isUnifiedRecommendation = false,
+    this.isError = false,
+    this.actionSteps,
+    this.confidenceScore,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -31,6 +41,11 @@ class ChatMessage {
       agentContributions: json['agentContributions'] != null
           ? Map<String, String>.from(json['agentContributions'])
           : null,
+      isAgentDiscussion: json['isAgentDiscussion'] ?? false,
+      isUnifiedRecommendation: json['isUnifiedRecommendation'] ?? false,
+      isError: json['isError'] ?? false,
+      actionSteps: json['actionSteps']?.cast<String>(),
+      confidenceScore: json['confidenceScore']?.toDouble(),
     );
   }
 
@@ -42,6 +57,11 @@ class ChatMessage {
       'timestamp': timestamp.toIso8601String(),
       'agentType': agentType?.toString().split('.').last,
       'agentContributions': agentContributions,
+      'isAgentDiscussion': isAgentDiscussion,
+      'isUnifiedRecommendation': isUnifiedRecommendation,
+      'isError': isError,
+      'actionSteps': actionSteps,
+      'confidenceScore': confidenceScore,
     };
   }
 }

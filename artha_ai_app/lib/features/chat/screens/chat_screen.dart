@@ -6,6 +6,8 @@ import '../../../core/widgets/modern_components.dart';
 import '../../../core/widgets/animated_widgets.dart';
 import '../../../core/services/navigation_service.dart';
 import '../../../core/navigation/app_router.dart';
+import '../../../services/artha_api_service.dart';
+import '../../../models/chat_response.dart';
 import '../widgets/chat_message_bubble.dart';
 import '../models/chat_message.dart';
 import '../models/agent_type.dart';
@@ -21,8 +23,11 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final ArthaApiService _apiService = ArthaApiService();
   bool _isTyping = false;
   List<AgentType> _activeAgents = [];
+  String? _currentSessionId;
+  ChatResponse? _lastChatResponse;
 
   @override
   void initState() {
@@ -36,6 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.removeListener(_onMessageChanged);
     _messageController.dispose();
     _scrollController.dispose();
+    _apiService.dispose();
     super.dispose();
   }
 
@@ -450,9 +456,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty || _isTyping) return;
 
     setState(() {
       _messages.add(
@@ -470,18 +476,68 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
     _scrollToBottom();
 
-    // Simulate AI response
-    Future.delayed(const Duration(seconds: 3), () {
+    try {
+      // Send message to backend
+      final response = await _apiService.sendChatMessage(
+        message,
+        userId: 'demo_user',
+        sessionId: _currentSessionId,
+      );
+
+      if (mounted) {
+        final chatResponse = ChatResponse.fromJson(response);
+        _lastChatResponse = chatResponse;
+        _currentSessionId = chatResponse.sessionId;
+
+        setState(() {
+          // Add agent discussion messages
+          for (final discussionMessage in chatResponse.chatroomDiscussion) {
+            _messages.add(
+              ChatMessage(
+                id: DateTime.now().millisecondsSinceEpoch.toString() + discussionMessage.agent,
+                text: discussionMessage.message,
+                isUser: false,
+                timestamp: discussionMessage.timestamp,
+                agentType: _getAgentType(discussionMessage.agent),
+                agentContributions: _extractAgentContributions(chatResponse),
+                isAgentDiscussion: true,
+              ),
+            );
+          }
+
+          // Add unified recommendation
+          if (chatResponse.unifiedRecommendation.summary.isNotEmpty) {
+            _messages.add(
+              ChatMessage(
+                id: DateTime.now().millisecondsSinceEpoch.toString() + '_unified',
+                text: chatResponse.unifiedRecommendation.summary,
+                isUser: false,
+                timestamp: chatResponse.unifiedRecommendation.timestamp,
+                agentType: AgentType.coordinator,
+                agentContributions: chatResponse.unifiedRecommendation.agentContributions,
+                isUnifiedRecommendation: true,
+                actionSteps: chatResponse.unifiedRecommendation.actionSteps,
+                confidenceScore: chatResponse.unifiedRecommendation.confidence,
+              ),
+            );
+          }
+
+          _isTyping = false;
+          _activeAgents = [];
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _messages.add(
             ChatMessage(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: _generateResponse(message),
+              text: 'Sorry, I encountered an error processing your request. Please check your internet connection and try again.\n\nError: ${e.toString()}',
               isUser: false,
               timestamp: DateTime.now(),
-              agentType: _activeAgents.isNotEmpty ? _activeAgents.first : AgentType.coordinator,
-              agentContributions: _activeAgents.length > 1 ? _generateAgentContributions() : null,
+              agentType: AgentType.coordinator,
+              isError: true,
             ),
           );
           _isTyping = false;
@@ -489,7 +545,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         _scrollToBottom();
       }
-    });
+    }
   }
 
   void _stopTyping() {
@@ -608,6 +664,27 @@ class _ChatScreenState extends State<ChatScreen> {
       'Present Agent': 'Current cash flow optimization',
       'Future Agent': 'Goal alignment strategy',
     };
+  }
+
+  AgentType _getAgentType(String agentName) {
+    switch (agentName.toLowerCase()) {
+      case 'past':
+        return AgentType.past;
+      case 'present':
+        return AgentType.present;
+      case 'future':
+        return AgentType.future;
+      case 'moderator':
+        return AgentType.coordinator;
+      default:
+        return AgentType.coordinator;
+    }
+  }
+
+  Map<String, String>? _extractAgentContributions(ChatResponse chatResponse) {
+    return chatResponse.unifiedRecommendation.agentContributions.isNotEmpty
+        ? chatResponse.unifiedRecommendation.agentContributions
+        : null;
   }
 
   void _scrollToBottom() {

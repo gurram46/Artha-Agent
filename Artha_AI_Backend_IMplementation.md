@@ -1,1186 +1,454 @@
-# Flask Backend with Google Vertex AI Time-Based Financial Advisor Integration
+# Artha AI MVP - Simple 3-Agent Financial Chatroom
 
 ## 🎯 Overview
-This guide provides comprehensive instructions for building Artha's AI system using Google's Vertex AI Agent Builder with a revolutionary **Past, Present, Future** financial advisory approach. The system leverages Google's Financial Advisor Agent from ADK samples, enhanced with time-based analysis capabilities.
+Simple hackathon MVP for "Let AI speak to your money" - 3 specialized AI agents (Past, Present, Future) that discuss and debate to provide the best financial advice using Fi's MCP Server and Google Gemini.
 
 ## 📋 Table of Contents
-1. [Architecture Overview](#architecture-overview)
-2. [Prerequisites](#prerequisites)
-3. [Time-Based Agent Architecture](#time-based-agent-architecture)
-4. [Google ADK Financial Advisor Integration](#google-adk-financial-advisor-integration)
-5. [Real-time Data Enhancement](#real-time-data-enhancement)
-6. [Flask Backend Implementation](#flask-backend-implementation)
-7. [Flutter Frontend Integration](#flutter-frontend-integration)
-8. [Testing and Deployment](#testing-and-deployment)
-9. [Monitoring and Optimization](#monitoring-and-optimization)
+1. [MVP Architecture](#mvp-architecture)
+2. [Quick Setup](#quick-setup)
+3. [Simple Agent Implementation](#simple-agent-implementation)
+4. [Fi MCP Integration](#fi-mcp-integration)
+5. [Real-time Market Data](#real-time-market-data)
+6. [Basic Flask Backend](#basic-flask-backend)
+7. [Simple Flutter Frontend](#simple-flutter-frontend)
 
-## 🏗️ Architecture Overview
+## 🏗️ MVP Architecture
 
-### Time-Based Financial Advisory System
+### Simple 3-Agent Chatroom System
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                Flutter Mobile App                           │
+│                Flutter Chat App                             │
 ├─────────────────────────────────────────────────────────────┤
-│    Chat Interface | Dashboard | Financial Timeline View     │
+│              3-Agent Chatroom Interface                     │
 └─────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  Flask Backend API                          │
+│                    Simple Flask API                         │
 ├─────────────────────────────────────────────────────────────┤
-│          Authentication & Time-Based Routing               │
+│                Chat Endpoint + Auth                         │
 └─────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│        Google ADK Financial Advisor + Time Agents          │
+│                    Gemini AI Router                         │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
-│  │PAST AGENT       │ │PRESENT AGENT    │ │FUTURE AGENT     │ │
-│  │Portfolio        │ │Spending         │ │Goal Planning    │ │
-│  │Performance      │ │Optimization     │ │Life Events      │ │
-│  │Analysis         │ │Agent            │ │Agent            │ │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘ │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
-│  │Investment       │ │Tax & Expense    │ │Retirement &     │ │
-│  │History          │ │Tracker          │ │Education        │ │
-│  │Analyzer         │ │                 │ │Planner          │ │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘ │
+│    Routes to: PAST | PRESENT | FUTURE Agent Responses      │
 └─────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│               Data & Integration Layer                      │
+│                  Data Sources                               │
 ├─────────────────────────────────────────────────────────────┤
-│ Historical Data | Real-time APIs | Fi MCP | Google Search  │
+│           Fi MCP | Market Data API                          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 🔧 Prerequisites
+## 🔧 Quick Setup
 
-### Required Google Cloud Services
-- **Vertex AI Agent Builder**: Core multi-agent platform
-- **Gemini Pro**: Language model for reasoning and analysis
-- **Google Search API**: Real-time market data and news
-- **Cloud Run**: Container hosting for Flask
-- **Firebase**: Real-time database and user data storage
-- **Cloud Speech-to-Text**: Voice input processing
-- **Cloud Text-to-Speech**: Voice output generation
-- **Cloud Storage**: Historical data storage
-- **Cloud Monitoring**: System observability
+### Minimal Requirements
+- **Gemini API**: For AI agent responses
+- **Fi MCP Server**: For financial data access
+- **Market Data API**: For real-time data (Alpha Vantage/Yahoo Finance)
 
 ### Required Tools
-- Google Cloud SDK
 - Python 3.8+
 - Flask
-- Firebase CLI
-- Git
 - Flutter SDK
-- Android Studio or VS Code
-- Poetry (for ADK agent management)
+- Git
 
-## 🕐 Time-Based Agent Architecture
+## 🕐 Simple Agent Implementation
 
-### Agent 1: PAST AGENT - Portfolio Performance Analyzer
-**Role**: Historical Data Analyst & Investment Performance Expert
-**Mission**: Analyze past investments, trades, and financial decisions to provide insights
-
-#### Core Responsibilities:
-1. **Investment History Analysis**
-   - Stock performance tracking over time
-   - Mutual fund returns analysis
-   - Portfolio allocation changes
-   - Risk-adjusted returns calculation
-
-2. **Trading Pattern Analysis**
-   - Buy/sell decision effectiveness
-   - Market timing analysis
-   - Dollar-cost averaging performance
-   - Sector rotation tracking
-
-3. **Financial Mistakes Learning**
-   - Identify poor investment decisions
-   - Analyze emotional trading patterns
-   - Market crash response analysis
-   - Opportunity cost calculations
-
-4. **Performance Benchmarking**
-   - Compare against market indices
-   - Peer portfolio comparison
-   - Risk-adjusted performance metrics
-   - Alpha and beta calculations
-
-#### System Instructions:
+### Agent 1: PAST AGENT
+**Role**: Analyzes historical financial data
+**Simple Prompt**: 
 ```
-You are the PAST AGENT, a specialized financial analyst focused on historical data analysis.
-
-CORE RESPONSIBILITIES:
-1. Analyze user's historical investment performance
-2. Identify patterns in past financial decisions
-3. Calculate risk-adjusted returns and performance metrics
-4. Provide insights on what worked and what didn't
-5. Learn from past mistakes to improve future decisions
-
-DECISION FRAMEWORK:
-- Use historical data to identify successful strategies
-- Analyze correlation between decisions and outcomes
-- Calculate opportunity costs of past decisions
-- Identify emotional trading patterns
-- Provide data-driven insights on performance
-
-COMMUNICATION STYLE:
-- Evidence-based recommendations using historical data
-- Clear charts and performance metrics
-- Lessons learned from past experiences
-- Objective analysis without judgment
-- Actionable insights for future improvement
-
-INTEGRATION POINTS:
-- Access historical portfolio data from Fi MCP
-- Analyze past transaction history
-- Calculate performance metrics over time
-- Identify successful and unsuccessful patterns
+You are the PAST AGENT. Analyze the user's historical financial data from Fi MCP:
+- Investment performance over time
+- Past spending patterns  
+- What worked and what didn't
+- Keep responses under 100 words
+- Focus on actionable insights
 ```
 
-### Agent 2: PRESENT AGENT - Spending Optimization Manager
-**Role**: Current Financial Health Optimizer & Expense Manager
-**Mission**: Analyze current spending patterns and optimize present financial situation
-
-#### Core Responsibilities:
-1. **Current Spending Analysis**
-   - Monthly expense categorization
-   - Subscription service auditing (Netflix, Spotify, etc.)
-   - Unnecessary spending identification
-   - Cash flow optimization
-
-2. **Tax Optimization**
-   - Current year tax planning
-   - Deduction maximization
-   - Tax-loss harvesting opportunities
-   - Estimated tax calculations
-
-3. **Salary & Income Optimization**
-   - Salary allocation recommendations
-   - Emergency fund management
-   - Debt repayment strategies
-   - Income diversification
-
-4. **Real-time Financial Health**
-   - Credit utilization monitoring
-   - Bill payment optimization
-   - Savings rate tracking
-   - Financial ratios analysis
-
-#### System Instructions:
+### Agent 2: PRESENT AGENT
+**Role**: Optimizes current financial situation
+**Simple Prompt**:
 ```
-You are the PRESENT AGENT, a specialized financial optimizer focused on current financial health.
-
-CORE RESPONSIBILITIES:
-1. Analyze current spending patterns and identify optimization opportunities
-2. Audit subscriptions and recurring expenses
-3. Optimize tax situation for current year
-4. Manage salary allocation and cash flow
-5. Monitor real-time financial health metrics
-
-DECISION FRAMEWORK:
-- Focus on immediate financial optimization
-- Identify quick wins in expense reduction
-- Maximize current tax benefits
-- Optimize cash flow and liquidity
-- Ensure financial stability and emergency preparedness
-
-COMMUNICATION STYLE:
-- Practical, actionable advice for immediate implementation
-- Clear expense breakdowns and recommendations
-- Monthly and weekly action plans
-- Alert-based notifications for important deadlines
-- Simple, easy-to-follow optimization steps
-
-INTEGRATION POINTS:
-- Access current transaction data from Fi MCP
-- Monitor real-time spending patterns
-- Track subscription services and recurring payments
-- Analyze current tax situation
-- Monitor credit scores and financial ratios
+You are the PRESENT AGENT. Analyze the user's current financial situation from Fi MCP:
+- Current spending patterns
+- Subscription optimizations 
+- Cash flow management
+- Immediate savings opportunities
+- Keep responses under 100 words
+- Focus on actionable next steps
 ```
 
-### Agent 3: FUTURE AGENT - Life Goal Planning Strategist
-**Role**: Future Planning Specialist & Life Event Advisor
-**Mission**: Plan and strategize for future financial goals and life events
-
-#### Core Responsibilities:
-1. **Major Purchase Planning**
-   - Car purchase planning and financing
-   - Home buying strategy and mortgage planning
-   - Property investment analysis
-   - Major asset acquisition timing
-
-2. **Life Event Planning**
-   - Marriage financial planning
-   - Child birth and education planning
-   - Career transition planning
-   - Healthcare and insurance planning
-
-3. **Long-term Wealth Building**
-   - Retirement planning and corpus calculation
-   - Children's education fund planning
-   - Wealth transfer and estate planning
-   - Legacy building strategies
-
-4. **Goal Achievement Roadmaps**
-   - Timeline creation for major goals
-   - Milestone tracking and adjustment
-   - Risk scenario planning
-   - Achievement celebration and rewards
-
-#### System Instructions:
+### Agent 3: FUTURE AGENT  
+**Role**: Plans for future financial goals
+**Simple Prompt**:
 ```
-You are the FUTURE AGENT, a specialized financial planner focused on long-term goals and life events.
-
-CORE RESPONSIBILITIES:
-1. Create comprehensive plans for major life purchases (car, home, etc.)
-2. Develop strategies for life events (marriage, children, retirement)
-3. Build wealth accumulation plans for long-term goals
-4. Create realistic timelines and milestones for goal achievement
-5. Adjust plans based on life changes and circumstances
-
-DECISION FRAMEWORK:
-- Focus on long-term wealth building and goal achievement
-- Create realistic and achievable timelines
-- Consider inflation and market volatility in planning
-- Integrate multiple goals into cohesive strategies
-- Plan for contingencies and life changes
-
-COMMUNICATION STYLE:
-- Inspirational and motivational approach
-- Clear goal visualization and milestone celebration
-- Step-by-step roadmaps for goal achievement
-- Regular progress updates and adjustments
-- Encouraging tone with realistic expectations
-
-INTEGRATION POINTS:
-- Access user goals and aspirations
-- Calculate required savings and investment returns
-- Monitor progress toward goals
-- Adjust plans based on life changes
-- Integrate with PAST and PRESENT agents for holistic planning
+You are the FUTURE AGENT. Help the user plan for future financial goals using Fi MCP data:
+- Goal planning (house, car, retirement)
+- Investment strategy recommendations
+- Timeline creation for major purchases
+- Risk planning and scenarios
+- Keep responses under 100 words
+- Focus on achievable steps
 ```
 
-## 📈 Google ADK Financial Advisor Integration
+## 📈 Fi MCP Integration
 
-### Step 1: Clone and Setup ADK Financial Advisor
+### Simple Fi MCP Setup
 ```bash
-# Clone the ADK samples repository
-git clone https://github.com/google/adk-samples.git
-cd adk-samples/python/agents/financial-advisor
-
-# Install dependencies
-poetry install
+# Install Fi MCP client
+pip install fi-mcp-client
 
 # Set up environment variables
-cp .env.example .env
-```
-
-### Step 2: Customize ADK Agent for Time-Based Analysis
+export FI_MCP_API_KEY="your_fi_api_key"
+export FI_MCP_BASE_URL="https://api.fi.money/mcp"
+### Simple Fi MCP Client Implementation
 ```python
-# financial_advisor/time_based_coordinator.py
-import json
-import logging
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
-from vertexai.generative_models import GenerativeModel
-
-class TimeBasedCoordinator:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.gemini_model = GenerativeModel('gemini-pro')
-        
-        # Initialize time-based agents
-        self.past_agent = PastAgent()
-        self.present_agent = PresentAgent()
-        self.future_agent = FutureAgent()
-        
-    def analyze_financial_query(self, query: str, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze query and route to appropriate time-based agents"""
-        try:
-            # Determine time focus of the query
-            time_focus = self._determine_time_focus(query)
-            
-            # Route to appropriate agents
-            responses = {}
-            
-            if 'past' in time_focus:
-                responses['past'] = self.past_agent.analyze(query, user_context)
-            
-            if 'present' in time_focus:
-                responses['present'] = self.present_agent.analyze(query, user_context)
-            
-            if 'future' in time_focus:
-                responses['future'] = self.future_agent.analyze(query, user_context)
-            
-            # Synthesize comprehensive response
-            return self._synthesize_time_based_response(query, responses, user_context)
-            
-        except Exception as e:
-            self.logger.error(f'Error in time-based analysis: {str(e)}')
-            return {'error': str(e)}
-    
-    def _determine_time_focus(self, query: str) -> List[str]:
-        """Determine which time periods the query relates to"""
-        query_lower = query.lower()
-        time_focus = []
-        
-        # Past indicators
-        past_keywords = ['history', 'past', 'previous', 'before', 'analysis', 'performance', 'returns']
-        if any(keyword in query_lower for keyword in past_keywords):
-            time_focus.append('past')
-        
-        # Present indicators
-        present_keywords = ['current', 'now', 'today', 'spending', 'expenses', 'salary', 'tax', 'budget']
-        if any(keyword in query_lower for keyword in present_keywords):
-            time_focus.append('present')
-        
-        # Future indicators
-        future_keywords = ['plan', 'goal', 'future', 'retirement', 'save', 'buy', 'purchase', 'education']
-        if any(keyword in query_lower for keyword in future_keywords):
-            time_focus.append('future')
-        
-        # If no specific focus, include all
-        if not time_focus:
-            time_focus = ['past', 'present', 'future']
-        
-        return time_focus
-    
-    def _synthesize_time_based_response(self, query: str, responses: Dict[str, Any], 
-                                      user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Synthesize responses from all time-based agents"""
-        try:
-            synthesis_prompt = f"""
-            You are a comprehensive financial advisor synthesizing insights from three time-based specialists.
-            
-            User Query: "{query}"
-            
-            Time-Based Analysis:
-            {json.dumps(responses, indent=2)}
-            
-            User Context:
-            {json.dumps(user_context, indent=2)}
-            
-            Provide a comprehensive response that:
-            1. Integrates insights from past performance, present situation, and future planning
-            2. Shows how past patterns inform current decisions
-            3. Connects current actions to future goals
-            4. Provides a timeline perspective on financial health
-            5. Offers specific, actionable recommendations
-            
-            Format as JSON with sections: summary, past_insights, present_actions, future_planning, integrated_recommendations
-            """
-            
-            response = self.gemini_model.generate_content(synthesis_prompt)
-            
-            try:
-                synthesized = json.loads(response.text)
-            except json.JSONDecodeError:
-                synthesized = {
-                    'summary': response.text,
-                    'past_insights': responses.get('past', {}),
-                    'present_actions': responses.get('present', {}),
-                    'future_planning': responses.get('future', {}),
-                    'integrated_recommendations': ['Review the comprehensive analysis provided'],
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return {
-                'time_based_analysis': synthesized,
-                'individual_responses': responses,
-                'query': query,
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-        except Exception as e:
-            self.logger.error(f'Error synthesizing time-based response: {str(e)}')
-            return {'error': str(e)}
-
-class PastAgent:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.gemini_model = GenerativeModel('gemini-pro')
-    
-    def analyze(self, query: str, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze historical financial data and performance"""
-        try:
-            # Get historical data
-            historical_data = self._get_historical_data(user_context)
-            
-            analysis_prompt = f"""
-            As the PAST AGENT, analyze the user's historical financial data.
-            
-            Query: "{query}"
-            Historical Data: {json.dumps(historical_data, indent=2)}
-            
-            Provide analysis focusing on:
-            1. Investment performance over time
-            2. Patterns in financial decisions
-            3. Successful and unsuccessful strategies
-            4. Lessons learned from past experiences
-            5. Performance benchmarks and comparisons
-            
-            Format as JSON with clear metrics and insights.
-            """
-            
-            response = self.gemini_model.generate_content(analysis_prompt)
-            
-            try:
-                analysis = json.loads(response.text)
-            except json.JSONDecodeError:
-                analysis = {
-                    'historical_analysis': response.text,
-                    'performance_metrics': historical_data,
-                    'key_insights': ['Analysis completed'],
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return analysis
-            
-        except Exception as e:
-            self.logger.error(f'Error in past agent analysis: {str(e)}')
-            return {'error': str(e)}
-    
-    def _get_historical_data(self, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Get historical financial data for analysis"""
-        # In production, this would fetch from Fi MCP or other data sources
-        return {
-            'investment_history': user_context.get('investment_history', []),
-            'transaction_history': user_context.get('transaction_history', []),
-            'portfolio_performance': user_context.get('portfolio_performance', {}),
-            'past_goals': user_context.get('past_goals', [])
-        }
-
-class PresentAgent:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.gemini_model = GenerativeModel('gemini-pro')
-    
-    def analyze(self, query: str, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze current financial situation and optimize spending"""
-        try:
-            # Get current financial data
-            current_data = self._get_current_data(user_context)
-            
-            analysis_prompt = f"""
-            As the PRESENT AGENT, analyze the user's current financial situation.
-            
-            Query: "{query}"
-            Current Financial Data: {json.dumps(current_data, indent=2)}
-            
-            Provide analysis focusing on:
-            1. Current spending patterns and optimization opportunities
-            2. Subscription services and recurring expenses audit
-            3. Tax optimization for current year
-            4. Salary allocation and cash flow management
-            5. Immediate financial health improvements
-            
-            Format as JSON with actionable recommendations.
-            """
-            
-            response = self.gemini_model.generate_content(analysis_prompt)
-            
-            try:
-                analysis = json.loads(response.text)
-            except json.JSONDecodeError:
-                analysis = {
-                    'current_analysis': response.text,
-                    'spending_optimization': current_data,
-                    'immediate_actions': ['Review current spending patterns'],
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return analysis
-            
-        except Exception as e:
-            self.logger.error(f'Error in present agent analysis: {str(e)}')
-            return {'error': str(e)}
-    
-    def _get_current_data(self, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Get current financial data for analysis"""
-        return {
-            'current_spending': user_context.get('current_spending', {}),
-            'subscriptions': user_context.get('subscriptions', []),
-            'salary_info': user_context.get('salary_info', {}),
-            'tax_situation': user_context.get('tax_situation', {}),
-            'monthly_transactions': user_context.get('monthly_transactions', [])
-        }
-
-class FutureAgent:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.gemini_model = GenerativeModel('gemini-pro')
-    
-    def analyze(self, query: str, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze future goals and create planning strategies"""
-        try:
-            # Get future planning data
-            future_data = self._get_future_data(user_context)
-            
-            analysis_prompt = f"""
-            As the FUTURE AGENT, analyze the user's future financial goals and life plans.
-            
-            Query: "{query}"
-            Future Planning Data: {json.dumps(future_data, indent=2)}
-            
-            Provide analysis focusing on:
-            1. Major purchase planning (car, home, etc.)
-            2. Life event planning (marriage, children, education)
-            3. Long-term wealth building and retirement
-            4. Goal achievement timelines and milestones
-            5. Risk scenario planning and contingencies
-            
-            Format as JSON with detailed planning strategies.
-            """
-            
-            response = self.gemini_model.generate_content(analysis_prompt)
-            
-            try:
-                analysis = json.loads(response.text)
-            except json.JSONDecodeError:
-                analysis = {
-                    'future_planning': response.text,
-                    'goals_analysis': future_data,
-                    'planning_strategies': ['Create detailed goal timelines'],
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return analysis
-            
-        except Exception as e:
-            self.logger.error(f'Error in future agent analysis: {str(e)}')
-            return {'error': str(e)}
-    
-    def _get_future_data(self, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Get future planning data for analysis"""
-        return {
-            'financial_goals': user_context.get('financial_goals', []),
-            'life_events': user_context.get('life_events', []),
-            'retirement_plans': user_context.get('retirement_plans', {}),
-            'major_purchases': user_context.get('major_purchases', []),
-            'education_plans': user_context.get('education_plans', [])
-        }
-```
-
-## 🔄 Real-time Data Enhancement
-
-### Enhanced Data Service for Time-Based Analysis
-```python
-# services/enhanced_time_based_service.py
-import os
-import json
-import logging
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
-from vertexai.generative_models import GenerativeModel
-from google.cloud import aiplatform
+# services/fi_mcp_client.py
 import requests
+import os
+from typing import Dict, Any
 
-class EnhancedTimeBasedService:
+class FiMCPClient:
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT')
-        self.location = os.environ.get('VERTEX_AI_LOCATION', 'us-central1')
+        self.api_key = os.getenv('FI_MCP_API_KEY')
+        self.base_url = os.getenv('FI_MCP_BASE_URL')
+    
+    def get_user_financial_data(self, user_id: str) -> Dict[str, Any]:
+        """Get comprehensive financial data from Fi MCP"""
+        headers = {'Authorization': f'Bearer {self.api_key}'}
         
-        # Initialize Gemini Pro
-        self.gemini_model = GenerativeModel('gemini-pro')
+        # Get portfolio data
+        portfolio = requests.get(f'{self.base_url}/portfolio/{user_id}', headers=headers).json()
         
-        # Initialize Time-Based Coordinator
-        from financial_advisor.time_based_coordinator import TimeBasedCoordinator
-        self.time_coordinator = TimeBasedCoordinator()
+        # Get transaction history
+        transactions = requests.get(f'{self.base_url}/transactions/{user_id}', headers=headers).json()
         
-        # Connect to deployed Financial Advisor Agent
-        self.agent_engine_id = os.environ.get('FINANCIAL_ADVISOR_AGENT_ID')
+        # Get credit score
+        credit_score = requests.get(f'{self.base_url}/credit-score/{user_id}', headers=headers).json()
         
-    def process_time_based_query(self, user_query: str, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Process query with time-based analysis"""
-        try:
-            # Enhance context with real-time data if needed
-            enhanced_context = self._enhance_context_with_real_time_data(user_context)
-            
-            # Process with time-based coordinator
-            time_based_response = self.time_coordinator.analyze_financial_query(
-                user_query, enhanced_context
-            )
-            
-            # Enhance with ADK Financial Advisor if needed
-            adk_response = self._enhance_with_adk_advisor(user_query, enhanced_context)
-            
-            # Combine responses
-            combined_response = self._combine_responses(time_based_response, adk_response)
-            
-            return combined_response
-            
-        except Exception as e:
-            self.logger.error(f'Error processing time-based query: {str(e)}')
-            return {'error': str(e)}
-    
-    def _enhance_context_with_real_time_data(self, user_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Enhance user context with real-time market and economic data"""
-        try:
-            # Get real-time market data
-            market_data = self._get_real_time_market_data()
-            
-            # Get current economic indicators
-            economic_data = self._get_economic_indicators()
-            
-            # Enhance context
-            enhanced_context = {
-                **user_context,
-                'real_time_market': market_data,
-                'economic_indicators': economic_data,
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-            return enhanced_context
-            
-        except Exception as e:
-            self.logger.error(f'Error enhancing context: {str(e)}')
-            return user_context
-    
-    def _get_real_time_market_data(self) -> Dict[str, Any]:
-        """Get real-time market data using Google Search API"""
-        try:
-            # Search for current market conditions
-            search_queries = [
-                "stock market today current status",
-                "economic indicators today",
-                "interest rates current",
-                "inflation data latest"
-            ]
-            
-            market_data = {}
-            for query in search_queries:
-                results = self._google_search(query)
-                market_data[query] = results
-            
-            # Analyze with Gemini
-            analysis_prompt = f"""
-            Analyze the following real-time market data and provide current market context:
-            
-            {json.dumps(market_data, indent=2)}
-            
-            Provide structured analysis including:
-            1. Current market sentiment
-            2. Key economic indicators
-            3. Interest rate environment
-            4. Inflation impact
-            5. Investment implications
-            
-            Format as JSON.
-            """
-            
-            response = self.gemini_model.generate_content(analysis_prompt)
-            
-            try:
-                analysis = json.loads(response.text)
-            except json.JSONDecodeError:
-                analysis = {
-                    'market_sentiment': 'neutral',
-                    'summary': response.text,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return analysis
-            
-        except Exception as e:
-            self.logger.error(f'Error getting real-time market data: {str(e)}')
-            return {'error': str(e)}
-    
-    def _google_search(self, query: str) -> List[Dict[str, Any]]:
-        """Perform Google Search API call"""
-        try:
-            search_api_key = os.environ.get('GOOGLE_SEARCH_API_KEY')
-            search_engine_id = os.environ.get('GOOGLE_SEARCH_ENGINE_ID')
-            
-            if not search_api_key or not search_engine_id:
-                return []
-            
-            url = "https://www.googleapis.com/customsearch/v1"
-            params = {
-                'key': search_api_key,
-                'cx': search_engine_id,
-                'q': query,
-                'num': 3,
-                'dateRestrict': 'd1'  # Last 24 hours
-            }
-            
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            
-            search_data = response.json()
-            results = []
-            
-            for item in search_data.get('items', []):
-                results.append({
-                    'title': item.get('title', ''),
-                    'snippet': item.get('snippet', ''),
-                    'link': item.get('link', ''),
-                    'source': item.get('displayLink', '')
-                })
-            
-            return results
-            
-        except Exception as e:
-            self.logger.error(f'Google Search API error: {str(e)}')
-            return []
-    
-    def _get_economic_indicators(self) -> Dict[str, Any]:
-        """Get current economic indicators"""
-        try:
-            # Use Gemini to provide current economic context
-            economic_prompt = """
-            Provide current economic indicators and their impact on personal finance:
-            
-            1. Current interest rates and trends
-            2. Inflation rates and impact
-            3. Employment data
-            4. GDP growth trends
-            5. Currency stability
-            
-            Format as JSON with current values and analysis.
-            """
-            
-            response = self.gemini_model.generate_content(economic_prompt)
-            
-            try:
-                economic_data = json.loads(response.text)
-            except json.JSONDecodeError:
-                economic_data = {
-                    'summary': response.text,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return economic_data
-            
-        except Exception as e:
-            self.logger.error(f'Error getting economic indicators: {str(e)}')
-            return {'error': str(e)}
-    
-    def _enhance_with_adk_advisor(self, query: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Enhance with ADK Financial Advisor for complex analysis"""
-        try:
-            # Call ADK Financial Advisor for comprehensive analysis
-            client = aiplatform.ReasoningEngineServiceClient()
-            
-            request = {
-                'name': f'projects/{self.project_id}/locations/{self.location}/reasoningEngines/{self.agent_engine_id}',
-                'input': {
-                    'query': query,
-                    'context': json.dumps(context)
-                }
-            }
-            
-            response = client.query_reasoning_engine(request)
-            
-            return {
-                'adk_analysis': response.output,
-                'session_id': response.session_id,
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-        except Exception as e:
-            self.logger.error(f'Error calling ADK advisor: {str(e)}')
-            return {'error': str(e)}
-    
-    def _combine_responses(self, time_based_response: Dict[str, Any], 
-                          adk_response: Dict[str, Any]) -> Dict[str, Any]:
-        """Combine time-based and ADK advisor responses"""
-        try:
-            combination_prompt = f"""
-            Combine the following financial analysis responses into a comprehensive recommendation:
-            
-            Time-Based Analysis:
-            {json.dumps(time_based_response, indent=2)}
-            
-            ADK Financial Advisor Analysis:
-            {json.dumps(adk_response, indent=2)}
-            
-            Provide a unified response that:
-            1. Integrates both analyses
-            2. Provides clear recommendations
-            3. Shows past-present-future connections
-            4. Includes actionable next steps
-            5. Maintains coherent narrative
-            
-            Format as JSON with clear sections.
-            """
-            
-            response = self.gemini_model.generate_content(combination_prompt)
-            
-            try:
-                combined = json.loads(response.text)
-            except json.JSONDecodeError:
-                combined = {
-                    'combined_analysis': response.text,
-                    'time_based_insights': time_based_response,
-                    'adk_insights': adk_response,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-            
-            return combined
-            
-        except Exception as e:
-            self.logger.error(f'Error combining responses: {str(e)}')
-            return time_based_response  # Fallback to time-based response
+        return {
+            'portfolio': portfolio,
+            'transactions': transactions,
+            'credit_score': credit_score,
+            'net_worth': portfolio.get('total_value', 0)
+        }
 ```
 
-## 🚀 Flask Backend Implementation
+### Simple Gemini Agent Implementation
+```python
+# services/simple_agents.py
+import google.generativeai as genai
+import os
+from typing import Dict, Any
 
-### Enhanced Flask Application with Time-Based Routing
+class SimpleAgentRouter:
+    def __init__(self):
+        genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+        self.model = genai.GenerativeModel('gemini-pro')
+        self.fi_client = FiMCPClient()
+    
+    def process_query(self, user_query: str, user_id: str) -> Dict[str, Any]:
+        """Simple routing to get all 3 agent responses"""
+        
+        # Get Fi MCP data
+        financial_data = self.fi_client.get_user_financial_data(user_id)
+        
+        # Get all 3 agent responses
+        past_response = self._get_past_agent_response(user_query, financial_data)
+        present_response = self._get_present_agent_response(user_query, financial_data)  
+        future_response = self._get_future_agent_response(user_query, financial_data)
+        
+        # Simple chatroom format
+        return {
+            'chatroom_discussion': [
+                {'agent': 'past', 'message': past_response},
+                {'agent': 'present', 'message': present_response},
+                {'agent': 'future', 'message': future_response}
+            ],
+            'final_recommendation': self._get_consensus(user_query, past_response, present_response, future_response)
+        }
+    
+    def _get_past_agent_response(self, query: str, data: Dict) -> str:
+        prompt = f"""
+        You are the PAST AGENT. Analyze historical data: {data}
+        User question: {query}
+        Provide insights from past performance in under 100 words.
+        """
+        return self.model.generate_content(prompt).text
+    
+    def _get_present_agent_response(self, query: str, data: Dict) -> str:
+        prompt = f"""
+        You are the PRESENT AGENT. Analyze current situation: {data}
+        User question: {query}
+        Provide current optimization advice in under 100 words.
+        """
+        return self.model.generate_content(prompt).text
+    
+    def _get_future_agent_response(self, query: str, data: Dict) -> str:
+        prompt = f"""
+        You are the FUTURE AGENT. Plan for goals using: {data}
+        User question: {query}
+        Provide future planning advice in under 100 words.
+        """
+        return self.model.generate_content(prompt).text
+    
+    def _get_consensus(self, query: str, past: str, present: str, future: str) -> str:
+        prompt = f"""
+        Synthesize these 3 agent responses into final advice:
+        Past Agent: {past}
+        Present Agent: {present}  
+        Future Agent: {future}
+        
+        User question: {query}
+        Provide unified recommendation in under 150 words.
+        """
+        return self.model.generate_content(prompt).text
+```
+
+## 🔄 Real-time Market Data
+
+### Simple Market Data Service
+```python
+# services/market_data.py
+import requests
+import os
+from typing import Dict
+
+class SimpleMarketData:
+    def __init__(self):
+        self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
+    
+    def get_current_market_data(self) -> Dict:
+        """Get basic market data for context"""
+        try:
+            # Get basic stock market data
+            url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=NIFTY&apikey={self.alpha_vantage_key}"
+            response = requests.get(url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    'market_status': 'active',
+                    'nifty_price': data.get('Global Quote', {}).get('05. price', '0'),
+                    'market_change': data.get('Global Quote', {}).get('09. change', '0')
+                }
+            
+            return {'market_status': 'unavailable'}
+            
+        except Exception:
+            return {'market_status': 'error'}
+```
+
+## 🚀 Basic Flask Backend
+
+### Simple Flask Application 
 ```python
 # app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from config import Config
-from services.enhanced_time_based_service import EnhancedTimeBasedService
-from services.firebase_service import FirebaseService
-from routes.time_based_chat import time_based_chat_bp
-from routes.health import health_bp
-import logging
-from datetime import datetime
+from services.simple_agents import SimpleAgentRouter
+from services.market_data import SimpleMarketData
 
 app = Flask(__name__)
-app.config.from_object(Config)
-
-# Initialize extensions
 CORS(app)
-jwt = JWTManager(app)
 
-# Initialize time-based services
-time_based_service = EnhancedTimeBasedService()
-firebase_service = FirebaseService()
-
-# Register blueprints
-app.register_blueprint(time_based_chat_bp, url_prefix='/api/chat')
-app.register_blueprint(health_bp, url_prefix='/api/health')
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize simple services
+agent_router = SimpleAgentRouter()
+market_data = SimpleMarketData()
 
 @app.route('/')
 def index():
     return jsonify({
-        'message': 'Artha AI Time-Based Financial Advisor',
-        'version': '3.0.0',
-        'agents': ['Past Agent', 'Present Agent', 'Future Agent'],
-        'capabilities': ['Historical Analysis', 'Current Optimization', 'Future Planning'],
-        'timestamp': datetime.utcnow().isoformat()
+        'message': 'Artha AI MVP - 3 Agent Chatroom',
+        'agents': ['Past', 'Present', 'Future'],
+        'status': 'ready'
     })
 
-@app.route('/api/login', methods=['POST'])
-def login():
+@app.route('/api/chat', methods=['POST'])
+def chat():
     try:
         data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
+        user_query = data.get('message', '')
+        user_id = data.get('user_id', 'demo_user')
         
-        # Authenticate with Firebase
-        user = firebase_service.authenticate_user(email, password)
+        if not user_query:
+            return jsonify({'error': 'Message is required'}), 400
         
-        if user:
-            access_token = create_access_token(identity=user['uid'])
-            return jsonify({
-                'access_token': access_token,
-                'user': user
-            })
-        else:
-            return jsonify({'error': 'Invalid credentials'}), 401
-            
+        # Get market context
+        market_context = market_data.get_current_market_data()
+        
+        # Process with 3 agents
+        result = agent_router.process_query(user_query, user_id)
+        
+        # Add market context
+        result['market_context'] = market_context
+        
+        return jsonify(result)
+        
     except Exception as e:
-        logger.error(f'Login error: {str(e)}')
-        return jsonify({'error': 'Login failed'}), 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=app.config['PORT'], debug=app.config['DEBUG'])
+    app.run(host='0.0.0.0', port=5000, debug=True)
 ```
 
-### Time-Based Chat Routes
-```python
-# routes/time_based_chat.py
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from services.enhanced_time_based_service import EnhancedTimeBasedService
-from services.firebase_service import FirebaseService
-from datetime import datetime
-import logging
+## 🚀 Quick Setup Commands
 
-time_based_chat_bp = Blueprint('time_based_chat', __name__)
-logger = logging.getLogger(__name__)
+```bash
+# Install dependencies
+pip install flask flask-cors google-generativeai requests
 
-# Initialize services
-time_based_service = EnhancedTimeBasedService()
-firebase_service = FirebaseService()
+# Set environment variables
+export GEMINI_API_KEY="your_gemini_key"
+export FI_MCP_API_KEY="your_fi_key"
+export FI_MCP_BASE_URL="https://api.fi.money/mcp"
+export ALPHA_VANTAGE_API_KEY="your_market_data_key"
 
-@time_based_chat_bp.route('/', methods=['POST'])
-@jwt_required()
-def time_based_chat():
-    """Time-based financial chat endpoint"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        message = data.get('message', '')
-        session_id = data.get('session_id', f'{user_id}_{datetime.utcnow().timestamp()}')
-        
-        if not message:
-            return jsonify({'error': 'Message is required'}), 400
-        
-        # Get comprehensive user context
-        user_context = {
-            'user_id': user_id,
-            'session_id': session_id,
-            
-            # Past data
-            'investment_history': data.get('investment_history', []),
-            'transaction_history': data.get('transaction_history', []),
-            'portfolio_performance': data.get('portfolio_performance', {}),
-            'past_goals': data.get('past_goals', []),
-            
-            # Present data
-            'current_spending': data.get('current_spending', {}),
-            'subscriptions': data.get('subscriptions', []),
-            'salary_info': data.get('salary_info', {}),
-            'tax_situation': data.get('tax_situation', {}),
-            'monthly_transactions': data.get('monthly_transactions', []),
-            
-            # Future data
-            'financial_goals': data.get('financial_goals', []),
-            'life_events': data.get('life_events', []),
-            'retirement_plans': data.get('retirement_plans', {}),
-            'major_purchases': data.get('major_purchases', []),
-            'education_plans': data.get('education_plans', []),
-            
-            # Profile data
-            'risk_tolerance': data.get('risk_tolerance', 'moderate'),
-            'investment_horizon': data.get('investment_horizon', 'long-term'),
-            'age': data.get('age', 30),
-            'annual_income': data.get('annual_income', 0),
-            'timestamp': datetime.utcnow().isoformat()
-        }
-        
-        # Process with time-based service
-        response = time_based_service.process_time_based_query(message, user_context)
-        
-        # Save conversation to Firebase
-        firebase_service.save_conversation(user_id, session_id, message, response)
-        
-        return jsonify({
-            'response': response,
-            'session_id': session_id,
-            'timestamp': datetime.utcnow().isoformat(),
-            'agents_used': response.get('agents_used', ['past', 'present', 'future'])
-        })
-        
-    except Exception as e:
-        logger.error(f'Error in time-based chat: {str(e)}')
-        return jsonify({'error': 'Internal server error'}), 500
-
-@time_based_chat_bp.route('/past-analysis', methods=['POST'])
-@jwt_required()
-def past_analysis():
-    """Dedicated past financial analysis endpoint"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        # Get historical data
-        historical_context = {
-            'user_id': user_id,
-            'investment_history': data.get('investment_history', []),
-            'transaction_history': data.get('transaction_history', []),
-            'portfolio_performance': data.get('portfolio_performance', {}),
-            'timeframe': data.get('timeframe', '1year')
-        }
-        
-        # Process with past agent
-        past_agent = time_based_service.time_coordinator.past_agent
-        analysis = past_agent.analyze("Analyze my historical performance", historical_context)
-        
-        return jsonify({
-            'past_analysis': analysis,
-            'timestamp': datetime.utcnow().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f'Error in past analysis: {str(e)}')
-        return jsonify({'error': 'Past analysis failed'}), 500
-
-@time_based_chat_bp.route('/present-optimization', methods=['POST'])
-@jwt_required()
-def present_optimization():
-    """Dedicated present financial optimization endpoint"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        # Get current financial data
-        current_context = {
-            'user_id': user_id,
-            'current_spending': data.get('current_spending', {}),
-            'subscriptions': data.get('subscriptions', []),
-            'salary_info': data.get('salary_info', {}),
-            'tax_situation': data.get('tax_situation', {}),
-            'monthly_transactions': data.get('monthly_transactions', [])
-        }
-        
-        # Process with present agent
-        present_agent = time_based_service.time_coordinator.present_agent
-        optimization = present_agent.analyze("Optimize my current financial situation", current_context)
-        
-        return jsonify({
-            'present_optimization': optimization,
-            'timestamp': datetime.utcnow().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f'Error in present optimization: {str(e)}')
-        return jsonify({'error': 'Present optimization failed'}), 500
-
-@time_based_chat_bp.route('/future-planning', methods=['POST'])
-@jwt_required()
-def future_planning():
-    """Dedicated future financial planning endpoint"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        # Get future planning data
-        future_context = {
-            'user_id': user_id,
-            'financial_goals': data.get('financial_goals', []),
-            'life_events': data.get('life_events', []),
-            'retirement_plans': data.get('retirement_plans', {}),
-            'major_purchases': data.get('major_purchases', []),
-            'education_plans': data.get('education_plans', []),
-            'planning_horizon': data.get('planning_horizon', '10years')
-        }
-        
-        # Process with future agent
-        future_agent = time_based_service.time_coordinator.future_agent
-        planning = future_agent.analyze("Create comprehensive future financial plan", future_context)
-        
-        return jsonify({
-            'future_planning': planning,
-            'timestamp': datetime.utcnow().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f'Error in future planning: {str(e)}')
-        return jsonify({'error': 'Future planning failed'}), 500
-
-@time_based_chat_bp.route('/collaborative-chat', methods=['POST'])
-@jwt_required()
-def collaborative_chat():
-    """Collaborative agent chatroom endpoint"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        message = data.get('message', '')
-        session_id = data.get('session_id', f'{user_id}_{datetime.utcnow().timestamp()}')
-        
-        if not message:
-            return jsonify({'error': 'Message is required'}), 400
-        
-        # Get comprehensive user context
-        user_context = {
-            'user_id': user_id,
-            'session_id': session_id,
-            
-            # Past data
-            'investment_history': data.get('investment_history', []),
-            'transaction_history': data.get('transaction_history', []),
-            'portfolio_performance': data.get('portfolio_performance', {}),
-            'past_goals': data.get('past_goals', []),
-            
-            # Present data
-            'current_spending': data.get('current_spending', {}),
-            'subscriptions': data.get('subscriptions', []),
-            'salary_info': data.get('salary_info', {}),
-            'tax_situation': data.get('tax_situation', {}),
-            'monthly_transactions': data.get('monthly_transactions', []),
-            
-            # Future data
-            'financial_goals': data.get('financial_goals', []),
-            'life_events': data.get('life_events', []),
-            'retirement_plans': data.get('retirement_plans', {}),
-            'major_purchases': data.get('major_purchases', []),
-            'education_plans': data.get('education_plans', []),
-            
-            # Profile data
-            'risk_tolerance': data.get('risk_tolerance', 'moderate'),
-            'investment_horizon': data.get('investment_horizon', 'long-term'),
-            'age': data.get('age', 30),
-            'annual_income': data.get('annual_income', 0),
-            'timestamp': datetime.utcnow().isoformat()
-        }
-        
-        # Process with collaborative coordinator
-        from financial_advisor.collaborative_coordinator import CollaborativeCoordinator
-        collaborative_coordinator = CollaborativeCoordinator()
-        
-        response = collaborative_coordinator.orchestrate_collaborative_analysis(message, user_context)
-        
-        # Save conversation to Firebase
-        firebase_service.save_conversation(user_id, session_id, message, response)
-        
-        return jsonify({
-            'response': response,
-            'session_id': session_id,
-            'timestamp': datetime.utcnow().isoformat(),
-            'collaboration_type': response.get('collaboration_type', 'three_way_collaboration'),
-            'agents_involved': ['past', 'present', 'future']
-        })
-        
-    except Exception as e:
-        logger.error(f'Error in collaborative chat: {str(e)}')
-        return jsonify({'error': 'Collaborative chat failed'}), 500
-
-@time_based_chat_bp.route('/agent-discussion', methods=['POST'])
-@jwt_required()
-def agent_discussion():
-    """View agent discussion logs for transparency"""
-    try:
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({'error': 'Session ID required'}), 400
-        
-        # Get discussion logs from Firebase
-        discussion_logs = firebase_service.get_collaboration_logs(user_id, session_id)
-        
-        return jsonify({
-            'discussion_logs': discussion_logs,
-            'session_id': session_id,
-            'timestamp': datetime.utcnow().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f'Error getting agent discussion: {str(e)}')
-        return jsonify({'error': 'Failed to get discussion logs'}), 500
+# Run the app
+python app.py
 ```
 
-## 📱 Flutter Frontend Integration
+## 📱 Simple Flutter Frontend
 
-### Enhanced Flutter App with Time-Based Interface
+### Basic Chat Interface
 ```dart
-// lib/screens/time_based_dashboard.dart
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/time_based_api_service.dart';
-import '../models/time_based_analysis.dart';
-import '../widgets/past_analysis_widget.dart';
-import '../widgets/present_optimization_widget.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() => runApp(ArthaAIApp());
+
+class ArthaAIApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Artha AI - 3 Agent Chatroom',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: ChatScreen(),
+    );
+  }
+}
+
+class ChatScreen extends StatefulWidget {
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+  List<Map<String, dynamic>> _messages = [];
+  
+  Future<void> _sendMessage(String message) async {
+    setState(() {
+      _messages.add({'type': 'user', 'message': message});
+    });
+    
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/api/chat'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'message': message, 'user_id': 'demo_user'}),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _messages.add({'type': 'agents', 'data': data});
+        });
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Artha AI - 3 Agent Chatroom')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                if (message['type'] == 'user') {
+                  return ListTile(
+                    title: Text(message['message']),
+                    trailing: Icon(Icons.person),
+                  );
+                } else {
+                  final data = message['data'];
+                  return Card(
+                    child: Column(
+                      children: [
+                        Text('Agent Discussion:'),
+                        ...data['chatroom_discussion'].map<Widget>((agent) => 
+                          ListTile(
+                            title: Text('${agent['agent'].toUpperCase()}: ${agent['message']}'),
+                            leading: Icon(Icons.smart_toy),
+                          )
+                        ).toList(),
+                        Divider(),
+                        Text('Final Recommendation: ${data['final_recommendation']}'),
+                      ],
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(hintText: 'Ask about your finances...'),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    if (_controller.text.isNotEmpty) {
+                      _sendMessage(_controller.text);
+                      _controller.clear();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## 🎯 MVP Complete!
+
+This simplified MVP provides:
+
+1. **3 AI Agents**: Past, Present, Future using Gemini
+2. **Fi MCP Integration**: Real financial data access  
+3. **Real-time Market Data**: Basic market context
+4. **Agent Chatroom**: See agents discuss and debate
+5. **Simple UI**: Basic Flutter chat interface
+
+**Total Setup Time**: ~30 minutes
+**Core Files**: 4 files (app.py, 3 service files)
+**Dependencies**: Flask, Gemini API, Fi MCP
+
+Perfect for hackathon deployment with room to add features!
 import '../widgets/future_planning_widget.dart';
 
 class TimeBasedDashboard extends StatefulWidget {
