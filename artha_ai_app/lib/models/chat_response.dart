@@ -1,54 +1,86 @@
 class ChatResponse {
   final String sessionId;
-  final List<AgentDiscussionMessage> chatroomDiscussion;
-  final Map<String, AgentResponse> agentResponses;
-  final CollaborationSummary collaborationSummary;
-  final UnifiedRecommendation unifiedRecommendation;
-  final double confidenceScore;
-  final String responseType;
+  final String userQuery;
+  final String finalSummary;
+  final Map<String, AgentInsight> agentInsights;
+  final double overallConfidence;
   final DateTime timestamp;
+  final bool? error;
 
   ChatResponse({
     required this.sessionId,
-    required this.chatroomDiscussion,
-    required this.agentResponses,
-    required this.collaborationSummary,
-    required this.unifiedRecommendation,
-    required this.confidenceScore,
-    required this.responseType,
+    required this.userQuery,
+    required this.finalSummary,
+    required this.agentInsights,
+    required this.overallConfidence,
     required this.timestamp,
+    this.error,
   });
 
   factory ChatResponse.fromJson(Map<String, dynamic> json) {
     return ChatResponse(
       sessionId: json['session_id'] ?? '',
-      chatroomDiscussion: (json['chatroom_discussion'] as List<dynamic>?)
-          ?.map((item) => AgentDiscussionMessage.fromJson(item))
-          .toList() ?? [],
-      agentResponses: _parseAgentResponses(json['agent_responses']),
-      collaborationSummary: CollaborationSummary.fromJson(
-        json['collaboration_summary'] ?? {}
-      ),
-      unifiedRecommendation: UnifiedRecommendation.fromJson(
-        json['unified_recommendation'] ?? {}
-      ),
-      confidenceScore: (json['confidence_score'] ?? 0.0).toDouble(),
-      responseType: json['response_type'] ?? 'general_advice',
+      userQuery: json['user_query'] ?? '',
+      finalSummary: json['final_summary'] ?? '',
+      agentInsights: _parseAgentInsights(json['agent_insights']),
+      overallConfidence: (json['overall_confidence'] ?? 0.0).toDouble(),
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      error: json['error'],
     );
   }
 
-  static Map<String, AgentResponse> _parseAgentResponses(dynamic agentResponsesJson) {
-    if (agentResponsesJson == null) return {};
+  static Map<String, AgentInsight> _parseAgentInsights(dynamic agentInsightsJson) {
+    if (agentInsightsJson == null) return {};
     
-    final Map<String, AgentResponse> responses = {};
-    (agentResponsesJson as Map<String, dynamic>).forEach((key, value) {
-      responses[key] = AgentResponse.fromJson(value);
+    final Map<String, AgentInsight> insights = {};
+    (agentInsightsJson as Map<String, dynamic>).forEach((key, value) {
+      insights[key] = AgentInsight.fromJson(value);
     });
-    return responses;
+    return insights;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'session_id': sessionId,
+      'user_query': userQuery,
+      'final_summary': finalSummary,
+      'agent_insights': agentInsights.map((key, value) => MapEntry(key, value.toJson())),
+      'overall_confidence': overallConfidence,
+      'timestamp': timestamp.toIso8601String(),
+      'error': error,
+    };
   }
 }
 
+class AgentInsight {
+  final String agentName;
+  final List<String> keyFindings;
+  final double confidence;
+
+  AgentInsight({
+    required this.agentName,
+    required this.keyFindings,
+    required this.confidence,
+  });
+
+  factory AgentInsight.fromJson(Map<String, dynamic> json) {
+    return AgentInsight(
+      agentName: json['agent_name'] ?? '',
+      keyFindings: List<String>.from(json['key_findings'] ?? []),
+      confidence: (json['confidence'] ?? 0.0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent_name': agentName,
+      'key_findings': keyFindings,
+      'confidence': confidence,
+    };
+  }
+}
+
+// Legacy models for backward compatibility - can be removed later
 class AgentDiscussionMessage {
   final String agent;
   final String agentName;

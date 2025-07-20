@@ -4,10 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ArthaApiService {
   // Change this to your backend URL when deployed
-  static const String baseUrl = 'http://localhost:5000';
-  // For Android emulator, use: 'http://10.0.2.2:5000'
-  // For iOS simulator, use: 'http://localhost:5000'
-  // For physical device, use your computer's IP: 'http://192.168.1.xxx:5000'
+  static const String baseUrl = 'http://localhost:8000';
+  // For Android emulator, use: 'http://10.0.2.2:8000'
+  // For iOS simulator, use: 'http://localhost:8000'
+  // For physical device, use your computer's IP: 'http://192.168.1.xxx:8000'
   
   final _storage = const FlutterSecureStorage();
   late http.Client _client;

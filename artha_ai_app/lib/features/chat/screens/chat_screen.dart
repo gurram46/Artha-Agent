@@ -490,34 +490,18 @@ class _ChatScreenState extends State<ChatScreen> {
         _currentSessionId = chatResponse.sessionId;
 
         setState(() {
-          // Add agent discussion messages
-          for (final discussionMessage in chatResponse.chatroomDiscussion) {
+          // Add the comprehensive final summary
+          if (chatResponse.finalSummary.isNotEmpty) {
             _messages.add(
               ChatMessage(
-                id: DateTime.now().millisecondsSinceEpoch.toString() + discussionMessage.agent,
-                text: discussionMessage.message,
+                id: DateTime.now().millisecondsSinceEpoch.toString() + '_final_summary',
+                text: chatResponse.finalSummary,
                 isUser: false,
-                timestamp: discussionMessage.timestamp,
-                agentType: _getAgentType(discussionMessage.agent),
-                agentContributions: _extractAgentContributions(chatResponse),
-                isAgentDiscussion: true,
-              ),
-            );
-          }
-
-          // Add unified recommendation
-          if (chatResponse.unifiedRecommendation.summary.isNotEmpty) {
-            _messages.add(
-              ChatMessage(
-                id: DateTime.now().millisecondsSinceEpoch.toString() + '_unified',
-                text: chatResponse.unifiedRecommendation.summary,
-                isUser: false,
-                timestamp: chatResponse.unifiedRecommendation.timestamp,
+                timestamp: chatResponse.timestamp,
                 agentType: AgentType.coordinator,
-                agentContributions: chatResponse.unifiedRecommendation.agentContributions,
+                agentContributions: _extractAgentContributionsFromInsights(chatResponse),
                 isUnifiedRecommendation: true,
-                actionSteps: chatResponse.unifiedRecommendation.actionSteps,
-                confidenceScore: chatResponse.unifiedRecommendation.confidence,
+                confidenceScore: chatResponse.overallConfidence,
               ),
             );
           }
@@ -656,6 +640,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     
     return "I'm here to help with all your financial questions! I can analyze your past investments, optimize your current spending, or plan your future goals. What specific area would you like to focus on today?";
+  }
+
+  Map<String, String> _extractAgentContributionsFromInsights(ChatResponse chatResponse) {
+    final contributions = <String, String>{};
+    
+    chatResponse.agentInsights.forEach((key, insight) {
+      if (insight.keyFindings.isNotEmpty) {
+        contributions[insight.agentName] = insight.keyFindings.first;
+      }
+    });
+    
+    return contributions;
   }
 
   Map<String, String> _generateAgentContributions() {
