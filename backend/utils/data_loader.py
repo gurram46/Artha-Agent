@@ -12,7 +12,13 @@ from pathlib import Path
 class DataLoader:
     """Loads financial data from MCP sample response files"""
     
-    def __init__(self, data_path: str = "../mcp-docs/sample_responses/"):
+    def __init__(self, data_path: str = None):
+        if data_path is None:
+            # Get the correct path relative to the backend directory
+            backend_dir = Path(__file__).parent.parent  # Go up from utils/ to backend/
+            project_root = backend_dir.parent  # Go up from backend/ to Artha-Agent/
+            data_path = project_root / "mcp-docs" / "sample_responses"
+        
         self.data_path = Path(data_path)
         self.cached_data = {}
         self._load_all_data()
@@ -20,32 +26,55 @@ class DataLoader:
     def _load_all_data(self):
         """Load all sample data files on initialization"""
         try:
+            print(f"🔍 Loading MCP data from: {self.data_path}")
+            
+            if not self.data_path.exists():
+                print(f"❌ Data path does not exist: {self.data_path}")
+                self.cached_data = {}
+                return
+            
             # Load credit report data
             credit_file = self.data_path / "fetch_credit_report.json"
             if credit_file.exists():
                 with open(credit_file, 'r') as f:
                     self.cached_data['credit_report'] = json.load(f)
+                print(f"✅ Loaded credit report data")
+            else:
+                print(f"⚠️ Credit report file not found: {credit_file}")
             
             # Load net worth data
             networth_file = self.data_path / "fetch_net_worth.json"
             if networth_file.exists():
                 with open(networth_file, 'r') as f:
                     self.cached_data['net_worth'] = json.load(f)
+                print(f"✅ Loaded net worth data")
+            else:
+                print(f"⚠️ Net worth file not found: {networth_file}")
             
             # Load EPF details
             epf_file = self.data_path / "fetch_epf_details.json"
             if epf_file.exists():
                 with open(epf_file, 'r') as f:
                     self.cached_data['epf_details'] = json.load(f)
+                print(f"✅ Loaded EPF details")
+            else:
+                print(f"⚠️ EPF file not found: {epf_file}")
             
             # Load MF transactions
             mf_file = self.data_path / "fetch_mf_transactions.json"
             if mf_file.exists():
                 with open(mf_file, 'r') as f:
                     self.cached_data['mf_transactions'] = json.load(f)
+                print(f"✅ Loaded MF transactions")
+            else:
+                print(f"⚠️ MF transactions file not found: {mf_file}")
+            
+            print(f"📊 Total datasets loaded: {len(self.cached_data)}")
                     
         except Exception as e:
-            print(f"Error loading data files: {e}")
+            print(f"❌ Error loading data files: {e}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
             self.cached_data = {}
     
     def get_credit_report(self, user_id: str = "demo") -> Dict[str, Any]:

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Artha AI - Revolutionary Real-Time Collaboration Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .demo-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .input-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .question-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .start-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .start-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .collaboration-stream {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 200px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .stream-message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .collaboration-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stage-start {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .agent-thinking {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .agent-completed {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .conflicts-detected {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        
+        .discussion-message {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .collaboration-complete {
+            background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+            color: white;
+        }
+        
+        .no-conflicts {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #d32f2f;
+        }
+        
+        .message-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .message-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .key-insights {
+            margin-top: 10px;
+        }
+        
+        .key-insights ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .key-insights li {
+            margin-bottom: 5px;
+        }
+        
+        .key-insights li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .metric {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .sample-questions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+        }
+        
+        .sample-questions h3 {
+            margin-bottom: 10px;
+            color: #2196f3;
+        }
+        
+        .sample-question {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .sample-question:hover {
+            background: #2196f3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Artha AI Real-Time Collaboration</h1>
+            <p>Watch three AI financial experts collaborate in real-time to solve your financial questions!</p>
+        </div>
+        
+        <div class="demo-container">
+            <div class="input-section">
+                <label for="questionInput">Ask Your Financial Question:</label>
+                <textarea 
+                    id="questionInput" 
+                    class="question-input" 
+                    placeholder="Type your financial question here... For example: 'How is my portfolio performing?' or 'Should I buy a car now?'"
+                ></textarea>
+                
+                <button id="startButton" class="start-button">
+                    🚀 Start Real-Time Collaboration
+                </button>
+                
+                <div class="sample-questions">
+                    <h3>💡 Try These Sample Questions:</h3>
+                    <div class="sample-question" onclick="setQuestion('How is my portfolio performing compared to market benchmarks?')">
+                        📊 Portfolio Performance Analysis
+                    </div>
+                    <div class="sample-question" onclick="setQuestion('Should I invest ₹50,000 in mutual funds right now?')">
+                        💰 Investment Decision
+                    </div>
+                    <div class="sample-question" onclick="setQuestion('What are the major risks in my current financial situation?')">
+                        ⚠️ Risk Assessment
+                    </div>
+                    <div class="sample-question" onclick="setQuestion('Should I buy a car worth 8 lakhs or continue using public transport?')">
+                        🚗 Purchase Decision
+                    </div>
+                    <div class="sample-question" onclick="setQuestion('How should I rebalance my portfolio for better returns?')">
+                        ⚖️ Portfolio Rebalancing
+                    </div>
+                </div>
+            </div>
+            
+            <div id="collaborationStream" class="collaboration-stream" style="display: none;">
+                <div class="message-title">🔄 Real-Time Collaboration Stream</div>
+                <div class="message-content">Watch as our three AI experts work together...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        
+        function setQuestion(question) {
+            document.getElementById('questionInput').value = question;
+        }
+        
+        function startCollaboration() {
+            const question = document.getElementById('questionInput').value.trim();
+            if (!question) {
+                alert('Please enter a financial question first!');
+                return;
+            }
+            
+            const startButton = document.getElementById('startButton');
+            const streamContainer = document.getElementById('collaborationStream');
+            
+            // Reset and show stream container
+            streamContainer.innerHTML = '';
+            streamContainer.style.display = 'block';
+            
+            // Disable button during streaming
+            startButton.disabled = true;
+            startButton.textContent = '🔄 Collaboration in Progress...';
+            
+            // Close existing connection if any
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Start EventSource connection
+            eventSource = new EventSource('/api/chat-stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: question,
+                    user_id: 'demo_user'
+                })
+            });
+            
+            // Use fetch with streaming instead of EventSource for POST
+            fetch('/api/chat-stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: question,
+                    user_id: 'demo_user'
+                })
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            // Re-enable button when done
+                            startButton.disabled = false;
+                            startButton.textContent = '🚀 Start Real-Time Collaboration';
+                            return;
+                        }
+                        
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\\n');
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.substring(6));
+                                    displayStreamMessage(data);
+                                } catch (e) {
+                                    console.error('Error parsing stream data:', e);
+                                }
+                            }
+                        }
+                        
+                        readStream();
+                    }).catch(error => {
+                        console.error('Stream reading error:', error);
+                        startButton.disabled = false;
+                        startButton.textContent = '🚀 Start Real-Time Collaboration';
+                    });
+                }
+                
+                readStream();
+            }).catch(error => {
+                console.error('Fetch error:', error);
+                startButton.disabled = false;
+                startButton.textContent = '🚀 Start Real-Time Collaboration';
+                
+                displayStreamMessage({
+                    type: 'error',
+                    title: 'Connection Error',
+                    data: { error: 'Failed to connect to collaboration stream' }
+                });
+            });
+        }
+        
+        function displayStreamMessage(message) {
+            const streamContainer = document.getElementById('collaborationStream');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `stream-message ${message.type}`;
+            
+            let content = `<div class="message-title">${message.title}</div>`;
+            
+            if (message.data) {
+                if (message.data.description) {
+                    content += `<div class="message-content">${message.data.description}</div>`;
+                }
+                
+                if (message.data.thinking) {
+                    content += `<div class="message-content">${message.data.thinking}</div>`;
+                }
+                
+                if (message.data.analysis_content) {
+                    content += `<div class="message-content"><strong>AI Analysis:</strong> ${message.data.analysis_content}</div>`;
+                }
+                
+                if (message.data.key_insights) {
+                    content += `<div class="key-insights">
+                        <ul>
+                            ${message.data.key_insights.map(insight => `<li>${insight}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                }
+                
+                if (message.data.conflicts) {
+                    content += `<div class="message-content">
+                        ${message.data.conflicts.map(conflict => 
+                            `<div>⚠️ <strong>${conflict.type}</strong>: ${conflict.description}</div>`
+                        ).join('')}
+                    </div>`;
+                }
+                
+                if (message.data.speaker && message.data.message) {
+                    content += `<div class="message-content"><strong>${message.data.speaker}:</strong> ${message.data.message}</div>`;
+                }
+                
+                if (message.data.collaboration_summary) {
+                    content += `<div class="message-content">${message.data.collaboration_summary.replace(/\\n/g, '<br>')}</div>`;
+                }
+                
+                if (message.data.agent_insights) {
+                    content += `<div class="message-content">
+                        <h4>Agent Analysis Summary:</h4>
+                        <ul>
+                            ${Object.entries(message.data.agent_insights).map(([agent, data]) => 
+                                `<li><strong>${data.agent_name}:</strong> Confidence ${(data.confidence * 100).toFixed(0)}%</li>`
+                            ).join('')}
+                        </ul>
+                    </div>`;
+                }
+                
+                if (message.data.framework_metrics) {
+                    content += `<div class="metrics">
+                        <div class="metric">Stages: ${message.data.framework_metrics.stages_completed}/4</div>
+                        <div class="metric">Confidence: ${(message.data.overall_confidence * 100).toFixed(0)}%</div>
+                        <div class="metric">Conflicts: ${message.data.conflicts_resolved || 0}</div>
+                    </div>`;
+                }
+                
+                if (message.data.error) {
+                    content += `<div class="message-content">❌ ${message.data.error}</div>`;
+                }
+            }
+            
+            messageDiv.innerHTML = content;
+            streamContainer.appendChild(messageDiv);
+            
+            // Auto-scroll to latest message
+            streamContainer.scrollTop = streamContainer.scrollHeight;
+        }
+        
+        // Add event listener to start button
+        document.getElementById('startButton').addEventListener('click', startCollaboration);
+        
+        // Allow Enter key to start collaboration
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                startCollaboration();
+            }
+        });
+    </script>
+</body>
+</html>

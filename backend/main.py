@@ -21,11 +21,18 @@ from agents.analyst_agent.analyst import AnalystAgent
 from agents.research_agent.research import ResearchAgent
 from agents.risk_management_agent.risk_manager import RiskManagementAgent
 from coordination.agent_coordinator import AgentCoordinator
+from coordination.realtime_collaboration import RealtimeCollaborationStreamer
+from coordination.conflict_detector import ConflictDetector, DiscussionSimulator
 from utils.data_loader import DataLoader
 from utils.logger import setup_logger
 
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/demo')
+def demo_page():
+    """Serve the real-time collaboration demo page"""
+    return app.send_static_file('realtime_demo.html')
 
 # Setup logging
 logger = setup_logger()
@@ -47,6 +54,12 @@ try:
     
     coordinator = AgentCoordinator(analyst_agent, research_agent, risk_agent)
     logger.info("✅ 4-stage collaboration coordinator ready")
+    
+    # Initialize real-time collaboration streamer
+    realtime_streamer = RealtimeCollaborationStreamer()
+    conflict_detector = ConflictDetector()
+    discussion_simulator = DiscussionSimulator()
+    logger.info("✅ Real-time collaboration streaming ready")
     
     agents_initialized = True
 except Exception as e:
@@ -232,6 +245,86 @@ def get_coordinator_status():
     except Exception as e:
         logger.error(f"Error getting coordinator status: {str(e)}")
         return jsonify({'error': 'Failed to get coordinator status'}), 500
+
+@app.route('/api/chat-stream', methods=['POST'])
+def chat_stream():
+    """🔥 Revolutionary Real-Time Collaboration Streaming Endpoint"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'message' not in data:
+            return jsonify({'error': 'Missing message parameter'}), 400
+        
+        user_message = data['message']
+        user_id = data.get('user_id', 'demo_user')
+        
+        logger.info(f"🚀 Starting real-time collaboration stream for: {user_message}")
+        
+        # Check if agents are initialized
+        if not agents_initialized:
+            return jsonify({'error': 'Agents not initialized'}), 500
+        
+        def generate_stream():
+            """Generate streaming response"""
+            logger.info("🔄 Starting stream generation...")
+            message_count = 0
+            
+            try:
+                # Send initial connection message
+                initial_message = {
+                    'type': 'connection_start',
+                    'title': 'Stream Connected',
+                    'data': {'status': 'connected', 'query': user_message},
+                    'timestamp': datetime.now().isoformat()
+                }
+                yield f"data: {json.dumps(initial_message)}\n\n"
+                message_count += 1
+                logger.info("✅ Initial message sent")
+                
+                # Start collaborative analysis
+                for stream_message in realtime_streamer.stream_collaborative_analysis(
+                    user_message=user_message,
+                    analyst_agent=analyst_agent,
+                    research_agent=research_agent, 
+                    risk_agent=risk_agent,
+                    conflict_detector=conflict_detector,
+                    discussion_simulator=discussion_simulator,
+                    user_id=user_id
+                ):
+                    yield f"data: {json.dumps(stream_message)}\n\n"
+                    message_count += 1
+                    if message_count % 5 == 0:  # Log every 5 messages
+                        logger.info(f"📊 Sent {message_count} messages")
+                
+                logger.info(f"✅ Stream completed successfully. Total messages: {message_count}")
+                    
+            except Exception as e:
+                logger.error(f"❌ Stream generation error: {str(e)}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                
+                error_message = {
+                    'type': 'error',
+                    'title': 'Streaming Error',
+                    'data': {'error': str(e)},
+                    'timestamp': datetime.now().isoformat()
+                }
+                yield f"data: {json.dumps(error_message)}\n\n"
+        
+        return app.response_class(
+            generate_stream(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Chat stream error: {str(e)}")
+        return jsonify({'error': f'Streaming failed: {str(e)}'}), 500
 
 @app.route('/api/test', methods=['POST'])
 def test_endpoint():

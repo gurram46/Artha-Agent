@@ -25,8 +25,8 @@ class ConflictDetector:
     def __init__(self):
         self.logger = logging.getLogger("conflict_detector")
         
-        # Conflict detection thresholds
-        self.BUDGET_THRESHOLD = 0.3  # 30% difference in budget recommendations
+        # Conflict detection thresholds (more lenient to reduce false positives)
+        self.BUDGET_THRESHOLD = 0.8  # 80% difference in budget recommendations
         self.CONFIDENCE_THRESHOLD = 0.2  # 20% difference in confidence levels
         self.TIMING_CONFLICT_KEYWORDS = {
             'immediate': ['now', 'immediately', 'urgent', 'asap', 'right away'],
@@ -110,38 +110,48 @@ class ConflictDetector:
     
     def _extract_budget_recommendation(self, analysis_text: str) -> Optional[float]:
         """Extract budget/amount recommendations from analysis text"""
-        # Look for ₹ amounts in the text
+        # Look for ₹ amounts in the text with proper unit handling
         amount_patterns = [
-            r'₹([\d,]+(?:\.\d+)?)\s*(?:lakhs?|L|crores?|K)?',
-            r'([\d,]+(?:\.\d+)?)\s*(?:lakhs?|L|crores?)\s*₹?',
-            r'budget.*?₹([\d,]+(?:\.\d+)?)',
+            r'₹([\d,]+(?:\.\d+)?)\s*lakh',     # ₹X lakh format
+            r'₹([\d,]+(?:\.\d+)?)\s*crore',    # ₹X crore format  
+            r'₹([\d,]+(?:\.\d+)?)\s*K',        # ₹X K format
+            r'₹([\d,]+(?:\.\d+)?)',            # Regular ₹X format
+            r'budget.*?₹([\d,]+(?:\.\d+)?)',   # Context-based
             r'spend.*?₹([\d,]+(?:\.\d+)?)',
             r'afford.*?₹([\d,]+(?:\.\d+)?)'
         ]
         
         amounts = []
         for pattern in amount_patterns:
-            matches = re.findall(pattern, analysis_text)
+            matches = re.finditer(pattern, analysis_text.lower())
             for match in matches:
                 try:
                     # Clean and convert amount
-                    clean_amount = str(match).replace(',', '')
+                    clean_amount = match.group(1).replace(',', '')
                     amount = float(clean_amount)
                     
-                    # Convert based on units mentioned
-                    if 'lakh' in analysis_text.lower() or 'L' in analysis_text:
-                        amount *= 100000
-                    elif 'crore' in analysis_text.lower():
-                        amount *= 10000000
-                    elif 'K' in analysis_text:
-                        amount *= 1000
+                    # Convert based on specific pattern context
+                    if 'lakh' in match.group(0):
+                        amount *= 100000  # Convert lakhs to rupees
+                    elif 'crore' in match.group(0):
+                        amount *= 10000000  # Convert crores to rupees
+                    elif 'k' in match.group(0):
+                        amount *= 1000  # Convert thousands to rupees
+                    # else: amount is already in rupees
                     
-                    amounts.append(amount)
-                except ValueError:
+                    # Only include reasonable amounts (not tiny decimals that get multiplied)
+                    if amount >= 10000 and amount <= 10000000:  # Between ₹10K and ₹1 crore (more realistic)
+                        amounts.append(amount)
+                        
+                except (ValueError, AttributeError):
                     continue
         
-        # Return the most prominent amount mentioned
-        return max(amounts) if amounts else None
+        # Return the most relevant amount (prefer budget-related contexts)
+        if amounts:
+            # If multiple amounts, prefer the median to avoid outliers
+            amounts.sort()
+            return amounts[len(amounts)//2]
+        return None
     
     def _extract_risk_tolerance(self, analysis_text: str) -> str:
         """Extract risk tolerance from analysis text"""
