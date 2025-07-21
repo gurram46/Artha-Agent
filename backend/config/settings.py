@@ -28,13 +28,13 @@ class Config:
     PARALLEL_AGENT_PROCESSING = os.getenv("PARALLEL_AGENT_PROCESSING", "false").lower() == "true"  # Sequential for complete analysis
     PARALLEL_SEARCH_PROCESSING = os.getenv("PARALLEL_SEARCH_PROCESSING", "true").lower() == "true"  # Parallel searches for speed
     GEMINI_GENERATION_CONFIG = {
-        "temperature": 0.3,
-        "max_output_tokens": 6000,  # Increased for complete responses 
-        "top_p": 0.8,
-        "top_k": 40
+        "temperature": 0.4,  # Slightly higher for better generation
+        # Removed max_output_tokens to fix Gemini API bug
+        "top_p": 0.95,  # Higher for more diverse outputs
+        "top_k": 64  # Higher for better quality
     }
     RESPONSE_LENGTH_LIMIT = 12000  # Increased to prevent truncation
-    SEARCH_TIMEOUT_SECONDS = int(os.getenv("SEARCH_TIMEOUT_SECONDS", "5"))  # Fast search timeout
+    SEARCH_TIMEOUT_SECONDS = int(os.getenv("SEARCH_TIMEOUT_SECONDS", "30"))  # Increased search timeout for grounding
     
     # Logging Configuration
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

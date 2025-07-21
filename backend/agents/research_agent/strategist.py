@@ -18,6 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from agents.base_agent import BaseFinancialAgent, AgentResponse
 from core.fi_mcp.client import FinancialData
 from core.google_grounding.grounding_client import GroundingResult
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -243,8 +244,8 @@ Return ONLY search queries, one per line.
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    max_output_tokens=200,
                     temperature=0.3
+                    # Removed max_output_tokens to fix Gemini API bug
                 )
             )
             
@@ -452,4 +453,69 @@ Structure your response with:
             sections.append(f"\nBased on {len(intelligence['sources'])} verified sources")
         
         return "\n\n".join(sections) if sections else "Strategic intelligence being processed"
+    
+    async def process_market_intelligence(self, user_query: str, financial_data: FinancialData, data_analysis: Dict[str, Any], market_intelligence: Dict[str, Any]) -> Dict[str, str]:
+        """Process market intelligence and data analysis to produce strategic research"""
+        
+        # Create comprehensive prompt for strategic analysis
+        strategic_prompt = f"""
+Strategic Research for: {user_query}
+
+Financial Status:
+- Net Worth: ₹{financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', 'N/A')}
+- Analysis: {json.dumps(data_analysis, indent=2)[:500]}
+
+Market Data ({len(market_intelligence.get('sources', []))} sources):
+{market_intelligence.get('findings', 'No findings')[:1000]}
+
+Provide:
+1. Market opportunities
+2. Strategic timing
+3. Action plan
+4. Specific recommendations
+
+Be direct and specific:
+"""
+        
+        try:
+            # Generate strategic research response
+            strategic_response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=strategic_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.4
+                    # Removed max_output_tokens to fix Gemini API bug
+                )
+            )
+            
+            if strategic_response and strategic_response.text:
+                strategic_content = strategic_response.text.strip()
+                logger.info(f"Research Agent: Generated strategic research - {len(strategic_content)} chars")
+            else:
+                logger.error(f"Research Agent: AI response was empty. Response object: {strategic_response}")
+                if hasattr(strategic_response, 'candidates') and strategic_response.candidates:
+                    logger.error(f"Candidate[0]: {strategic_response.candidates[0]}")
+                    if hasattr(strategic_response.candidates[0], 'finish_reason'):
+                        logger.error(f"Finish reason: {strategic_response.candidates[0].finish_reason}")
+                if hasattr(strategic_response, 'usage_metadata'):
+                    logger.error(f"Usage metadata: {strategic_response.usage_metadata}")
+                strategic_content = f"ERROR: Strategic analysis failed - AI returned empty response. Query: {user_query}"
+            
+            return {
+                'agent': 'Strategic Research',
+                'content': strategic_content,
+                'emoji': '🎯',
+                'market_sources': len(market_intelligence.get('sources', [])),
+                'data_analysis_integrated': True
+            }
+            
+        except Exception as e:
+            logger.error(f"Research Agent: Strategic processing failed: {e}")
+            return {
+                'agent': 'Strategic Research',
+                'content': f"Strategic analysis failed: {str(e)}",
+                'emoji': '🎯',
+                'market_sources': len(market_intelligence.get('sources', [])),
+                'data_analysis_integrated': False
+            }
     

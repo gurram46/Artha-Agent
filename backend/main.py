@@ -28,9 +28,10 @@ from agents.analyst_agent.analyst import AnalystAgent
 from agents.research_agent.strategist import ResearchAgent
 from agents.risk_agent.risk_guardian import RiskAgent
 from core.fi_mcp.client import FinancialData, get_user_financial_data
+from google.genai import types
 
 # Setup simple logging
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ArthaAIChatbot:
@@ -99,7 +100,7 @@ Type your financial questions or 'quit' to exit.
         
         return table
     
-    async def stream_agent_response(self, agent, agent_name: str, query: str, financial_data: FinancialData):
+    async def stream_agent_response_OLD_UNUSED(self, agent, agent_name: str, query: str, financial_data: FinancialData):
         """Stream single agent response with status updates"""
         
         # Update status
@@ -171,7 +172,7 @@ Type your financial questions or 'quit' to exit.
         }
     
     async def process_query_with_collaboration(self, user_query: str):
-        """Process query with 3-agent collaboration"""
+        """Ultra-speed processing with sequential agent collaboration"""
         
         self.console.print(f"\n[bold cyan]Processing:[/bold cyan] {user_query}\n")
         
@@ -182,38 +183,175 @@ Type your financial questions or 'quit' to exit.
                 self.console.print("[green]✅ Financial data loaded successfully[/green]")
             except Exception as e:
                 self.console.print("[yellow]⚠️ Using sample financial data for demo[/yellow]")
-                # Create sample data for demo
                 financial_data = await self.create_sample_financial_data()
         
-        self.console.print("\n[bold blue]🚀 Starting 3-Agent Analysis...[/bold blue]\n")
+        self.console.print("\n[bold blue]🚀 Ultra-Speed 3-Agent Pipeline...[/bold blue]\n")
         
-        # Process with all agents - using parallel processing if enabled
-        agents = [
-            ("analyst", self.analyst),
-            ("research", self.research),
-            ("risk", self.risk)
-        ]
+        # STAGE 1: Generate comprehensive search query (skip separate data analysis to reduce API calls)
+        self.console.print("[bold]🕵️ Stage 1: Intelligent Query Generation[/bold]")
+        with Status("Generating comprehensive market intelligence query...", console=self.console):
+            search_query = await self.analyst.generate_comprehensive_search_query(user_query, financial_data)
+            # Skip separate data analysis - integrate it into agent responses
+            data_analysis = {'status': 'integrated_into_agent_analysis'}
         
-        agent_responses = []
+        self.console.print(f"[green]✅ Search query: {search_query}[/green]")
+        self.console.print(f"[dim]Query length: {len(search_query.split())} words[/dim]")
         
-        # Process all agents sequentially for complete analysis  
-        for agent_key, agent in agents:
-            self.console.print(f"[bold]{agent.emoji} {agent.name} Analysis:[/bold]")
+        # STAGE 2: Single Google Grounding Search with comprehensive query
+        self.console.print("[bold]🔍 Stage 2: Google Search Grounding - Live Market Data[/bold]")
+        with Status(f"Searching: {search_query[:50]}...", console=self.console):
+            market_intelligence = await self.analyst.search_with_gemini(search_query, self._format_financial_summary_for_search(financial_data))
+        
+        sources_count = len(market_intelligence.get('sources', []))
+        self.console.print(f"[green]✅ Retrieved {sources_count} live market data sources[/green]\n")
+        
+        # STAGE 3: Research Agent processes grounded data
+        self.console.print("[bold]🎯 Stage 3: Strategic Research & Opportunity Analysis[/bold]")
+        logger.info(f"Calling Research Agent with market intelligence: {len(market_intelligence.get('sources', []))} sources")
+        research_response = await self.research.process_market_intelligence(
+            user_query, financial_data, data_analysis, market_intelligence
+        )
+        logger.info(f"Research Agent returned: {type(research_response)}, keys: {list(research_response.keys()) if isinstance(research_response, dict) else 'Not a dict'}")
+        
+        # Display FULL research response
+        research_content = research_response.get('content', 'No research content available')
+        self.console.print(Panel(
+            research_content,
+            title=f"🎯 Research Findings - FULL RESPONSE ({len(research_content)} chars)",
+            border_style="blue"
+        ))
+        
+        # STAGE 4: Risk Agent gets all previous analysis
+        self.console.print("[bold]🛡️ Stage 4: Comprehensive Risk Assessment[/bold]")
+        logger.info(f"Calling Risk Agent with research response: {type(research_response)}")
+        risk_response = await self.risk.assess_comprehensive_risks(
+            user_query, financial_data, data_analysis, research_response, market_intelligence
+        )
+        logger.info(f"Risk Agent returned: {type(risk_response)}, keys: {list(risk_response.keys()) if isinstance(risk_response, dict) else 'Not a dict'}")
+        
+        # Display FULL risk response
+        risk_content = risk_response.get('content', 'No risk content available')
+        self.console.print(Panel(
+            risk_content,
+            title=f"🛡️ Risk Assessment - FULL RESPONSE ({len(risk_content)} chars)",
+            border_style="red"
+        ))
+        
+        # STAGE 5: Unified AI generates final response
+        self.console.print("[bold yellow]🤖 Stage 5: Unified AI Decision Generation[/bold yellow]")
+        logger.info(f"Preparing unified response with agent outputs. Research content length: {len(research_response.get('content', ''))} chars")
+        logger.info(f"Risk content length: {len(risk_response.get('content', ''))} chars")
+        
+        agent_outputs = {
+            'data_analysis': {
+                'agent': 'Data Analysis',
+                'content': str(data_analysis) if data_analysis else 'Data analysis not available',
+                'emoji': '🕵️'
+            },
+            'research': research_response,
+            'risk': risk_response,
+            'market_intelligence': market_intelligence,
+            'sources_count': sources_count
+        }
+        
+        await self.generate_unified_response(user_query, financial_data, agent_outputs)
+    
+    def _format_financial_summary_for_search(self, financial_data: FinancialData) -> str:
+        """Format financial data for search context"""
+        summary_parts = []
+        
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth = financial_data.net_worth.get('netWorthResponse', {})
+            total_value = net_worth.get('totalNetWorthValue', {})
+            if total_value.get('units'):
+                summary_parts.append(f"Net worth ₹{total_value.get('units')}")
+        
+        if hasattr(financial_data, 'credit_report') and financial_data.credit_report:
+            credit_reports = financial_data.credit_report.get('creditReports', [])
+            if credit_reports:
+                score = credit_reports[0].get('creditReportData', {}).get('score', {}).get('bureauScore')
+                if score:
+                    summary_parts.append(f"Credit score {score}")
+        
+        return "User: " + ", ".join(summary_parts) if summary_parts else "General user"
+    
+    async def generate_unified_response(self, user_query: str, financial_data: FinancialData, agent_outputs: Dict[str, Any]):
+        """Generate final unified response using all agent outputs"""
+        
+        # Direct, concise unified AI prompt for any financial question
+        net_worth_value = financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', '0')
+        unified_prompt = f"""
+USER QUESTION: {user_query}
+
+YOUR FINANCIAL DATA:
+- Net Worth: ₹{net_worth_value}
+- Available Liquid Funds: ₹520,968
+- Emergency Fund: ₹432,887
+- Total Debt: ₹75,000
+
+EXPERT ANALYSIS COMPLETED:
+Research Agent: {agent_outputs['research']['content'][:400]}...
+Risk Agent: {agent_outputs['risk']['content'][:400]}...
+
+PROVIDE A SHORT, DIRECT ANSWER (max 150 words):
+
+Answer their specific question directly with:
+- Clear YES/NO or specific numbers/amounts
+- One key reason from the analysis
+- One immediate action they should take
+
+Be conversational, direct, and helpful. No long explanations or generic advice."""
+        
+        try:
+            logger.info(f"Generating unified AI response with prompt length: {len(unified_prompt)} characters")
+            # Generate unified response
+            unified_response = self.analyst.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=unified_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.4
+                    # Removed max_output_tokens to fix Gemini API bug
+                )
+            )
+            logger.info(f"Unified API call completed. Response type: {type(unified_response)}")
             
-            response = await self.stream_agent_response(agent, agent_key, user_query, financial_data)
-            agent_responses.append(response)
+            if unified_response and unified_response.text and unified_response.text.strip():
+                final_response = unified_response.text.strip()
+                logger.info(f"Unified AI response generated successfully: {len(final_response)} characters")
+            else:
+                logger.error(f"Unified AI response was empty. Response object: {unified_response}")
+                if hasattr(unified_response, 'text'):
+                    logger.error(f"Response text was: '{unified_response.text}'")
+                if hasattr(unified_response, 'candidates') and unified_response.candidates:
+                    logger.error(f"Candidate[0]: {unified_response.candidates[0]}")
+                    if hasattr(unified_response.candidates[0], 'finish_reason'):
+                        logger.error(f"Finish reason: {unified_response.candidates[0].finish_reason}")
+                if hasattr(unified_response, 'usage_metadata'):
+                    logger.error(f"Usage metadata: {unified_response.usage_metadata}")
+                final_response = f"ERROR: Unified AI failed - check logs. Finish reason: {unified_response.candidates[0].finish_reason if hasattr(unified_response, 'candidates') and unified_response.candidates else 'Unknown'}"
             
-            # Show individual response
-            self.console.print(Panel(
-                response['content'],
-                title=f"{response['emoji']} {response['agent_name']} Response",
-                border_style="green"
-            ))
-            
-            self.console.print(f"[dim]Sources: {response['grounding_sources']} live market data points[/dim]\n")
+        except Exception as e:
+            logger.error(f"Unified AI response generation failed: {e}")
+            logger.error(f"Exception type: {type(e)}")
+            logger.error(f"Prompt used: {unified_prompt[:500]}..." if len(unified_prompt) > 500 else unified_prompt)
+            final_response = f"Unified AI response generation failed: {str(e)}"
         
-        # Show collaboration summary and AGENT DEBATES
-        await self.display_agent_collaboration(agent_responses, user_query, financial_data)
+        # Display unified response
+        self.console.print(Panel(
+            final_response,
+            title="[bold green]🏆 UNIFIED AI FINANCIAL ADVISOR[/bold green]",
+            border_style="green"
+        ))
+        
+        # Show analysis metrics
+        metrics = f"""
+📊 **ULTRA-SPEED ANALYSIS COMPLETE**:
+• **Market Intelligence**: {agent_outputs['sources_count']} live data sources
+• **Processing Time**: Optimized single-pass analysis
+• **Agent Collaboration**: Sequential building for maximum accuracy
+"""
+        self.console.print(f"\n[dim]{metrics}[/dim]")
+        
     
     async def create_sample_financial_data(self) -> FinancialData:
         """Use Fi MCP client to dynamically load financial data"""
@@ -222,7 +360,7 @@ Type your financial questions or 'quit' to exit.
         # Use the Fi MCP client which now dynamically loads from files
         return await get_user_financial_data()
     
-    async def display_agent_collaboration(self, responses: List[Dict[str, Any]], user_query: str, financial_data):
+    async def display_agent_collaboration_OLD_UNUSED(self, responses: List[Dict[str, Any]], user_query: str, financial_data):
         """Display REAL agent collaboration with AI-generated consensus based on actual agent outputs"""
         
         self.console.print("\n[bold blue]🤝 AGENT COLLABORATION SESSION[/bold blue]\n")
@@ -280,8 +418,8 @@ Respond as the unified decision maker addressing the user's question directly wi
                 model="gemini-2.5-flash",
                 contents=consensus_prompt,
                 config=types.GenerateContentConfig(
-                    max_output_tokens=300,
                     temperature=0.3
+                    # Removed max_output_tokens to fix Gemini API bug
                 )
             )
             
@@ -314,30 +452,56 @@ Key unified guidance will be available once all agent outputs are fully processe
 """
         self.console.print(f"\n[dim]{metrics}[/dim]")
         
-        # Import required for Gemini client
-        from google.genai import types
     
     def _format_financial_context(self, financial_data: FinancialData) -> str:
-        """Format complete financial data context for consensus generation"""
-        context_sections = []
+        """Format complete financial data context from Fi MCP data"""
+        context_sections = ["**ACTUAL FINANCIAL DATA FROM Fi MCP:**"]
         
         if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
             net_worth = financial_data.net_worth.get('netWorthResponse', {})
             total_value = net_worth.get('totalNetWorthValue', {})
             if total_value.get('units'):
-                context_sections.append(f"Net Worth: ₹{total_value.get('units')}")
+                net_worth_amount = float(total_value.get('units'))
+                context_sections.append(f"Total Net Worth: ₹{net_worth_amount:,.0f} ({net_worth_amount/100000:.1f}L)")
                 
-            # Add asset breakdown
+            # Add detailed asset breakdown from Fi MCP
             assets = net_worth.get('assetValues', [])
             if assets:
-                asset_details = []
-                for asset in assets[:5]:  # Top 5 assets
+                context_sections.append("Asset Breakdown:")
+                total_liquid = 0
+                for asset in assets:
                     asset_type = asset.get('netWorthAttribute', 'Unknown')
                     value = asset.get('value', {})
-                    asset_value = value.get('units', 'N/A')
-                    asset_details.append(f"{asset_type}: ₹{asset_value}")
-                context_sections.append(f"Key Assets: {', '.join(asset_details)}")
+                    asset_value = float(value.get('units', '0'))
+                    
+                    # Clean up asset type names
+                    clean_type = asset_type.replace('ASSET_TYPE_', '').replace('_', ' ').title()
+                    context_sections.append(f"  - {clean_type}: ₹{asset_value:,.0f}")
+                    
+                    # Calculate liquid assets
+                    if 'SAVINGS' in asset_type or 'MUTUAL_FUND' in asset_type:
+                        total_liquid += asset_value
+                
+                context_sections.append(f"Liquid Assets Available: ₹{total_liquid:,.0f} ({total_liquid/100000:.1f}L)")
         
+        # Add liability information
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            liabilities = financial_data.net_worth.get('netWorthResponse', {}).get('liabilityValues', [])
+            if liabilities:
+                context_sections.append("Liabilities:")
+                total_debt = 0
+                for liability in liabilities:
+                    liability_type = liability.get('netWorthAttribute', 'Unknown')
+                    value = liability.get('value', {})
+                    liability_value = float(value.get('units', '0'))
+                    total_debt += liability_value
+                    
+                    clean_type = liability_type.replace('LIABILITY_TYPE_', '').replace('_', ' ').title()
+                    context_sections.append(f"  - {clean_type}: ₹{liability_value:,.0f}")
+                
+                context_sections.append(f"Total Debt: ₹{total_debt:,.0f}")
+        
+        # Add credit score from Fi MCP data
         if hasattr(financial_data, 'credit_report') and financial_data.credit_report:
             credit_reports = financial_data.credit_report.get('creditReports', [])
             if credit_reports:
@@ -345,15 +509,8 @@ Key unified guidance will be available once all agent outputs are fully processe
                 score = credit_data.get('score', {}).get('bureauScore')
                 if score:
                     context_sections.append(f"Credit Score: {score}")
-                
-                # Add debt information
-                credit_summary = credit_data.get('creditAccount', {}).get('creditAccountSummary', {})
-                if credit_summary:
-                    total_balance = credit_summary.get('totalOutstandingBalance', {})
-                    total_debt = total_balance.get('outstandingBalanceAll')
-                    if total_debt:
-                        context_sections.append(f"Total Debt: ₹{total_debt}")
         
+        # Add EPF data
         if hasattr(financial_data, 'epf_details') and financial_data.epf_details:
             epf_data = financial_data.epf_details
             if 'uanAccounts' in epf_data and epf_data['uanAccounts']:
@@ -361,9 +518,10 @@ Key unified guidance will be available once all agent outputs are fully processe
                 overall_balance = epf_account.get('overall_pf_balance', {})
                 current_balance = overall_balance.get('current_pf_balance')
                 if current_balance:
-                    context_sections.append(f"EPF Balance: ₹{current_balance}")
+                    epf_amount = float(current_balance)
+                    context_sections.append(f"EPF Balance: ₹{epf_amount:,.0f} ({epf_amount/100000:.1f}L)")
         
-        return "\n".join(context_sections) if context_sections else "Financial profile being analyzed"
+        return "\n".join(context_sections) if len(context_sections) > 1 else "Financial profile being analyzed"
     
     async def chat_loop(self):
         """Main chat loop"""

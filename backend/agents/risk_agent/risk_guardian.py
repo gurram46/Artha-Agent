@@ -313,16 +313,7 @@ You are an expert Indian Financial Risk Intelligence Agent powered by Gemini AI.
                 if current_balance != 'N/A':
                     try:
                         epf_balance = float(current_balance)
-                        if epf_balance < 100000:
-                            retirement_risk = "Very High Retirement Risk (Insufficient corpus)"
-                        elif epf_balance < 500000:
-                            retirement_risk = "High Retirement Risk (Low corpus)"
-                        elif epf_balance < 1000000:
-                            retirement_risk = "Medium Retirement Risk (Moderate corpus)"
-                        else:
-                            retirement_risk = "Low Retirement Risk (Good corpus)"
-                        
-                        formatted_data += f"- Retirement Security: ₹{current_balance} EPF ({retirement_risk})\n"
+                        formatted_data += f"- Retirement Security: ₹{current_balance} EPF\n"
                     except:
                         formatted_data += f"- Retirement Security: Unable to assess risk\n"
         
@@ -344,32 +335,13 @@ You are an expert Indian Financial Risk Intelligence Agent powered by Gemini AI.
                         try:
                             balance_amount = float(balance.get('units', '0'))
                             total_emergency_funds += balance_amount
-                            
-                            # Individual account risk
-                            if balance_amount < 50000:
-                                account_risk = "High Liquidity Risk (Low balance)"
-                            elif balance_amount < 200000:
-                                account_risk = "Medium Liquidity Risk (Moderate balance)"
-                            else:
-                                account_risk = "Low Liquidity Risk (Good balance)"
-                            
-                            formatted_data += f"- {bank_name} ({account_type}): ₹{balance.get('units', 'N/A')} ({account_risk})\n"
+                            formatted_data += f"- {bank_name} ({account_type}): ₹{balance.get('units', 'N/A')}\n"
                         except:
                             pass
                 
-                # Overall emergency fund adequacy risk
+                # Overall emergency fund total
                 if total_emergency_funds > 0:
-                    if total_emergency_funds < 100000:
-                        emergency_risk = "CRITICAL: Insufficient emergency funds (< ₹1L)"
-                    elif total_emergency_funds < 300000:
-                        emergency_risk = "HIGH: Low emergency funds (< ₹3L)"
-                    elif total_emergency_funds < 600000:
-                        emergency_risk = "MEDIUM: Moderate emergency funds (₹3-6L)"
-                    else:
-                        emergency_risk = "LOW: Adequate emergency funds (> ₹6L)"
-                    
-                    formatted_data += f"\n**EMERGENCY FUND RISK LEVEL: {emergency_risk}**\n"
-                    formatted_data += f"**TOTAL LIQUID EMERGENCY FUNDS: ₹{total_emergency_funds:.0f}**\n"
+                    formatted_data += f"\n**TOTAL LIQUID EMERGENCY FUNDS: ₹{total_emergency_funds:.0f}**\n"
         
         return formatted_data
     
@@ -396,8 +368,8 @@ Return ONLY search queries, one per line.
                 model="gemini-2.5-flash",
                 contents=ai_prompt,
                 config=types.GenerateContentConfig(
-                    max_output_tokens=150,
                     temperature=0.3
+                    # Removed max_output_tokens to fix Gemini API bug
                 )
             )
             
@@ -632,4 +604,78 @@ Structure your response with:
             sections.append(f"\nBased on {len(intelligence['sources'])} verified sources")
         
         return "\n\n".join(sections) if sections else "Risk intelligence being processed"
+    
+    async def assess_comprehensive_risks(self, user_query: str, financial_data: FinancialData, data_analysis: Dict[str, Any], research_response: Dict[str, Any], market_intelligence: Dict[str, Any]) -> Dict[str, str]:
+        """Assess comprehensive risks based on data analysis, research findings, and market intelligence"""
+        
+        # Create comprehensive prompt for risk assessment
+        risk_prompt = f"""
+You are the Comprehensive Risk Assessment Agent. Based on all previous analysis, provide detailed risk assessment and protection strategies.
+
+USER QUERY: {user_query}
+
+DATA ANALYSIS FINDINGS:
+{json.dumps(data_analysis, indent=2)}
+
+STRATEGIC RESEARCH FINDINGS:
+{research_response.get('content', 'No research findings available')}
+
+MARKET INTELLIGENCE:
+Query: {market_intelligence.get('query', 'N/A')}
+Findings: {market_intelligence.get('findings', 'No findings available')}
+Sources: {len(market_intelligence.get('sources', []))} live market sources
+
+USER'S RISK PROFILE:
+{self._format_financial_data_for_risk_assessment(financial_data)}
+
+Provide comprehensive risk assessment that:
+1. Identifies specific risks in the user's query and financial situation
+2. Assesses risks mentioned in the strategic research
+3. Considers market risks from current intelligence
+4. Provides specific risk mitigation strategies with costs
+5. Recommends insurance products and protection measures
+6. Evaluates emergency fund adequacy for the planned decisions
+7. Suggests risk monitoring and contingency planning
+8. Provides timeline for implementing risk protections
+
+Focus on protecting the user's financial interests while enabling their goals based on all the analysis provided.
+"""
+        
+        try:
+            # Generate comprehensive risk assessment
+            risk_response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=risk_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.3  # Lower temperature for more conservative risk assessment
+                    # Removed max_output_tokens to fix Gemini API bug
+                )
+            )
+            
+            if risk_response and risk_response.text:
+                risk_content = risk_response.text.strip()
+                logger.info("Risk Agent: Generated comprehensive risk assessment")
+            else:
+                logger.warning("Risk Agent: AI response was empty")
+                risk_content = f"Risk assessment failed - no response generated for: {user_query}"
+            
+            return {
+                'agent': 'Comprehensive Risk Assessment',
+                'content': risk_content,
+                'emoji': '🛡️',
+                'market_sources': len(market_intelligence.get('sources', [])),
+                'data_analysis_integrated': True,
+                'research_integrated': True
+            }
+            
+        except Exception as e:
+            logger.error(f"Risk Agent: Comprehensive risk assessment failed: {e}")
+            return {
+                'agent': 'Comprehensive Risk Assessment',  
+                'content': f"Risk assessment failed: {str(e)}",
+                'emoji': '🛡️',
+                'market_sources': len(market_intelligence.get('sources', [])),
+                'data_analysis_integrated': False,
+                'research_integrated': False
+            }
     

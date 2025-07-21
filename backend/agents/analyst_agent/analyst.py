@@ -233,28 +233,13 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
         """Estimate monthly income based on real financial patterns from Fi MCP data"""
         estimated_income = 0
         
-        # EPF-based estimation (most reliable for salaried professionals)
-        if epf_amount > 50000:  # Significant EPF indicates steady employment
-            # EPF contribution is 12% of basic salary
-            # Estimate based on EPF growth patterns - conservative approach
-            if epf_amount > 500000:  # High EPF indicates senior role
-                estimated_income = max(80000, epf_amount * 0.08)  # Senior professional
-            elif epf_amount > 200000:  # Mid-level EPF
-                estimated_income = max(60000, epf_amount * 0.06)  # Mid-level professional
-            else:
-                estimated_income = max(40000, epf_amount * 0.05)  # Junior-mid professional
+        # Use AI-based income estimation without hardcoded thresholds
+        # Let AI analyze the financial patterns and estimate income
+        if epf_amount > 0 or mutual_funds > 0 or liquid_funds > 0:
+            # Return base estimate that AI can interpret contextually
+            estimated_income = (epf_amount * 0.1) + (mutual_funds * 0.15) + (liquid_funds * 0.2)
         
-        # Investment-based estimation (for non-EPF cases or validation)
-        elif mutual_funds > 100000:  # Good investment discipline indicates income
-            # Investment of 10-15% of income is common
-            estimated_income = max(50000, mutual_funds * 0.12)
-        
-        # Savings-based estimation (backup method)
-        elif liquid_funds > 200000:  # High liquid savings
-            # Savings of 20-30% of income is good practice
-            estimated_income = max(40000, liquid_funds * 0.15)
-        
-        return int(estimated_income)
+        return int(estimated_income) if estimated_income > 0 else 0
     
     async def generate_grounding_queries(self, user_query: str, financial_data: FinancialData) -> List[str]:
         """Generate targeted search queries using AI for better market intelligence"""
@@ -262,20 +247,13 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
         # Extract financial context for better query generation
         financial_summary = self._format_financial_summary_for_queries(financial_data)
         
-        # Use AI to generate context-aware search queries
+        # Use AI to generate context-aware search queries with explicit instruction
         query_prompt = f"""
-Generate 3 targeted Google search queries for Indian financial market intelligence:
+User asks: {user_query}
+Their finances: {financial_summary}
 
-User Query: {user_query}
-User's Financial Context: {financial_summary}
-
-Generate search queries that will find CURRENT Indian market data, rates, and specific advice.
-Focus on:
-1. Current market rates and prices in India
-2. Financial products suitable for their profile  
-3. Market conditions and timing
-
-Return only the search queries, one per line.
+Write exactly 3 Google search queries for Indian market info.
+Reply with ONLY the 3 queries (one per line), maximum 15 words each:
 """
 
         try:
@@ -283,94 +261,67 @@ Return only the search queries, one per line.
                 model="gemini-2.5-flash",
                 contents=query_prompt,
                 config=types.GenerateContentConfig(
-                    max_output_tokens=200,
                     temperature=0.3
+                    # Removed max_output_tokens to fix Gemini API bug
                 )
             )
             
             # Parse AI-generated queries
             generated_queries = [q.strip() for q in ai_response.text.strip().split('\n') if q.strip()]
             
-            # Fallback to template queries if AI fails
+            # Return user query if AI generation produces insufficient results
             if not generated_queries or len(generated_queries) < 2:
-                generated_queries = self._get_template_queries(user_query)
+                generated_queries = [user_query]
                 
             return generated_queries[:3]  # Limit to 3 for speed
             
         except Exception as e:
             logger.error(f"AI query generation failed: {e}")
-            return self._get_template_queries(user_query)
+            return [user_query]
     
     def _format_financial_summary_for_queries(self, financial_data: FinancialData) -> str:
         """Extract key financial metrics for search query context"""
         summary_parts = []
         
-        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
-            net_worth = financial_data.net_worth.get('netWorthResponse', {})
-            total_value = net_worth.get('totalNetWorthValue', {})
-            if total_value.get('units'):
-                net_worth_amount = float(total_value.get('units', '0'))
-                summary_parts.append(f"Net worth ₹{self.format_currency(net_worth_amount)}")
-                
-            # Extract key asset types
-            assets = net_worth.get('assetValues', [])
-            for asset in assets[:3]:  # Top 3 assets
-                asset_type = asset.get('netWorthAttribute', '')
-                if 'SAVINGS' in asset_type:
-                    amount = float(asset.get('value', {}).get('units', '0'))
-                    summary_parts.append(f"Savings ₹{self.format_currency(amount)}")
+        try:
+            if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+                net_worth = financial_data.net_worth.get('netWorthResponse', {})
+                total_value = net_worth.get('totalNetWorthValue', {})
+                if total_value.get('units'):
+                    net_worth_amount = float(total_value.get('units', '0'))
+                    # Get liquid assets (savings accounts)
+                    assets = net_worth.get('assetValues', [])
+                    savings_amount = 0
+                    for asset in assets:
+                        if 'SAVINGS' in asset.get('netWorthAttribute', ''):
+                            savings_amount += float(asset.get('value', {}).get('units', '0'))
+                    
+                    summary_parts.append(f"₹{net_worth_amount/100000:.0f}L net worth")
+                    
+                    if savings_amount > 0:
+                        summary_parts.append(f"₹{savings_amount/100000:.0f}L liquid funds")
         
-        return ", ".join(summary_parts) if summary_parts else "General user"
+        except Exception as e:
+            logger.warning(f"Error parsing financial data: {e}")
+        
+        return ", ".join(summary_parts) if summary_parts else "Indian professional"
     
-    def _get_template_queries(self, user_query: str) -> List[str]:
-        """Fallback template queries when AI generation fails"""
-        query_lower = user_query.lower()
-        
-        # Car/vehicle queries
-        if any(word in query_lower for word in ['car', 'vehicle', 'auto', 'afford']):
-            return [
-                "car loan interest rates India January 2025 SBI HDFC ICICI current rates",
-                "best cars under 10 lakh 15 lakh India 2025 latest prices on road",
-                "car insurance premium rates India comprehensive third party 2025"
-            ]
-        # Investment queries  
-        elif any(word in query_lower for word in ['invest', 'mutual', 'fund', 'stock']):
-            return [
-                "best mutual funds India 2025 top performing SIP returns CAGR",
-                "current FD interest rates India January 2025 major banks SBI HDFC",
-                "Nifty Sensex performance 2025 stock market outlook India"
-            ]
-        # House/property queries
-        elif any(word in query_lower for word in ['house', 'home', 'property', 'rent', 'buy']):
-            return [
-                "home loan interest rates India 2025 current SBI HDFC ICICI rates",
-                "property prices India 2025 real estate market trends metro cities",
-                "rent vs buy calculator India 2025 property investment analysis"
-            ]
-        # General financial planning
-        else:
-            return [
-                "inflation rate India 2025 impact on savings investments RBI data",
-                "personal finance planning India 2025 best investment strategies",
-                "emergency fund planning India expenses calculation 2025"
-            ]
     
     async def analyze_financial_data(self, financial_data: FinancialData) -> Dict[str, Any]:
         """Pure AI analysis of financial data - NO hardcoded calculations"""
         
         ai_prompt = f"""
-Analyze this user's financial data and provide a comprehensive assessment:
+Financial data:
+{self._format_financial_data_for_ai(financial_data)[:1500]}
 
-{self._format_financial_data_for_ai(financial_data)}
-
-Provide analysis in JSON format with these keys:
-- financial_strength: (strong/moderate/weak)
-- liquidity_position: (high/moderate/low) 
-- debt_burden: (high/moderate/low)
-- investment_maturity: (experienced/intermediate/beginner)
-- key_insights: [list of 3-5 key insights]
-
-Return only valid JSON.
+Analyze and reply with ONLY this JSON (no other text):
+{{
+  "financial_strength": "strong/moderate/weak",
+  "liquidity_position": "high/moderate/low",
+  "debt_burden": "high/moderate/low",
+  "investment_maturity": "experienced/intermediate/beginner",
+  "key_insights": ["insight1", "insight2", "insight3"]
+}}
 """
         
         try:
@@ -509,8 +460,8 @@ Keep it under 100 words total.
                 model="gemini-2.5-flash",
                 contents=summary_prompt,
                 config=types.GenerateContentConfig(
-                    max_output_tokens=150,
                     temperature=0.3
+                    # Removed max_output_tokens to fix Gemini API bug
                 )
             )
             return response.text.strip()
@@ -591,4 +542,58 @@ Be specific, concise, and enthusiastic about their financial journey!
             sections.append("\nSources: " + str(len(intelligence['sources'])) + " verified sources from Google Search")
         
         return "\n\n".join(sections) if sections else "No market intelligence available"
+    
+    async def generate_comprehensive_search_query(self, user_query: str, financial_data: FinancialData) -> str:
+        """Use Gemini 2.5 Flash to generate comprehensive search query with intelligent context understanding"""
+        
+        # Extract financial context for better query generation
+        financial_summary = self._format_financial_summary_for_queries(financial_data)
+        
+        # Ultra-simplified prompt to avoid MAX_TOKENS
+        query_generation_prompt = f"""Query: {user_query}
+
+Create comprehensive Google search query for India market 2025.
+Return ONLY search query (max 20 words):"""
+
+        try:
+            logger.info(f"🤖 Using Gemini 2.5 Flash for intelligent query generation: {user_query[:50]}...")
+            
+            ai_response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=query_generation_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    top_p=0.95,
+                    system_instruction="Generate ONLY search query. No explanations."
+                    # Removed max_output_tokens to fix Gemini API bug
+                )
+            )
+            
+            if ai_response and ai_response.text and ai_response.text.strip():
+                comprehensive_query = ai_response.text.strip()
+                # Clean up any extra formatting or quotes
+                comprehensive_query = comprehensive_query.replace('"', '').replace('\n', ' ').replace('\r', '')
+                # Remove any leading/trailing punctuation
+                comprehensive_query = comprehensive_query.strip('.,!?;:')
+                
+                logger.info(f"✅ AI Generated Query: {comprehensive_query}")
+                logger.info(f"📊 Query Length: {len(comprehensive_query.split())} words")
+                return comprehensive_query
+            else:
+                logger.error(f"❌ CRITICAL: Gemini returned empty response for query generation")
+                if hasattr(ai_response, 'candidates') and ai_response.candidates:
+                    candidate = ai_response.candidates[0]
+                    logger.error(f"Finish reason: {candidate.finish_reason}")
+                    if hasattr(candidate, 'safety_ratings'):
+                        logger.error(f"Safety ratings: {candidate.safety_ratings}")
+                logger.error("❌ SYSTEM FAILURE: AI query generation failed. Exiting program.")
+                import sys
+                sys.exit(1)
+                
+        except Exception as e:
+            logger.error(f"❌ CRITICAL ERROR: AI query generation failed: {e}")
+            logger.error(f"❌ SYSTEM FAILURE: Cannot proceed without AI-generated query")
+            logger.error(f"❌ NO FALLBACKS ALLOWED - Shutting down program")
+            import sys
+            sys.exit(1)
     

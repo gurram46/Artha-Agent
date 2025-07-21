@@ -93,8 +93,8 @@ class BaseFinancialAgent(ABC):
         pass
     
     async def search_with_gemini(self, query: str, financial_context: str) -> Dict[str, Any]:
-        """Use REAL Google Search grounding as per official documentation"""
-        logger.info(f"{self.name}: Executing REAL Google Search for: {query}")
+        """Use Google Search grounding exactly as per official documentation"""
+        logger.info(f"{self.name}: Executing Google Search grounding for: {query}")
         
         try:
             # Configure the grounding tool exactly as per Google documentation
@@ -107,28 +107,18 @@ class BaseFinancialAgent(ABC):
                 tools=[grounding_tool]
             )
             
-            # Create financial search prompt
-            search_prompt = f"""Find current information about: {query}
-
-Context: {financial_context}
-
-Please provide specific Indian market data including:
-- Current interest rates from major banks (SBI, HDFC, ICICI)
-- Latest market prices and trends
-- Expert opinions and analysis
-- Specific numerical data and percentages
-
-Focus on Indian financial markets and INR currency."""
+            # Use query as-is if it's already comprehensive (for stocks)
+            if len(query.split()) > 10:  # Comprehensive query
+                search_prompt = query
+            else:
+                # Add context for simple queries
+                search_prompt = f"{query} India financial market 2025 expert analysis"
             
-            # Make the grounded request
-            response = await asyncio.wait_for(
-                asyncio.to_thread(
-                    self.gemini_client.models.generate_content,
-                    model="gemini-2.5-flash",
-                    contents=search_prompt,
-                    config=config_grounding
-                ),
-                timeout=config.SEARCH_TIMEOUT_SECONDS + 3
+            # Make the grounded request using official documentation method
+            response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=search_prompt,
+                config=config_grounding
             )
             
             # Initialize result structure
@@ -140,20 +130,20 @@ Focus on Indian financial markets and INR currency."""
                 'search_success': True
             }
             
-            # Process grounding metadata exactly as per documentation
+            # Process grounding metadata exactly as per official documentation
             if response.candidates and len(response.candidates) > 0:
                 candidate = response.candidates[0]
                 
                 if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
                     metadata = candidate.grounding_metadata
-                    logger.info(f"{self.name}: ✅ Grounding metadata detected!")
+                    logger.info(f"{self.name}: ✅ Grounding metadata found!")
                     
-                    # Extract web search queries used
+                    # Extract webSearchQueries as per documentation
                     if hasattr(metadata, 'web_search_queries') and metadata.web_search_queries:
                         result['web_search_queries'] = list(metadata.web_search_queries)
-                        logger.info(f"{self.name}: Executed searches: {result['web_search_queries']}")
+                        logger.info(f"{self.name}: Search queries used: {result['web_search_queries']}")
                     
-                    # Extract grounding chunks (sources)
+                    # Extract groundingChunks as per documentation  
                     if hasattr(metadata, 'grounding_chunks') and metadata.grounding_chunks:
                         sources = []
                         for i, chunk in enumerate(metadata.grounding_chunks):
@@ -166,23 +156,24 @@ Focus on Indian financial markets and INR currency."""
                                 sources.append(source)
                         
                         result['sources'] = sources
-                        logger.info(f"{self.name}: ✅ Found {len(sources)} grounded sources")
+                        logger.info(f"{self.name}: ✅ Retrieved {len(sources)} sources from grounding")
                     
-                    # Extract grounding supports for citation mapping
+                    # Extract groundingSupports as per documentation
                     if hasattr(metadata, 'grounding_supports') and metadata.grounding_supports:
                         result['grounding_supports'] = []
                         for support in metadata.grounding_supports:
-                            support_info = {
-                                'text_segment': getattr(support.segment, 'text', ''),
-                                'start_index': getattr(support.segment, 'start_index', 0),
-                                'end_index': getattr(support.segment, 'end_index', 0),
-                                'chunk_indices': list(support.grounding_chunk_indices) if support.grounding_chunk_indices else []
-                            }
-                            result['grounding_supports'].append(support_info)
-                        logger.info(f"{self.name}: Mapped {len(result['grounding_supports'])} citation supports")
+                            if hasattr(support, 'segment') and support.segment:
+                                support_info = {
+                                    'text_segment': getattr(support.segment, 'text', ''),
+                                    'start_index': getattr(support.segment, 'start_index', 0),
+                                    'end_index': getattr(support.segment, 'end_index', 0),
+                                    'chunk_indices': list(support.grounding_chunk_indices) if hasattr(support, 'grounding_chunk_indices') and support.grounding_chunk_indices else []
+                                }
+                                result['grounding_supports'].append(support_info)
+                        logger.info(f"{self.name}: Processed {len(result['grounding_supports'])} citation supports")
                     
                 else:
-                    logger.warning(f"{self.name}: ❌ No grounding metadata - search may not have been triggered")
+                    logger.warning(f"{self.name}: No grounding metadata found")
                     result['search_success'] = False
             
             # Add source count to findings
@@ -201,7 +192,7 @@ Focus on Indian financial markets and INR currency."""
             logger.error(f"{self.name}: Search timeout after {config.SEARCH_TIMEOUT_SECONDS} seconds")
             return {
                 'query': query,
-                'findings': "Search timed out. Please try again.",
+                'findings': "Search timeout - no market data available",
                 'sources': [],
                 'web_search_queries': [],
                 'search_success': False,
@@ -446,6 +437,15 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
                 config=gen_config
             )
             
+            # Check for empty response
+            if not response or not response.text:
+                logger.error(f"{self.name}: AI response was empty")
+                if hasattr(response, 'candidates') and response.candidates:
+                    logger.error(f"Finish reason: {response.candidates[0].finish_reason if response.candidates else 'No candidates'}")
+                if hasattr(response, 'usage_metadata'):
+                    logger.error(f"Token usage: {response.usage_metadata}")
+                raise ValueError("AI returned empty response")
+            
             # Process grounding metadata if available
             if response.candidates and response.candidates[0].grounding_metadata:
                 result = self._process_grounded_response(response)
@@ -618,3 +618,4 @@ Maintain your {self.personality} personality while being collaborative.
             'supporting_data': context.get('financial_metrics', {}),
             'collaboration_style': f'{self.agent_type}_fallback'
         }
+    
