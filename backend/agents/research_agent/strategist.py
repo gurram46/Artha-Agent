@@ -454,27 +454,28 @@ Structure your response with:
         
         return "\n\n".join(sections) if sections else "Strategic intelligence being processed"
     
-    async def process_market_intelligence(self, user_query: str, financial_data: FinancialData, data_analysis: Dict[str, Any], market_intelligence: Dict[str, Any]) -> Dict[str, str]:
+    async def process_market_intelligence(self, user_query: str, market_intelligence: Dict[str, Any]) -> Dict[str, str]:
         """Process market intelligence and data analysis to produce strategic research"""
         
-        # Create comprehensive prompt for strategic analysis
+        # Pure market research prompt - NO user financial data
         strategic_prompt = f"""
-Strategic Research for: {user_query}
+You are the Strategic Research Agent. Provide comprehensive market research and investment opportunities analysis.
 
-Financial Status:
-- Net Worth: ₹{financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', 'N/A')}
-- Analysis: {json.dumps(data_analysis, indent=2)[:500]}
+USER QUESTION: {user_query}
 
-Market Data ({len(market_intelligence.get('sources', []))} sources):
-{market_intelligence.get('findings', 'No findings')[:1000]}
+LIVE MARKET INTELLIGENCE ({len(market_intelligence.get('sources', []))} sources):
+{market_intelligence.get('findings', 'No findings')[:2000]}
 
-Provide:
-1. Market opportunities
-2. Strategic timing
-3. Action plan
-4. Specific recommendations
+SEARCH SOURCES: {len(market_intelligence.get('sources', []))} live market data sources
 
-Be direct and specific:
+Provide comprehensive research covering:
+1. **Market Opportunities** - Current opportunities and growth potential
+2. **Strategic Timing** - Best timing for entry and market conditions  
+3. **Action Plan** - Step-by-step approach for taking advantage
+4. **Specific Recommendations** - Concrete actionable recommendations
+
+Focus on market research, trends, and opportunities. Do NOT make personalized financial advice - that will be handled separately.
+Be thorough and data-driven using the live market intelligence provided.
 """
         
         try:

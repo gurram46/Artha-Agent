@@ -605,43 +605,35 @@ Structure your response with:
         
         return "\n\n".join(sections) if sections else "Risk intelligence being processed"
     
-    async def assess_comprehensive_risks(self, user_query: str, financial_data: FinancialData, data_analysis: Dict[str, Any], research_response: Dict[str, Any], market_intelligence: Dict[str, Any]) -> Dict[str, str]:
+    async def assess_comprehensive_risks(self, user_query: str, research_response: Dict[str, Any], market_intelligence: Dict[str, Any]) -> Dict[str, str]:
         """Assess comprehensive risks based on data analysis, research findings, and market intelligence"""
         
-        # Create comprehensive prompt for risk assessment
+        # Pure risk analysis prompt - NO user financial data
+        research_summary = research_response.get('content', 'No research available')[:1500] + "..." if len(research_response.get('content', '')) > 1500 else research_response.get('content', 'No research available')
+        
         risk_prompt = f"""
-You are the Comprehensive Risk Assessment Agent. Based on all previous analysis, provide detailed risk assessment and protection strategies.
+You are the Risk Assessment Agent. Provide comprehensive risk analysis for this investment/financial decision.
 
-USER QUERY: {user_query}
+USER QUESTION: {user_query}
 
-DATA ANALYSIS FINDINGS:
-{json.dumps(data_analysis, indent=2)}
+STRATEGIC RESEARCH ANALYSIS:
+{research_summary}
 
-STRATEGIC RESEARCH FINDINGS:
-{research_response.get('content', 'No research findings available')}
+LIVE MARKET DATA: {len(market_intelligence.get('sources', []))} sources analyzed
 
-MARKET INTELLIGENCE:
-Query: {market_intelligence.get('query', 'N/A')}
-Findings: {market_intelligence.get('findings', 'No findings available')}
-Sources: {len(market_intelligence.get('sources', []))} live market sources
+Provide comprehensive risk analysis covering:
+1. **Market & Investment Risks** - Specific risks related to this opportunity
+2. **Timing & Volatility Risks** - Market timing and volatility considerations
+3. **Risk Mitigation Strategies** - General strategies to minimize risks
+4. **Protection Measures** - Recommended safeguards and best practices
+5. **Timeline Considerations** - Risk management over time
 
-USER'S RISK PROFILE:
-{self._format_financial_data_for_risk_assessment(financial_data)}
-
-Provide comprehensive risk assessment that:
-1. Identifies specific risks in the user's query and financial situation
-2. Assesses risks mentioned in the strategic research
-3. Considers market risks from current intelligence
-4. Provides specific risk mitigation strategies with costs
-5. Recommends insurance products and protection measures
-6. Evaluates emergency fund adequacy for the planned decisions
-7. Suggests risk monitoring and contingency planning
-8. Provides timeline for implementing risk protections
-
-Focus on protecting the user's financial interests while enabling their goals based on all the analysis provided.
-"""
+Focus on investment/decision-specific risks and general risk management strategies. Do NOT provide personalized financial advice - that will be handled separately.
+Be thorough and analytical using the research and market data provided."""
         
         try:
+            logger.info(f"🛡️ Risk Agent: Processing prompt of {len(risk_prompt)} characters")
+            
             # Generate comprehensive risk assessment
             risk_response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
@@ -652,12 +644,22 @@ Focus on protecting the user's financial interests while enabling their goals ba
                 )
             )
             
-            if risk_response and risk_response.text:
+            logger.info(f"🛡️ Risk Agent: API response received, type: {type(risk_response)}")
+            
+            if risk_response and hasattr(risk_response, 'text') and risk_response.text and risk_response.text.strip():
                 risk_content = risk_response.text.strip()
-                logger.info("Risk Agent: Generated comprehensive risk assessment")
+                logger.info(f"✅ Risk Agent: Generated comprehensive risk assessment ({len(risk_content)} chars)")
             else:
-                logger.warning("Risk Agent: AI response was empty")
-                risk_content = f"Risk assessment failed - no response generated for: {user_query}"
+                logger.error(f"❌ Risk Agent: AI response failed")
+                if hasattr(risk_response, 'text'):
+                    logger.error(f"Response text: '{risk_response.text}'")
+                if hasattr(risk_response, 'candidates') and risk_response.candidates:
+                    logger.error(f"Candidates: {risk_response.candidates}")
+                    if hasattr(risk_response.candidates[0], 'finish_reason'):
+                        logger.error(f"Finish reason: {risk_response.candidates[0].finish_reason}")
+                logger.error(f"❌ CRITICAL: Risk Agent failed - system cannot proceed")
+                import sys
+                sys.exit(1)
             
             return {
                 'agent': 'Comprehensive Risk Assessment',
@@ -669,13 +671,9 @@ Focus on protecting the user's financial interests while enabling their goals ba
             }
             
         except Exception as e:
-            logger.error(f"Risk Agent: Comprehensive risk assessment failed: {e}")
-            return {
-                'agent': 'Comprehensive Risk Assessment',  
-                'content': f"Risk assessment failed: {str(e)}",
-                'emoji': '🛡️',
-                'market_sources': len(market_intelligence.get('sources', [])),
-                'data_analysis_integrated': False,
-                'research_integrated': False
-            }
+            logger.error(f"❌ CRITICAL ERROR: Risk Agent comprehensive risk assessment failed: {e}")
+            logger.error(f"Exception type: {type(e)}")
+            logger.error(f"❌ SYSTEM FAILURE: Cannot proceed without risk assessment")
+            import sys
+            sys.exit(1)
     
