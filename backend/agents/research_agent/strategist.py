@@ -220,42 +220,45 @@ You are an expert Indian Financial Strategic Research Agent powered by Gemini AI
         return formatted_data
     
     async def generate_grounding_queries(self, user_query: str, financial_data: FinancialData) -> List[str]:
-        """Generate strategic search queries using Gemini AI"""
+        """Generate strategic search queries using Gemini AI - Optimized for Speed"""
         
         financial_summary = self._format_financial_data_for_strategic_planning(financial_data)
         
         prompt = f"""
-As a strategic financial planner, generate Google search queries for comprehensive planning:
+Generate 3 targeted Google search queries for Indian strategic financial planning:
 
 User Query: {user_query}
+Financial Context: {financial_summary}
 
-User's Financial Position:
-{financial_summary}
+Focus on CURRENT Indian market:
+1. Strategic opportunities and market timing
+2. Tax optimization and wealth building strategies  
+3. Specific financial products and expert recommendations
 
-Generate 5 strategic search queries focusing on INDIAN context:
-1. Long-term Indian financial strategies and best practices
-2. Indian market timing and opportunity analysis
-3. Indian tax optimization and wealth building strategies
-4. Indian risk management and portfolio optimization
-5. Specific Indian financial products and their current offerings
-
-IMPORTANT: Focus on INDIAN market, INR currency, Indian financial products, and advice for Indian consumers.
-Return ONLY the search queries, one per line.
+Return ONLY search queries, one per line.
 """
         
         try:
             response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=prompt
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=200,
+                    temperature=0.3
+                )
             )
             
             queries = [q.strip() for q in response.text.strip().split('\n') if q.strip()]
             logger.info(f"Generated {len(queries)} strategic queries")
-            return queries[:5]
+            return queries[:3]  # Reduced to 3 for speed
             
         except Exception as e:
             logger.error(f"Strategic query generation failed: {e}")
-            return [f"{user_query} financial strategy planning India 2024"]
+            return [
+                f"{user_query} strategic financial planning India 2025",
+                "wealth building strategies India tax optimization 2025",
+                "investment opportunities India market timing 2025"
+            ]
     
     async def analyze_financial_data(self, financial_data: FinancialData) -> Dict[str, Any]:
         """Pure AI strategic analysis of financial data - NO hardcoded calculations"""

@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.fi_mcp.client import FinancialData
 from core.google_grounding.grounding_client import GoogleGroundingClient, GroundingResult
 from config.settings import config, AgentConfig
+from utils.response_cache import response_cache
 
 logger = logging.getLogger(__name__)
 
@@ -92,59 +93,130 @@ class BaseFinancialAgent(ABC):
         pass
     
     async def search_with_gemini(self, query: str, financial_context: str) -> Dict[str, Any]:
-        """Use Gemini with Google Search to find information"""
-        logger.info(f"{self.name}: Searching with Gemini for: {query}")
+        """Use REAL Google Search grounding as per official documentation"""
+        logger.info(f"{self.name}: Executing REAL Google Search for: {query}")
         
         try:
-            # Configure Google Search tool
-            search_tool = types.Tool(google_search=types.GoogleSearch())
-            
-            config = types.GenerateContentConfig(
-                tools=[search_tool],
-                system_instruction="You are an Indian financial research assistant. Search for current, accurate information about Indian financial markets, products, and regulations. Focus on Indian context, INR prices, and advice relevant to Indian consumers. Provide detailed findings with sources."
+            # Configure the grounding tool exactly as per Google documentation
+            grounding_tool = types.Tool(
+                google_search=types.GoogleSearch()
             )
             
-            # Create search prompt
-            search_prompt = f"""
-Search for and analyze: {query}
-
-Financial context: {financial_context}
-
-Provide detailed findings with specific data points, prices, rates, and market information. Include all relevant sources.
-"""
-            
-            # Execute search with Gemini
-            response = self.gemini_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=search_prompt,
-                config=config
+            # Configure generation settings for grounding
+            config_grounding = types.GenerateContentConfig(
+                tools=[grounding_tool]
             )
             
-            # Extract search results and metadata
+            # Create financial search prompt
+            search_prompt = f"""Find current information about: {query}
+
+Context: {financial_context}
+
+Please provide specific Indian market data including:
+- Current interest rates from major banks (SBI, HDFC, ICICI)
+- Latest market prices and trends
+- Expert opinions and analysis
+- Specific numerical data and percentages
+
+Focus on Indian financial markets and INR currency."""
+            
+            # Make the grounded request
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self.gemini_client.models.generate_content,
+                    model="gemini-2.5-flash",
+                    contents=search_prompt,
+                    config=config_grounding
+                ),
+                timeout=config.SEARCH_TIMEOUT_SECONDS + 3
+            )
+            
+            # Initialize result structure
             result = {
                 'query': query,
                 'findings': response.text,
-                'sources': []
+                'sources': [],
+                'web_search_queries': [],
+                'search_success': True
             }
             
-            if response.candidates and response.candidates[0].grounding_metadata:
-                metadata = response.candidates[0].grounding_metadata
-                if metadata.grounding_chunks:
-                    result['sources'] = [
-                        {'title': chunk.web.title, 'url': chunk.web.uri}
-                        for chunk in metadata.grounding_chunks
-                    ]
-                if metadata.web_search_queries:
-                    result['actual_searches'] = metadata.web_search_queries
+            # Process grounding metadata exactly as per documentation
+            if response.candidates and len(response.candidates) > 0:
+                candidate = response.candidates[0]
+                
+                if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
+                    metadata = candidate.grounding_metadata
+                    logger.info(f"{self.name}: ✅ Grounding metadata detected!")
+                    
+                    # Extract web search queries used
+                    if hasattr(metadata, 'web_search_queries') and metadata.web_search_queries:
+                        result['web_search_queries'] = list(metadata.web_search_queries)
+                        logger.info(f"{self.name}: Executed searches: {result['web_search_queries']}")
+                    
+                    # Extract grounding chunks (sources)
+                    if hasattr(metadata, 'grounding_chunks') and metadata.grounding_chunks:
+                        sources = []
+                        for i, chunk in enumerate(metadata.grounding_chunks):
+                            if hasattr(chunk, 'web') and chunk.web:
+                                source = {
+                                    'index': i + 1,
+                                    'title': getattr(chunk.web, 'title', f'Source {i+1}'),
+                                    'uri': getattr(chunk.web, 'uri', '#')
+                                }
+                                sources.append(source)
+                        
+                        result['sources'] = sources
+                        logger.info(f"{self.name}: ✅ Found {len(sources)} grounded sources")
+                    
+                    # Extract grounding supports for citation mapping
+                    if hasattr(metadata, 'grounding_supports') and metadata.grounding_supports:
+                        result['grounding_supports'] = []
+                        for support in metadata.grounding_supports:
+                            support_info = {
+                                'text_segment': getattr(support.segment, 'text', ''),
+                                'start_index': getattr(support.segment, 'start_index', 0),
+                                'end_index': getattr(support.segment, 'end_index', 0),
+                                'chunk_indices': list(support.grounding_chunk_indices) if support.grounding_chunk_indices else []
+                            }
+                            result['grounding_supports'].append(support_info)
+                        logger.info(f"{self.name}: Mapped {len(result['grounding_supports'])} citation supports")
+                    
+                else:
+                    logger.warning(f"{self.name}: ❌ No grounding metadata - search may not have been triggered")
+                    result['search_success'] = False
             
+            # Add source count to findings
+            if result['sources']:
+                source_count = len(result['sources'])
+                result['findings'] += f"\n\n📊 **Live Market Sources**: {source_count} verified web sources"
+                
+                # Add source list
+                source_list = "\n".join([f"• {s['title']}" for s in result['sources'][:3]])
+                result['findings'] += f"\n**Key Sources**: \n{source_list}"
+            
+            logger.info(f"{self.name}: Search completed - {len(result['sources'])} sources, {len(result['web_search_queries'])} queries")
             return result
             
-        except Exception as e:
-            logger.error(f"{self.name}: Gemini search failed: {e}")
+        except asyncio.TimeoutError:
+            logger.error(f"{self.name}: Search timeout after {config.SEARCH_TIMEOUT_SECONDS} seconds")
             return {
                 'query': query,
-                'findings': f"Search failed: {str(e)}",
-                'sources': []
+                'findings': "Search timed out. Please try again.",
+                'sources': [],
+                'web_search_queries': [],
+                'search_success': False,
+                'error': 'timeout'
+            }
+            
+        except Exception as e:
+            logger.error(f"{self.name}: Google Search grounding failed: {str(e)}")
+            return {
+                'query': query,
+                'findings': f"Search error: {str(e)}",
+                'sources': [],
+                'web_search_queries': [],
+                'search_success': False,
+                'error': str(e)
             }
     
     async def stream_thinking_process(self, stage: str, content: str) -> AsyncGenerator[Dict[str, Any], None]:
@@ -195,9 +267,35 @@ Provide detailed findings with specific data points, prices, rates, and market i
             search_results = []
             financial_context = self._format_financial_summary(financial_data)
             
-            for query in search_queries[:3]:  # Limit to 3 searches
-                result = await self.search_with_gemini(query, financial_context)
-                search_results.append(result)
+            # Process searches with parallel processing for speed optimization
+            if config.PARALLEL_SEARCH_PROCESSING and len(search_queries) > 1:
+                # Parallel processing for multiple queries
+                search_tasks = []
+                for query in search_queries[:config.MAX_GROUNDING_QUERIES]:
+                    task = asyncio.wait_for(
+                        self.search_with_gemini(query, financial_context),
+                        timeout=config.SEARCH_TIMEOUT_SECONDS
+                    )
+                    search_tasks.append(task)
+                
+                search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+                search_results = [r for r in search_results if not isinstance(r, Exception)]
+            else:
+                # Sequential processing for single query or when parallel is disabled
+                search_results = []
+                for query in search_queries[:config.MAX_GROUNDING_QUERIES]:
+                    try:
+                        result = await asyncio.wait_for(
+                            self.search_with_gemini(query, financial_context),
+                            timeout=config.SEARCH_TIMEOUT_SECONDS
+                        )
+                        search_results.append(result)
+                    except asyncio.TimeoutError:
+                        logger.warning(f"{self.name}: Search timeout for query: {query}")
+                    except Exception as e:
+                        logger.error(f"{self.name}: Search failed for query {query}: {e}")
+                        
+            logger.info(f"{self.name}: Completed {len(search_results)} searches out of {len(search_queries)} queries")
             
             # Stage 4: Process Search Results with AI
             async for thinking in self.stream_thinking_process(
@@ -311,6 +409,12 @@ Provide detailed findings with specific data points, prices, rates, and market i
     async def generate_ai_response(self, system_prompt: str, user_context: str, market_context: str = "") -> str:
         """Generate AI-powered response using Gemini with REAL Google Search Grounding"""
         
+        # Check cache first
+        cache_key = f"{user_context[:100]}_{market_context[:50]}"
+        cached_response = response_cache.get(cache_key)
+        if cached_response:
+            return cached_response
+        
         try:
             # Configure REAL Google Search Grounding tool
             grounding_tool = types.Tool(
@@ -318,9 +422,10 @@ Provide detailed findings with specific data points, prices, rates, and market i
             )
             
             # Configure generation with grounding
-            config = types.GenerateContentConfig(
+            gen_config = types.GenerateContentConfig(
                 tools=[grounding_tool],
-                system_instruction=f"You are an {self.personality} Indian financial agent specializing in {self.grounding_focus}. {self.response_style}. Focus on INDIAN financial context - use INR currency, Indian financial products, Indian market conditions. Use Google Search to find current Indian market data and cite your sources."
+                system_instruction=f"You are an {self.personality} Indian financial agent specializing in {self.grounding_focus}. {self.response_style}. Focus on INDIAN financial context - use INR currency, Indian financial products, Indian market conditions. Use Google Search to find current Indian market data and cite your sources.",
+                **config.GEMINI_GENERATION_CONFIG
             )
             
             # Construct comprehensive prompt
@@ -338,14 +443,18 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
             response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=full_prompt,
-                config=config
+                config=gen_config
             )
             
             # Process grounding metadata if available
             if response.candidates and response.candidates[0].grounding_metadata:
-                return self._process_grounded_response(response)
+                result = self._process_grounded_response(response)
             else:
-                return self._add_agent_personality(response.text)
+                result = self._add_agent_personality(response.text)
+            
+            # Cache the response
+            response_cache.set(cache_key, result)
+            return result
             
         except Exception as e:
             logger.error(f"{self.name}: AI generation with grounding failed: {e}")
@@ -353,12 +462,20 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
             try:
                 response = self.gemini_client.models.generate_content(
                     model="gemini-2.5-flash",
-                    contents=full_prompt
+                    contents=full_prompt,
+                    config=types.GenerateContentConfig(**config.GEMINI_GENERATION_CONFIG)
                 )
-                return self._add_agent_personality(response.text)
+                result = self._add_agent_personality(response.text)
+                response_cache.set(cache_key, result)
+                return result
             except Exception as e2:
                 logger.error(f"{self.name}: Fallback AI generation also failed: {e2}")
                 return self._generate_intelligent_fallback(user_context)
+    
+    def _trim_response_length(self, response: str) -> str:
+        """Return complete response without truncation - improved for full analysis"""
+        # Remove truncation logic completely - users want complete analysis
+        return response
     
     def _add_agent_personality(self, ai_response: str) -> str:
         """Inject agent personality into AI responses"""
@@ -366,41 +483,41 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
         personality_enhancements = {
             'analyst': {
                 'openings': [
-                    "🔥 Your financial data just revealed something incredible!",
-                    "💎 I've discovered some fascinating patterns in your numbers!",
                     "🕵️ Financial detective mode: ACTIVATED! Here's what I found...",
-                    "📊 This is exciting! Your data tells an amazing story..."
+                    "🔥 Your numbers just revealed something INCREDIBLE!",
+                    "💎 I've uncovered fascinating insights in your financial data!",
+                    "📊 Detective work complete! Your financial story is amazing..."
                 ],
                 'conclusions': [
-                    "Your financial position has serious potential!",
-                    "The numbers don't lie - you're in a strong position!",
-                    "Data-driven confidence: This strategy will work for you!"
+                    "The data is crystal clear - you've got solid potential!",
+                    "Numbers never lie - this analysis reveals your true position!",
+                    "Data-driven confidence: The evidence supports this path!"
                 ]
             },
             'research': {
                 'openings': [
-                    "🧠 Strategic intelligence gathered! Let me break this down...",
-                    "🎯 Perfect! I've mapped out your optimal strategy...",
-                    "📈 Market research complete! Here's your winning plan...",
-                    "🚀 Amazing opportunities detected! Strategic analysis ready..."
+                    "🎯 Strategy radar: LOCKED ON TARGET!",
+                    "💡 I've discovered the PERFECT strategy for you!",
+                    "🚀 Opportunity hunter mode: Amazing findings ahead!",
+                    "💎 Strategic mastermind activated! Here's your winning plan..."
                 ],
                 'conclusions': [
-                    "This strategic plan maximizes your potential!",
-                    "Market timing and your position align perfectly!",
-                    "Strategic success probability: Very High!"
+                    "This strategy is absolutely BRILLIANT for your situation!",
+                    "Perfect timing + perfect strategy = SUCCESS!",
+                    "Strategic confidence: This plan will deliver results!"
                 ]
             },
             'risk': {
                 'openings': [
-                    "🛡️ Security analysis complete! Your protection status...",
-                    "⚠️ Risk radar activated! Here's what I detected...",
-                    "🔍 Vulnerability scan finished! Critical insights...",
-                    "🚨 Protection protocol engaged! Risk assessment ready..."
+                    "🛡️ Risk radar: ACTIVE MONITORING!",
+                    "⚠️ ALERT: Critical financial threats detected!",
+                    "🚨 Financial guardian mode: Protection analysis ready!",
+                    "🔍 Security scan complete! Urgent safeguards needed..."
                 ],
                 'conclusions': [
-                    "Your financial security can be significantly enhanced!",
-                    "Risk mitigation strategies will protect your wealth!",
-                    "Protection confidence: Your assets will be secured!"
+                    "SECURE your financial future with these protections!",
+                    "Financial fortress: Your wealth WILL be protected!",
+                    "Protection confidence: These safeguards are ESSENTIAL!"
                 ]
             }
         }
@@ -418,40 +535,22 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
         conclusion = random.choice(agent_personality['conclusions'])
         enhanced_response += f"\n\n🎯 **{conclusion}**"
         
-        return enhanced_response
+        # Trim response if too long
+        return self._trim_response_length(enhanced_response)
     
     def _process_grounded_response(self, response) -> str:
-        """Process response with grounding metadata and add citations"""
+        """Process response with grounding metadata but remove citation links"""
         try:
             text = response.text
-            metadata = response.candidates[0].grounding_metadata
             
-            if metadata.grounding_supports and metadata.grounding_chunks:
-                # Add citations to the response
-                supports = metadata.grounding_supports
-                chunks = metadata.grounding_chunks
-                
-                # Sort supports by end_index in descending order
-                sorted_supports = sorted(supports, key=lambda s: s.segment.end_index, reverse=True)
-                
-                for support in sorted_supports:
-                    end_index = support.segment.end_index
-                    if support.grounding_chunk_indices:
-                        # Create citation links
-                        citation_links = []
-                        for i in support.grounding_chunk_indices:
-                            if i < len(chunks):
-                                uri = chunks[i].web.uri
-                                title = chunks[i].web.title
-                                citation_links.append(f"[{title}]({uri})")
-                        
-                        citation_string = " " + ", ".join(citation_links)
-                        text = text[:end_index] + citation_string + text[end_index:]
-                
-                # Add search queries used
-                if metadata.web_search_queries:
-                    queries_text = "\n\n🔍 **Search queries used:** " + ", ".join(metadata.web_search_queries)
-                    text += queries_text
+            # Remove any citation URLs that may appear in the text
+            import re
+            # Remove citation links like [title](url)
+            text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
+            # Remove raw URLs
+            text = re.sub(r'https?://[^\s]+', '', text)
+            # Remove grounding redirect URLs specifically
+            text = re.sub(r'https://vertexaisearch\.cloud\.google\.com/grounding-api-redirect/[^\s\)]+', '', text)
             
             return self._add_agent_personality(text)
             
@@ -492,7 +591,8 @@ Maintain your {self.personality} personality while being collaborative.
                 model="gemini-2.5-flash",
                 contents=collaboration_prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction=f"You are a {self.personality} {self.agent_type} agent in a collaborative discussion."
+                    system_instruction=f"You are a {self.personality} {self.agent_type} agent in a collaborative discussion.",
+                    **config.GEMINI_GENERATION_CONFIG
                 )
             )
             

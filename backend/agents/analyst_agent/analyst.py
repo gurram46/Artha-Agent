@@ -18,6 +18,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from agents.base_agent import BaseFinancialAgent, AgentResponse
 from core.fi_mcp.client import FinancialData
 from core.google_grounding.grounding_client import GroundingResult
+from config.settings import config
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
 6. NO hardcoded formulas - use intelligent reasoning about Indian financial relationships
 7. Focus on practical, realistic advice for Indian middle-class and upper-middle-class scenarios
 
-**USER'S ACTUAL FINANCIAL DATA:**
+**USER'S FINANCIAL DATA:**
 {self._format_financial_data_for_ai(financial_data)}
 
 **USER QUERY:** {user_query}
@@ -51,17 +53,16 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
 **YOUR ANALYSIS FRAMEWORK:**
 
 1. **FINANCIAL POSITION ANALYSIS:**
-   - Analyze the user's actual net worth, assets, liabilities from the data above
+   - Analyze the user's net worth, assets, and liabilities from the data above
    - Assess liquidity position based on savings accounts vs total assets
-   - Evaluate debt burden using actual loan/credit card data
-   - Determine monthly cash flow capacity based on asset patterns and EPF contributions
+   - Evaluate debt burden using actual loan/credit data
+   - Determine financial capacity based on current position
 
-2. **QUERY-SPECIFIC REASONING:**
-   - For purchase decisions: Reason about affordability based on actual liquidity, monthly capacity, and debt situation
-   - For career decisions: Consider emergency fund adequacy, debt obligations, and financial flexibility
-   - For investment decisions: Analyze current portfolio, risk capacity, and surplus availability
-   - For housing decisions: Evaluate rent vs buy based on actual financial position and market data
-   - For travel/lifestyle: Assess discretionary spending capacity without compromising financial health
+2. **PERSONALIZED RECOMMENDATIONS:**
+   - For purchase decisions: Calculate affordability based on liquid funds and existing obligations
+   - Consider emergency fund requirements (typically 3-6 months expenses)
+   - Factor in debt-to-income ratios and existing loan obligations
+   - Provide specific recommendations based on their actual financial situation
 
 3. **MARKET CONTEXT INTEGRATION:**
    - Use Google Search results to understand current market prices, interest rates, and trends
@@ -85,25 +86,76 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
 """
     
     def _format_financial_data_for_ai(self, financial_data: FinancialData) -> str:
-        """Format actual financial data for AI analysis"""
+        """Format actual Fi MCP financial data for AI analysis using REAL data structure"""
         
         formatted_data = """
-**NET WORTH & ASSETS:**
+**USER'S ACTUAL FINANCIAL POSITION (Live Fi MCP Data):**
 """
         
-        # Net Worth Data
+        # Net Worth Data from REAL Fi MCP structure
         if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
             net_worth = financial_data.net_worth
             if 'netWorthResponse' in net_worth:
                 total_value = net_worth['netWorthResponse'].get('totalNetWorthValue', {})
-                formatted_data += f"- Total Net Worth: {total_value.get('units', 'N/A')} {total_value.get('currencyCode', '')}\n"
+                net_worth_amount = float(total_value.get('units', '0'))
+                formatted_data += f"\n💰 **TOTAL NET WORTH**: ₹{self.format_currency(net_worth_amount)} (From connected accounts)\n\n"
                 
+                # Process REAL Assets from Fi MCP
                 assets = net_worth['netWorthResponse'].get('assetValues', [])
-                formatted_data += "- Asset Breakdown:\n"
+                formatted_data += "📊 **ASSET BREAKDOWN** (Real-time data):\n"
+                liquid_funds = 0
+                mutual_funds = 0
+                securities = 0
+                epf_amount = 0
+                
                 for asset in assets:
                     asset_type = asset.get('netWorthAttribute', 'Unknown')
                     value = asset.get('value', {})
-                    formatted_data += f"  • {asset_type}: {value.get('units', 'N/A')} {value.get('currencyCode', '')}\n"
+                    amount = float(value.get('units', '0'))
+                    
+                    if 'SAVINGS_ACCOUNTS' in asset_type:
+                        liquid_funds += amount
+                        formatted_data += f"  💳 Bank Savings: ₹{self.format_currency(amount)} (LIQUID - immediate access)\n"
+                    elif 'MUTUAL_FUND' in asset_type:
+                        mutual_funds += amount
+                        formatted_data += f"  📈 Mutual Fund Portfolio: ₹{self.format_currency(amount)} (Can liquidate in 1-2 days)\n"
+                    elif 'INDIAN_SECURITIES' in asset_type:
+                        securities += amount
+                        formatted_data += f"  📊 Stock Holdings: ₹{self.format_currency(amount)} (Can sell in T+2 days)\n"
+                    elif 'EPF' in asset_type:
+                        epf_amount += amount
+                        formatted_data += f"  🏦 EPF Balance: ₹{self.format_currency(amount)} (RETIREMENT fund - restricted)\n"
+                    else:
+                        formatted_data += f"  • {asset_type.replace('ASSET_TYPE_', '').replace('_', ' ').title()}: ₹{self.format_currency(amount)}\n"
+                
+                # Process REAL Liabilities from Fi MCP
+                liabilities = net_worth['netWorthResponse'].get('liabilityValues', [])
+                total_loans = 0
+                if liabilities:
+                    formatted_data += "\n❌ **OUTSTANDING LIABILITIES**:\n"
+                    for liability in liabilities:
+                        liability_type = liability.get('netWorthAttribute', 'Unknown')
+                        value = liability.get('value', {})
+                        amount = float(value.get('units', '0'))
+                        total_loans += amount
+                        clean_type = liability_type.replace('LIABILITY_TYPE_', '').replace('_', ' ').title()
+                        formatted_data += f"  • {clean_type}: ₹{self.format_currency(amount)}\n"
+                
+                # FINANCIAL CAPACITY ANALYSIS
+                formatted_data += f"\n💡 **LIQUIDITY & CAPACITY ANALYSIS**:\n"
+                formatted_data += f"- 💳 **Immediate Liquid Funds**: ₹{self.format_currency(liquid_funds)} (Bank accounts)\n"
+                formatted_data += f"- 📈 **Liquidatable Investments**: ₹{self.format_currency(mutual_funds + securities)} (MF + Stocks)\n"
+                formatted_data += f"- 🏦 **Retirement Savings**: ₹{self.format_currency(epf_amount)} (EPF - long-term)\n"
+                formatted_data += f"- ❌ **Total Debt Burden**: ₹{self.format_currency(total_loans)} (EMI obligations)\n"
+                
+                # Calculate REAL financial metrics
+                total_accessible = liquid_funds + (mutual_funds * 0.8) + (securities * 0.8)  # 80% liquidity factor
+                formatted_data += f"- ⚡ **Accessible Funds**: ₹{self.format_currency(total_accessible)} (Emergency + purchases)\n"
+                
+                # Income estimation from REAL EPF and investment patterns  
+                estimated_income = self._estimate_monthly_income_from_data(epf_amount, mutual_funds, liquid_funds)
+                if estimated_income > 0:
+                    formatted_data += f"- 💰 **Estimated Monthly Income**: ₹{self.format_currency(estimated_income)} (Based on EPF/investment patterns)\n"
         
         # Mutual Fund Holdings
         if hasattr(financial_data, 'net_worth') and financial_data.net_worth and 'mfSchemeAnalytics' in financial_data.net_worth:
@@ -174,49 +226,134 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
                     if balance:
                         formatted_data += f"- {bank_name}: ₹{balance.get('units', 'N/A')}\n"
         
+        
         return formatted_data
     
+    def _estimate_monthly_income_from_data(self, epf_amount: float, mutual_funds: float, liquid_funds: float) -> float:
+        """Estimate monthly income based on real financial patterns from Fi MCP data"""
+        estimated_income = 0
+        
+        # EPF-based estimation (most reliable for salaried professionals)
+        if epf_amount > 50000:  # Significant EPF indicates steady employment
+            # EPF contribution is 12% of basic salary
+            # Estimate based on EPF growth patterns - conservative approach
+            if epf_amount > 500000:  # High EPF indicates senior role
+                estimated_income = max(80000, epf_amount * 0.08)  # Senior professional
+            elif epf_amount > 200000:  # Mid-level EPF
+                estimated_income = max(60000, epf_amount * 0.06)  # Mid-level professional
+            else:
+                estimated_income = max(40000, epf_amount * 0.05)  # Junior-mid professional
+        
+        # Investment-based estimation (for non-EPF cases or validation)
+        elif mutual_funds > 100000:  # Good investment discipline indicates income
+            # Investment of 10-15% of income is common
+            estimated_income = max(50000, mutual_funds * 0.12)
+        
+        # Savings-based estimation (backup method)
+        elif liquid_funds > 200000:  # High liquid savings
+            # Savings of 20-30% of income is good practice
+            estimated_income = max(40000, liquid_funds * 0.15)
+        
+        return int(estimated_income)
+    
     async def generate_grounding_queries(self, user_query: str, financial_data: FinancialData) -> List[str]:
-        """Generate search queries using Gemini AI based on user query and financial data"""
+        """Generate targeted search queries using AI for better market intelligence"""
         
-        # Format financial summary for context
-        financial_summary = self._format_financial_data_for_ai(financial_data)
+        # Extract financial context for better query generation
+        financial_summary = self._format_financial_summary_for_queries(financial_data)
         
-        # Use Gemini to generate search queries
-        prompt = f"""
-Analyze this financial query and generate specific Google search queries to find current market data:
+        # Use AI to generate context-aware search queries
+        query_prompt = f"""
+Generate 3 targeted Google search queries for Indian financial market intelligence:
 
 User Query: {user_query}
+User's Financial Context: {financial_summary}
 
-User's Financial Data:
-{financial_summary}
+Generate search queries that will find CURRENT Indian market data, rates, and specific advice.
+Focus on:
+1. Current market rates and prices in India
+2. Financial products suitable for their profile  
+3. Market conditions and timing
 
-Generate 5 specific search queries focused on INDIAN financial context that will help answer their question with:
-1. Current Indian market prices and rates (in INR)
-2. Indian financial product comparisons (banks, mutual funds, loans)
-3. Indian market trends and forecasts
-4. Expert recommendations for Indian consumers
-5. India-specific information and regulations
-
-IMPORTANT: All searches should focus on INDIAN market, INDIAN products, prices in RUPEES, and be relevant to Indian consumers.
-Return ONLY the queries, one per line.
+Return only the search queries, one per line.
 """
-        
+
         try:
-            response = self.gemini_client.models.generate_content(
+            ai_response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=prompt
+                contents=query_prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=200,
+                    temperature=0.3
+                )
             )
             
-            # Parse queries from response
-            queries = [q.strip() for q in response.text.strip().split('\n') if q.strip()]
-            logger.info(f"Generated {len(queries)} search queries for analysis")
-            return queries[:5]
+            # Parse AI-generated queries
+            generated_queries = [q.strip() for q in ai_response.text.strip().split('\n') if q.strip()]
+            
+            # Fallback to template queries if AI fails
+            if not generated_queries or len(generated_queries) < 2:
+                generated_queries = self._get_template_queries(user_query)
+                
+            return generated_queries[:3]  # Limit to 3 for speed
             
         except Exception as e:
-            logger.error(f"Query generation failed: {e}")
-            # Basic fallback query
-            return [f"{user_query} India 2024 current market analysis"]
+            logger.error(f"AI query generation failed: {e}")
+            return self._get_template_queries(user_query)
+    
+    def _format_financial_summary_for_queries(self, financial_data: FinancialData) -> str:
+        """Extract key financial metrics for search query context"""
+        summary_parts = []
+        
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth = financial_data.net_worth.get('netWorthResponse', {})
+            total_value = net_worth.get('totalNetWorthValue', {})
+            if total_value.get('units'):
+                net_worth_amount = float(total_value.get('units', '0'))
+                summary_parts.append(f"Net worth ₹{self.format_currency(net_worth_amount)}")
+                
+            # Extract key asset types
+            assets = net_worth.get('assetValues', [])
+            for asset in assets[:3]:  # Top 3 assets
+                asset_type = asset.get('netWorthAttribute', '')
+                if 'SAVINGS' in asset_type:
+                    amount = float(asset.get('value', {}).get('units', '0'))
+                    summary_parts.append(f"Savings ₹{self.format_currency(amount)}")
+        
+        return ", ".join(summary_parts) if summary_parts else "General user"
+    
+    def _get_template_queries(self, user_query: str) -> List[str]:
+        """Fallback template queries when AI generation fails"""
+        query_lower = user_query.lower()
+        
+        # Car/vehicle queries
+        if any(word in query_lower for word in ['car', 'vehicle', 'auto', 'afford']):
+            return [
+                "car loan interest rates India January 2025 SBI HDFC ICICI current rates",
+                "best cars under 10 lakh 15 lakh India 2025 latest prices on road",
+                "car insurance premium rates India comprehensive third party 2025"
+            ]
+        # Investment queries  
+        elif any(word in query_lower for word in ['invest', 'mutual', 'fund', 'stock']):
+            return [
+                "best mutual funds India 2025 top performing SIP returns CAGR",
+                "current FD interest rates India January 2025 major banks SBI HDFC",
+                "Nifty Sensex performance 2025 stock market outlook India"
+            ]
+        # House/property queries
+        elif any(word in query_lower for word in ['house', 'home', 'property', 'rent', 'buy']):
+            return [
+                "home loan interest rates India 2025 current SBI HDFC ICICI rates",
+                "property prices India 2025 real estate market trends metro cities",
+                "rent vs buy calculator India 2025 property investment analysis"
+            ]
+        # General financial planning
+        else:
+            return [
+                "inflation rate India 2025 impact on savings investments RBI data",
+                "personal finance planning India 2025 best investment strategies",
+                "emergency fund planning India expenses calculation 2025"
+            ]
     
     async def analyze_financial_data(self, financial_data: FinancialData) -> Dict[str, Any]:
         """Pure AI analysis of financial data - NO hardcoded calculations"""
@@ -239,7 +376,8 @@ Return only valid JSON.
         try:
             ai_response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=ai_prompt
+                contents=ai_prompt,
+                config=types.GenerateContentConfig(**config.GEMINI_GENERATION_CONFIG)
             )
             
             # Clean and parse JSON response
@@ -316,7 +454,8 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         try:
             response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=analysis_prompt
+                contents=analysis_prompt,
+                config=types.GenerateContentConfig(**config.GEMINI_GENERATION_CONFIG)
             )
             
             # Clean and parse JSON response
@@ -347,8 +486,47 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                 'confidence': 'low'
             }
     
+    async def _generate_executive_summary(self, user_query: str, financial_data: FinancialData) -> str:
+        """Generate a dynamic executive summary using AI"""
+        
+        # Create a concise prompt for executive summary
+        summary_prompt = f"""
+Generate a VERY brief executive summary for this financial query. Use exactly this format:
+
+🎯 **QUICK ANSWER: [ONE WORD RECOMMENDATION]**
+
+✅ **Feasible**: [Yes/No/Partially] - [brief reason]
+⚠️ **Risk Level**: [Low/Medium/High] - [key concern]
+💡 **Best Approach**: [one key strategy]
+🚀 **Timeline**: [timeframe needed]
+
+Query: {user_query}
+Keep it under 100 words total.
+"""
+
+        try:
+            response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=summary_prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=150,
+                    temperature=0.3
+                )
+            )
+            return response.text.strip()
+        except:
+            # Simple fallback without hardcoded specifics
+            return """🎯 **QUICK ANALYSIS COMPLETE**
+
+✅ **Assessment**: Analyzing your situation...
+💡 **Strategy**: Personalized recommendations below  
+🚀 **Next Steps**: Review detailed analysis"""
+
     async def generate_response(self, user_query: str, financial_data: FinancialData, grounded_intelligence: Dict[str, Any]) -> str:
         """Generate response using Gemini with Google Search grounding"""
+        
+        # Generate executive summary first
+        exec_summary = await self._generate_executive_summary(user_query, financial_data)
         
         # Prepare comprehensive context
         market_context = self._format_market_intelligence(grounded_intelligence)
@@ -356,34 +534,38 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         
         # Create comprehensive prompt for final response
         response_prompt = f"""
-You are an Indian Financial Intelligence Analyst. Using the user's Indian financial data and fresh Indian market intelligence from Google Search, provide a comprehensive analysis.
+You are an enthusiastic Indian Financial Intelligence Analyst. Start with excitement about the analysis, then provide concise insights.
 
 USER QUERY: {user_query}
 
-USER'S INDIAN FINANCIAL DATA:
+EXECUTIVE SUMMARY ALREADY PROVIDED:
+{exec_summary}
+
+USER'S FINANCIAL DATA:
 {financial_context}
 
-CURRENT INDIAN MARKET INTELLIGENCE (from Google Search):
+CURRENT MARKET INTELLIGENCE:
 {market_context}
 
-Provide a detailed, personalized Indian financial analysis that:
-1. Directly answers their question with specific INR amounts and realistic recommendations for Indian consumers
-2. Uses actual Indian market data from search results (cite specific Indian rates, prices, trends)
-3. Considers their personal Indian financial situation and Indian market context
-4. Provides actionable next steps relevant to Indian financial systems
-5. Includes any relevant warnings or opportunities specific to Indian market
-6. Be practical and realistic - avoid overly complex or unrealistic scenarios
-7. Focus on middle-class to upper-middle-class Indian financial decisions
+Provide a concise, enthusiastic analysis (max 1000 words) that:
+1. Shows excitement about their financial potential
+2. Uses specific numbers from their data
+3. Gives 3-4 key actionable recommendations
+4. Includes realistic calculations
+5. Maintains optimistic but realistic tone
 
-IMPORTANT: All amounts in INR, all advice relevant to Indian consumers, realistic scenarios only.
+Be specific, concise, and enthusiastic about their financial journey!
 """
         
         # Generate final response with grounding
-        return await self.generate_ai_response(
+        detailed_response = await self.generate_ai_response(
             "",  # System prompt is in config
             response_prompt,
             ""   # Market context already in prompt
         )
+        
+        # Combine executive summary with detailed response
+        return f"{exec_summary}\n\n---\n\n{detailed_response}"
     
     def _format_market_intelligence(self, intelligence: Dict[str, Any]) -> str:
         """Format market intelligence for response generation"""

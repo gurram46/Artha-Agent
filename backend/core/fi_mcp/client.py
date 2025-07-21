@@ -209,58 +209,115 @@ class FiMCPClient:
         )
 
 async def get_user_financial_data() -> FinancialData:
-    """Demo function to get sample financial data"""
-    # For demo purposes, return sample data
+    """Dynamically fetch real Fi MCP sample data from /mcp-docs/ files"""
+    logger.info("Loading real Fi MCP sample data from /mcp-docs/ files...")
     
-    sample_net_worth = {
-        'totalNetWorthValue': {'currencyCode': 'INR', 'units': '868721'},
-        'assetValues': [
-            {'netWorthAttribute': 'ASSET_TYPE_MUTUAL_FUND', 'value': {'currencyCode': 'INR', 'units': '84613'}},
-            {'netWorthAttribute': 'ASSET_TYPE_EPF', 'value': {'currencyCode': 'INR', 'units': '211111'}},
-            {'netWorthAttribute': 'ASSET_TYPE_INDIAN_SECURITIES', 'value': {'currencyCode': 'INR', 'units': '200642'}},
-            {'netWorthAttribute': 'ASSET_TYPE_SAVINGS_ACCOUNTS', 'value': {'currencyCode': 'INR', 'units': '436355'}}
-        ],
-        'liabilityValues': [
-            {'netWorthAttribute': 'LIABILITY_TYPE_OTHER_LOAN', 'value': {'currencyCode': 'INR', 'units': '42000'}},
-            {'netWorthAttribute': 'LIABILITY_TYPE_HOME_LOAN', 'value': {'currencyCode': 'INR', 'units': '17000'}},
-            {'netWorthAttribute': 'LIABILITY_TYPE_VEHICLE_LOAN', 'value': {'currencyCode': 'INR', 'units': '5000'}}
-        ]
-    }
-    
-    sample_mf_data = [
-        {
-            'schemeDetail': {
-                'amc': 'ICICI_PRUDENTIAL',
-                'nameData': {'longName': 'ICICI Prudential Nifty 50 Index Fund'},
-                'assetClass': 'EQUITY',
-                'fundhouseDefinedRiskLevel': 'VERY_HIGH_RISK'
-            },
-            'enrichedAnalytics': {
-                'analytics': {
-                    'schemeDetails': {
-                        'currentValue': {'currencyCode': 'INR', 'units': '20147'},
-                        'XIRR': 23.28
-                    }
+    try:
+        # Construct file paths dynamically 
+        base_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+            "mcp-docs", "sample_responses"
+        )
+        
+        # Load net worth data from actual sample file
+        net_worth_file = os.path.join(base_path, "fetch_net_worth.json")
+        with open(net_worth_file, 'r') as f:
+            net_worth_data = json.load(f)
+            logger.info(f"✅ Loaded net worth data from: {net_worth_file}")
+        
+        # Load EPF data from actual sample file
+        epf_file = os.path.join(base_path, "fetch_epf_details.json") 
+        epf_data = None
+        try:
+            with open(epf_file, 'r') as f:
+                epf_data = json.load(f)
+                logger.info(f"✅ Loaded EPF data from: {epf_file}")
+        except FileNotFoundError:
+            logger.warning(f"EPF file not found: {epf_file}")
+        
+        # Load credit report from actual sample file
+        credit_file = os.path.join(base_path, "fetch_credit_report.json")
+        credit_data = None
+        try:
+            with open(credit_file, 'r') as f:
+                credit_data = json.load(f)
+                logger.info(f"✅ Loaded credit data from: {credit_file}")
+        except FileNotFoundError:
+            logger.warning(f"Credit file not found: {credit_file}")
+        
+        # Load MF transactions from actual sample file
+        mf_file = os.path.join(base_path, "fetch_mf_transactions.json")
+        mf_transactions = []
+        try:
+            with open(mf_file, 'r') as f:
+                mf_data = json.load(f)
+                mf_transactions = mf_data.get('transactions', [])
+                logger.info(f"✅ Loaded MF transactions from: {mf_file}")
+        except FileNotFoundError:
+            logger.warning(f"MF transactions file not found: {mf_file}")
+        
+        # Extract structured data from the loaded files
+        net_worth_response = net_worth_data.get('netWorthResponse', {})
+        
+        # Extract mutual funds from mfSchemeAnalytics
+        mutual_funds = []
+        if 'mfSchemeAnalytics' in net_worth_data:
+            mutual_funds = net_worth_data['mfSchemeAnalytics'].get('schemeAnalytics', [])
+        
+        # Extract bank accounts from accountDetailsBulkResponse
+        bank_accounts = []
+        equity_holdings = []
+        if 'accountDetailsBulkResponse' in net_worth_data:
+            account_map = net_worth_data['accountDetailsBulkResponse'].get('accountDetailsMap', {})
+            
+            for account_id, account_info in account_map.items():
+                if 'depositSummary' in account_info:
+                    bank_accounts.append({
+                        'id': account_id,
+                        'details': account_info.get('accountDetails', {}),
+                        'summary': account_info['depositSummary']
+                    })
+                elif 'equitySummary' in account_info:
+                    equity_holdings.append({
+                        'id': account_id,
+                        'details': account_info.get('accountDetails', {}),
+                        'holdings': account_info['equitySummary'] 
+                    })
+        
+        # Log summary of loaded data
+        total_net_worth = net_worth_response.get('totalNetWorthValue', {}).get('units', '0')
+        asset_count = len(net_worth_response.get('assetValues', []))
+        liability_count = len(net_worth_response.get('liabilityValues', []))
+        
+        logger.info(f"📊 Fi MCP Data Summary: Net Worth ₹{total_net_worth}, Assets: {asset_count}, Liabilities: {liability_count}, MF Schemes: {len(mutual_funds)}, Bank Accounts: {len(bank_accounts)}")
+        
+        return FinancialData(
+            net_worth=net_worth_data,  # Full net worth response with all nested data
+            mutual_funds=mutual_funds,
+            bank_accounts=bank_accounts,
+            equity_holdings=equity_holdings,
+            credit_report=credit_data,
+            epf_details=epf_data,
+            transactions=mf_transactions
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to load Fi MCP sample data: {e}")
+        logger.error(f"Attempted base path: {base_path if 'base_path' in locals() else 'Unknown'}")
+        
+        # Return minimal fallback data instead of crashing
+        return FinancialData(
+            net_worth={
+                'netWorthResponse': {
+                    'totalNetWorthValue': {'currencyCode': 'INR', 'units': '0'},
+                    'assetValues': [],
+                    'liabilityValues': []
                 }
-            }
-        }
-    ]
-    
-    sample_transactions = [
-        {
-            'schemeName': 'ICICI Prudential Nifty 50 Index Fund',
-            'transactionDate': '2022-03-08T18:30:00Z',
-            'transactionAmount': {'currencyCode': 'INR', 'units': '10027'},
-            'externalOrderType': 'BUY'
-        }
-    ]
-    
-    return FinancialData(
-        net_worth=sample_net_worth,
-        mutual_funds=sample_mf_data,
-        bank_accounts=[],
-        equity_holdings=[],
-        credit_report=None,
-        epf_details=None,
-        transactions=sample_transactions
-    )
+            },
+            mutual_funds=[],
+            bank_accounts=[],
+            equity_holdings=[],
+            credit_report=None,
+            epf_details=None,
+            transactions=[]
+        )

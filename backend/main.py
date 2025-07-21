@@ -154,11 +154,19 @@ Type your financial questions or 'quit' to exit.
             
             await asyncio.sleep(0.5)
         
+        # Count actual sources from search results
+        total_sources = 0
+        if agent_response and 'grounded_data' in agent_response:
+            for search_result in agent_response.get('grounded_data', []):
+                if isinstance(search_result, dict) and 'sources' in search_result:
+                    total_sources += len(search_result['sources'])
+        
         return {
             'agent_name': agent.name,
             'emoji': agent.emoji,
             'content': response_content if 'response_content' in locals() else "Analysis failed",
-            'grounding_sources': len(agent_response.get('grounded_data', [])) if agent_response else 0,
+            'grounding_sources': total_sources,  # Use actual source count
+            'search_results': len(agent_response.get('grounded_data', [])) if agent_response else 0,
             'recommendations': agent_response.get('recommendations', []) if agent_response else []
         }
     
@@ -175,11 +183,11 @@ Type your financial questions or 'quit' to exit.
             except Exception as e:
                 self.console.print("[yellow]⚠️ Using sample financial data for demo[/yellow]")
                 # Create sample data for demo
-                financial_data = self.create_sample_financial_data()
+                financial_data = await self.create_sample_financial_data()
         
         self.console.print("\n[bold blue]🚀 Starting 3-Agent Analysis...[/bold blue]\n")
         
-        # Process with all agents concurrently but show sequentially for better UX
+        # Process with all agents - using parallel processing if enabled
         agents = [
             ("analyst", self.analyst),
             ("research", self.research),
@@ -188,6 +196,7 @@ Type your financial questions or 'quit' to exit.
         
         agent_responses = []
         
+        # Process all agents sequentially for complete analysis  
         for agent_key, agent in agents:
             self.console.print(f"[bold]{agent.emoji} {agent.name} Analysis:[/bold]")
             
@@ -203,101 +212,158 @@ Type your financial questions or 'quit' to exit.
             
             self.console.print(f"[dim]Sources: {response['grounding_sources']} live market data points[/dim]\n")
         
-        # Show collaboration summary
-        self.display_collaboration_summary(agent_responses)
+        # Show collaboration summary and AGENT DEBATES
+        await self.display_agent_collaboration(agent_responses, user_query, financial_data)
     
-    def create_sample_financial_data(self) -> FinancialData:
-        """Create sample financial data for demo"""
+    async def create_sample_financial_data(self) -> FinancialData:
+        """Use Fi MCP client to dynamically load financial data"""
+        self.console.print(f"[green]Using Fi MCP client to fetch real sample data...[/green]")
         
-        # Load sample data from mcp-docs
+        # Use the Fi MCP client which now dynamically loads from files
+        return await get_user_financial_data()
+    
+    async def display_agent_collaboration(self, responses: List[Dict[str, Any]], user_query: str, financial_data):
+        """Display REAL agent collaboration with AI-generated consensus based on actual agent outputs"""
+        
+        self.console.print("\n[bold blue]🤝 AGENT COLLABORATION SESSION[/bold blue]\n")
+        
+        # Format actual agent responses for AI consensus generation
+        agent_summaries = []
+        total_sources = 0
+        
+        for response in responses:
+            agent_name = response['agent_name']
+            content = response['content']
+            sources = response['grounding_sources']
+            total_sources += sources
+            
+            # Create structured summary of each agent's COMPLETE actual output
+            agent_summaries.append(f"""
+{response['emoji']} **{agent_name}**:
+- Complete Analysis: {content}
+- Market Intelligence: {sources} live data sources
+- Key Recommendations: {response.get('recommendations', ['Analysis provided above'])}
+""")
+        
+        # Display agent outputs
+        self.console.print("[bold cyan]🎭 AGENT ANALYSIS SUMMARY:[/bold cyan]")
+        for summary in agent_summaries:
+            self.console.print(summary)
+        
+        # AI-generated consensus based on ACTUAL agent outputs
+        self.console.print(f"\n[bold yellow]🤖 AI UNIFIED CONSENSUS:[/bold yellow]")
+        
+        # Create comprehensive prompt with actual agent responses
+        consensus_prompt = f"""
+Based on the 3 financial AI agents' ACTUAL analysis of this query: "{user_query}"
+
+ACTUAL AGENT RESPONSES:
+{chr(10).join(agent_summaries)}
+
+USER'S FINANCIAL PROFILE:
+{self._format_financial_context(financial_data)}
+
+As the Unified AI Financial Advisor, provide a SHORT and STRAIGHT response that:
+1. Directly answers the user's question: "{user_query}" in 2-3 sentences
+2. Gives clear YES/NO or specific recommendation based on all 3 agents' analysis
+3. Mentions 1-2 key points from the agents' findings
+4. Provides one specific action step if applicable
+
+Keep response concise, direct, and actionable. Avoid lengthy explanations - just give the final decision based on the collaborative analysis.
+
+Respond as the unified decision maker addressing the user's question directly with a brief, clear answer.
+"""
+        
         try:
-            # Load all sample data files
-            with open('../mcp-docs/sample_responses/fetch_net_worth.json', 'r') as f:
-                sample_net_worth = json.load(f)
-            
-            with open('../mcp-docs/sample_responses/fetch_mf_transactions.json', 'r') as f:
-                sample_transactions = json.load(f)
-            
-            with open('../mcp-docs/sample_responses/fetch_credit_report.json', 'r') as f:
-                sample_credit = json.load(f)
-            
-            with open('../mcp-docs/sample_responses/fetch_epf_details.json', 'r') as f:
-                sample_epf = json.load(f)
-            
-            # Extract data properly
-            net_worth_data = sample_net_worth  # Contains full net worth response including mfSchemeAnalytics
-            
-            # Create FinancialData object with all sample data
-            return FinancialData(
-                net_worth=net_worth_data,  # Pass the full net worth object
-                mutual_funds=net_worth_data.get('mfSchemeAnalytics', {}).get('schemeAnalytics', []),
-                bank_accounts=net_worth_data.get('accountDetailsBulkResponse', {}).get('accountDetailsMap', {}),
-                equity_holdings=[],  # Not in sample data
-                credit_report=sample_credit,
-                epf_details=sample_epf,
-                transactions=sample_transactions.get('transactions', [])
+            # Generate AI consensus using actual agent outputs
+            consensus_response = self.analyst.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=consensus_prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=300,
+                    temperature=0.3
+                )
             )
+            
+            unified_response = consensus_response.text.strip()
+            
         except Exception as e:
-            self.console.print(f"[red]Error loading sample data: {e}[/red]")
-            # Fallback with more complete minimal data
-            return FinancialData(
-                net_worth={
-                    'netWorthResponse': {
-                        'totalNetWorthValue': {'currencyCode': 'INR', 'units': '868721'},
-                        'assetValues': [
-                            {'netWorthAttribute': 'ASSET_TYPE_SAVINGS_ACCOUNTS', 'value': {'units': '200000', 'currencyCode': 'INR'}},
-                            {'netWorthAttribute': 'ASSET_TYPE_MUTUAL_FUND', 'value': {'units': '300000', 'currencyCode': 'INR'}}
-                        ]
-                    }
-                },
-                mutual_funds=[],
-                bank_accounts={},
-                equity_holdings=[],
-                credit_report={},
-                epf_details={},
-                transactions=[]
-            )
-    
-    def display_collaboration_summary(self, responses: List[Dict[str, Any]]):
-        """Display final collaboration summary"""
-        
-        total_sources = sum(r['grounding_sources'] for r in responses)
-        all_recommendations = []
-        for r in responses:
-            all_recommendations.extend(r['recommendations'])
-        
-        summary = f"""
-🏆 3-AGENT COLLABORATION COMPLETE
+            logger.error(f"AI consensus generation failed: {e}")
+            # Fallback using actual agent content snippets
+            unified_response = f"""
+Based on comprehensive analysis by our 3 AI financial experts:
 
-📊 Analysis Summary:
-• Total Agents: 3 specialized financial AI agents
-• Live Data Sources: {total_sources} real-time market intelligence points
-• Processing Mode: Concurrent analysis with live grounding
+The consensus recommendation for "{user_query}" considers your financial capacity, market opportunities, and risk factors. Each agent has provided detailed analysis with {total_sources} market intelligence sources.
 
-🤝 Unified Insights:
-Each agent analyzed your query using live market data and personal financial information.
-All recommendations are backed by current market conditions and verifiable sources.
-
-💡 Key Recommendations:"""
+Key unified guidance will be available once all agent outputs are fully processed.
+"""
         
-        for i, rec in enumerate(list(set(all_recommendations))[:5], 1):
-            summary += f"\n{i}. {rec}"
-        
-        summary += f"""
-
-⚡ Agent Specializations:
-• 🕵️ Data Analyst: Portfolio analysis vs live market benchmarks
-• 🎯 Market Strategist: Current opportunities and strategic timing
-• 🛡️ Risk Guardian: Live threat monitoring and protection strategies
-
-🔍 All responses include real-time market intelligence and verifiable sources.
-        """
-        
+        # Display unified consensus
         self.console.print(Panel(
-            summary,
-            title="[bold green]🎯 COLLABORATIVE AI ANALYSIS[/bold green]",
+            unified_response,
+            title="[bold green]🏆 UNIFIED AI FINANCIAL ADVISOR RESPONSE[/bold green]",
             border_style="green"
         ))
+        
+        # Show collaboration metrics
+        metrics = f"""
+📊 **ANALYSIS METRICS**:
+• **Agents**: 3 specialized AI financial experts
+• **Market Intelligence**: {total_sources} live data sources
+• **Analysis Mode**: Multi-agent collaboration with unified consensus
+"""
+        self.console.print(f"\n[dim]{metrics}[/dim]")
+        
+        # Import required for Gemini client
+        from google.genai import types
+    
+    def _format_financial_context(self, financial_data: FinancialData) -> str:
+        """Format complete financial data context for consensus generation"""
+        context_sections = []
+        
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth = financial_data.net_worth.get('netWorthResponse', {})
+            total_value = net_worth.get('totalNetWorthValue', {})
+            if total_value.get('units'):
+                context_sections.append(f"Net Worth: ₹{total_value.get('units')}")
+                
+            # Add asset breakdown
+            assets = net_worth.get('assetValues', [])
+            if assets:
+                asset_details = []
+                for asset in assets[:5]:  # Top 5 assets
+                    asset_type = asset.get('netWorthAttribute', 'Unknown')
+                    value = asset.get('value', {})
+                    asset_value = value.get('units', 'N/A')
+                    asset_details.append(f"{asset_type}: ₹{asset_value}")
+                context_sections.append(f"Key Assets: {', '.join(asset_details)}")
+        
+        if hasattr(financial_data, 'credit_report') and financial_data.credit_report:
+            credit_reports = financial_data.credit_report.get('creditReports', [])
+            if credit_reports:
+                credit_data = credit_reports[0].get('creditReportData', {})
+                score = credit_data.get('score', {}).get('bureauScore')
+                if score:
+                    context_sections.append(f"Credit Score: {score}")
+                
+                # Add debt information
+                credit_summary = credit_data.get('creditAccount', {}).get('creditAccountSummary', {})
+                if credit_summary:
+                    total_balance = credit_summary.get('totalOutstandingBalance', {})
+                    total_debt = total_balance.get('outstandingBalanceAll')
+                    if total_debt:
+                        context_sections.append(f"Total Debt: ₹{total_debt}")
+        
+        if hasattr(financial_data, 'epf_details') and financial_data.epf_details:
+            epf_data = financial_data.epf_details
+            if 'uanAccounts' in epf_data and epf_data['uanAccounts']:
+                epf_account = epf_data['uanAccounts'][0].get('rawDetails', {})
+                overall_balance = epf_account.get('overall_pf_balance', {})
+                current_balance = overall_balance.get('current_pf_balance')
+                if current_balance:
+                    context_sections.append(f"EPF Balance: ₹{current_balance}")
+        
+        return "\n".join(context_sections) if context_sections else "Financial profile being analyzed"
     
     async def chat_loop(self):
         """Main chat loop"""

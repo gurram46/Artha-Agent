@@ -18,6 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from agents.base_agent import BaseFinancialAgent, AgentResponse
 from core.fi_mcp.client import FinancialData
 from core.google_grounding.grounding_client import GroundingResult
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -375,39 +376,55 @@ You are an expert Indian Financial Risk Intelligence Agent powered by Gemini AI.
     async def generate_grounding_queries(self, user_query: str, financial_data: FinancialData) -> List[str]:
         """Pure AI-powered risk query generation using Gemini AI - NO hardcoded functions"""
         
-        # Use AI to generate risk intelligence queries based on user's actual financial data
+        # Use AI to generate risk intelligence queries - Optimized for Speed
         ai_prompt = f"""
-You are an AI risk management expert. Based on this user query and their actual financial data, generate 5 specific Google search queries that will provide the most relevant risk intelligence and protection strategies.
+Generate 3 targeted Google search queries for Indian financial risk assessment:
 
 User Query: {user_query}
+Financial Context: {self._format_financial_summary_for_queries(financial_data)}
 
-User's Financial Risk Profile:
-{self._format_financial_data_for_risk_assessment(financial_data)}
+Focus on CURRENT Indian market risks:
+1. Insurance and protection strategies
+2. Market risks and emergency planning
+3. Regulatory compliance and safeguards
 
-Generate exactly 5 risk intelligence queries focused on INDIAN context that will help identify:
-- Current Indian market risks and protection strategies
-- Indian insurance and protection opportunities
-- Emergency planning and risk mitigation approaches for Indians
-- Specific risks related to their Indian financial situation
-
-IMPORTANT: Focus on INDIAN market, INR currency, Indian insurance products, and Indian financial regulations.
-Return only the queries, one per line, no explanations.
+Return ONLY search queries, one per line.
 """
         
         try:
             ai_response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=ai_prompt
+                contents=ai_prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=150,
+                    temperature=0.3
+                )
             )
             
             # Parse AI response into query list
             queries = [line.strip() for line in ai_response.text.strip().split('\n') if line.strip()]
-            return queries[:5]
+            return queries[:3]  # Reduced to 3 for speed
             
         except Exception as e:
             logger.error(f"AI risk query generation failed: {e}")
-            # Fallback: let AI generate basic risk queries
-            return [f"{user_query} financial risk assessment protection strategies current"]
+            return [
+                f"{user_query} insurance protection India 2025",
+                "financial risk management India emergency fund",
+                "investment protection strategies India market risk 2025"
+            ]
+    
+    def _format_financial_summary_for_queries(self, financial_data: FinancialData) -> str:
+        """Extract key financial metrics for risk assessment query context"""
+        summary_parts = []
+        
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth = financial_data.net_worth.get('netWorthResponse', {})
+            total_value = net_worth.get('totalNetWorthValue', {})
+            if total_value.get('units'):
+                net_worth_amount = float(total_value.get('units', '0'))
+                summary_parts.append(f"Net worth ₹{self.format_currency(net_worth_amount)}")
+        
+        return ", ".join(summary_parts) if summary_parts else "General user"
     
     async def analyze_financial_data(self, financial_data: FinancialData) -> Dict[str, Any]:
         """Pure AI risk analysis of financial data - NO hardcoded calculations"""
