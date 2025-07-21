@@ -1,1 +1,0 @@
-# Coordination module for agent collaboration

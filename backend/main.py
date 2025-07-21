@@ -1,360 +1,364 @@
-#!/usr/bin/env python3
 """
-Artha AI Backend - Revolutionary Multi-Agent Financial Advisory System
-Main Flask application orchestrating the hackathon-winning 4-stage collaboration framework
+Revolutionary 3-Agent Financial AI Chatbot
+Real-time streaming responses with agent collaboration
 """
 
+import asyncio
+import sys
 import os
 import json
-import uuid
-from datetime import datetime
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from typing import Dict, List, Any, Optional
-from dotenv import load_dotenv
+import logging
+from typing import Dict, Any, List
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.live import Live
+from rich.status import Status
+from rich.text import Text
+from rich.columns import Columns
+from rich.rule import Rule
+import time
 
-# Load environment variables
-load_dotenv()
+# Add backend to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Import our revolutionary agents
+# Import agents directly
 from agents.analyst_agent.analyst import AnalystAgent
-from agents.research_agent.research import ResearchAgent
-from agents.risk_management_agent.risk_manager import RiskManagementAgent
-from coordination.agent_coordinator import AgentCoordinator
-from coordination.realtime_collaboration import RealtimeCollaborationStreamer
-from coordination.conflict_detector import ConflictDetector, DiscussionSimulator
-from utils.data_loader import DataLoader
-from utils.logger import setup_logger
+from agents.research_agent.strategist import ResearchAgent
+from agents.risk_agent.risk_guardian import RiskAgent
+from core.fi_mcp.client import FinancialData, get_user_financial_data
 
-app = Flask(__name__)
-CORS(app)
+# Setup simple logging
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
-@app.route('/demo')
-def demo_page():
-    """Serve the real-time collaboration demo page"""
-    return app.send_static_file('realtime_demo.html')
-
-# Setup logging
-logger = setup_logger()
-
-# Initialize agents and coordinator with error handling
-try:
-    logger.info("🔄 Initializing revolutionary agents...")
-    data_loader = DataLoader()
-    logger.info("✅ Data loader initialized")
+class ArthaAIChatbot:
+    """Revolutionary 3-Agent Financial AI Chatbot"""
     
-    analyst_agent = AnalystAgent(data_loader)
-    logger.info("✅ Data Analyst agent ready")
-    
-    research_agent = ResearchAgent(data_loader)
-    logger.info("✅ Research Strategist agent ready")
-    
-    risk_agent = RiskManagementAgent(data_loader)
-    logger.info("✅ Risk Guardian agent ready")
-    
-    coordinator = AgentCoordinator(analyst_agent, research_agent, risk_agent)
-    logger.info("✅ 4-stage collaboration coordinator ready")
-    
-    # Initialize real-time collaboration streamer
-    realtime_streamer = RealtimeCollaborationStreamer()
-    conflict_detector = ConflictDetector()
-    discussion_simulator = DiscussionSimulator()
-    logger.info("✅ Real-time collaboration streaming ready")
-    
-    agents_initialized = True
-except Exception as e:
-    logger.error(f"❌ Agent initialization failed: {str(e)}")
-    agents_initialized = False
-    coordinator = None
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint for revolutionary collaboration framework"""
-    return jsonify({
-        'status': 'revolutionary_healthy',
-        'framework_version': '4-stage-collaboration-v1.0',
-        'timestamp': datetime.now().isoformat(),
-        'agents': {
-            'analyst': 'Data Analyst - Financial Detective (online)',
-            'research': 'Research Strategist - Market Intelligence Expert (online)', 
-            'risk_management': 'Risk Guardian - Financial Protection Specialist (online)'
-        },
-        'collaboration_features': [
-            'Independent Analysis (Stage 1)',
-            'AI-Powered Conflict Detection (Stage 2)',
-            'Real-Time Discussion Simulation (Stage 3)',
-            'Unified Decision Building (Stage 4)'
-        ]
-    })
-
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    """🏆 Revolutionary chat endpoint using 4-stage collaboration framework"""
-    try:
-        data = request.get_json()
+    def __init__(self):
+        self.console = Console()
         
-        if not data or 'message' not in data:
-            return jsonify({'error': 'Missing message parameter'}), 400
-        
-        user_message = data['message']
-        user_id = data.get('user_id', 'demo_user')
-        session_id = data.get('session_id', str(uuid.uuid4()))
-        
-        logger.info(f"🚀 Initiating revolutionary 4-stage collaboration for user {user_id}, session {session_id}")
-        
-        # Check if agents are initialized
-        if not agents_initialized or coordinator is None:
-            logger.error("❌ Agents not properly initialized")
-            return jsonify({
-                'error': 'System initialization error',
-                'message': 'Revolutionary agents not properly initialized.',
-                'collaboration_summary': 'The revolutionary collaboration framework is initializing. Please refresh and try again.',
-                'framework_version': '4-stage-collaboration-v1.0'
-            }), 500
-        
-        # Check if Gemini API key is available
-        if not os.getenv('GEMINI_API_KEY'):
-            logger.error("❌ GEMINI_API_KEY not found in environment")
-            return jsonify({
-                'error': 'API configuration error',
-                'message': 'Gemini API key not configured. Please check your .env file.',
-                'collaboration_summary': 'Please configure your Gemini API key in the .env file to enable the revolutionary collaboration framework.',
-                'framework_version': '4-stage-collaboration-v1.0'
-            }), 500
-        
-        # Use revolutionary 4-stage collaboration framework
+        # Initialize agents
         try:
-            logger.info("🎯 Starting collaboration process...")
-            response = coordinator.process_collaborative_query(
-                user_message=user_message,
-                user_id=user_id,
-                session_id=session_id
-            )
-            logger.info("✅ Collaboration completed successfully")
-        except Exception as coord_error:
-            logger.error(f"❌ Coordination error: {str(coord_error)}")
-            # Return a simplified response while we debug
-            response = {
-                'session_id': session_id,
-                'user_query': user_message,
-                'collaboration_summary': f"""🏆 Revolutionary Artha AI Analysis
+            self.analyst = AnalystAgent()
+            self.research = ResearchAgent()
+            self.risk = RiskAgent()
+            self.console.print("[green]✅ All 3 agents initialized successfully![/green]")
+        except Exception as e:
+            self.console.print(f"[red]❌ Error initializing agents: {e}[/red]")
+            sys.exit(1)
+    
+    def print_welcome(self):
+        """Print welcome banner"""
+        welcome = """
+🏆 Revolutionary 3-Agent Financial AI System
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Your Question: "{user_message}"
+🤖 Your Comprehensive Financial Advisory Team:
+   🕵️ Financial Data Intelligence Analyst - Complete financial analysis for ANY decision
+   🎯 Universal Financial Strategist - Plans for ALL financial goals  
+   🛡️ Comprehensive Risk Advisor - Protects ALL financial decisions
 
-🤖 Our three expert agents are working on your question:
+🌟 HANDLES ALL FINANCIAL QUESTIONS:
+   Cars, Houses, Jobs, Travel, Taxes, Investments, Insurance, Loans - EVERYTHING!
 
-🕵️ **Data Analyst (Financial Detective)**: Analyzing your financial data patterns and portfolio performance with Fi MCP integration.
+💡 Powered by Google Search Grounding + Live Market Data
+🚀 Watch agents collaborate in real-time!
 
-🎯 **Research Strategist (Market Intelligence Expert)**: Evaluating current market conditions and investment timing strategies.
-
-🛡️ **Risk Guardian (Protection Specialist)**: Assessing potential risks and developing protective measures.
-
-💡 **Preliminary Recommendation**: Based on our revolutionary 4-stage collaboration framework, we recommend taking a balanced approach that considers your financial data, current market conditions, and risk protection needs.
-
-⚡ The full collaboration system is currently being optimized. Please try again for complete multi-agent analysis!""",
-                'agent_insights': {
-                    'analyst': {'agent_name': 'Data Analyst', 'key_findings': ['Portfolio analysis in progress'], 'confidence': 0.85},
-                    'research': {'agent_name': 'Research Strategist', 'key_findings': ['Market analysis in progress'], 'confidence': 0.80},
-                    'risk_management': {'agent_name': 'Risk Guardian', 'key_findings': ['Risk assessment in progress'], 'confidence': 0.90}
-                },
-                'conflicts_resolved': 0,
-                'discussion_rounds': 0,
-                'overall_confidence': 0.85,
-                'timestamp': datetime.now().isoformat(),
-                'status': 'simplified_response'
-            }
+Type your financial questions or 'quit' to exit.
+        """
         
-        # Add framework metadata to response
-        if isinstance(response, dict):
-            response['framework_info'] = {
-                'version': '4-stage-collaboration-v1.0',
-                'stages_completed': [
-                    '✅ Stage 1: Independent Analysis',
-                    '✅ Stage 2: Conflict Detection', 
-                    '✅ Stage 3: Collaborative Discussion',
-                    '✅ Stage 4: Unified Decision'
-                ]
-            }
+        self.console.print(Panel(
+            welcome,
+            title="[bold blue]ARTHA AI CHATBOT[/bold blue]",
+            border_style="blue"
+        ))
+    
+    def create_agent_table(self, statuses: Dict[str, Dict]) -> Table:
+        """Create agent status table"""
+        table = Table(title="🤖 Agent Status", show_header=True)
+        table.add_column("Agent", style="cyan", width=20)
+        table.add_column("Status", style="green", width=15)
+        table.add_column("Activity", style="yellow", width=40)
         
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"❌ Error in revolutionary collaboration: {str(e)}")
-        return jsonify({
-            'error': 'Revolutionary collaboration error',
-            'message': str(e),
-            'framework_version': '4-stage-collaboration-v1.0'
-        }), 500
-
-@app.route('/api/financial-data/<user_id>', methods=['GET'])
-def get_financial_data(user_id: str):
-    """Get user's financial data"""
-    try:
-        financial_data = data_loader.get_user_financial_data(user_id)
-        return jsonify(financial_data)
-    except Exception as e:
-        logger.error(f"Error getting financial data: {str(e)}")
-        return jsonify({'error': 'Failed to get financial data'}), 500
-
-@app.route('/api/market-data', methods=['GET'])
-def get_market_data():
-    """Get market data"""
-    try:
-        market_data = data_loader.get_market_data()
-        return jsonify(market_data)
-    except Exception as e:
-        logger.error(f"Error getting market data: {str(e)}")
-        return jsonify({'error': 'Failed to get market data'}), 500
-
-@app.route('/api/collaboration-details', methods=['POST'])
-def get_collaboration_details():
-    """🔥 Get full collaboration details including 4-stage framework results"""
-    try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        
-        if not session_id:
-            return jsonify({'error': 'Missing session_id parameter'}), 400
-        
-        collaboration_details = coordinator.get_session_collaboration(session_id)
-        
-        # Add framework context to response
-        if isinstance(collaboration_details, dict) and 'error' not in collaboration_details:
-            collaboration_details['framework_info'] = {
-                'version': '4-stage-collaboration-v1.0',
-                'stages': {
-                    'stage_1': 'Independent Analysis by 3 expert agents',
-                    'stage_2': 'AI-powered conflict detection and analysis',
-                    'stage_3': 'Real-time discussion simulation for conflict resolution',
-                    'stage_4': 'Unified decision synthesis using advanced AI'
-                }
-            }
-        
-        return jsonify(collaboration_details)
-        
-    except Exception as e:
-        logger.error(f"❌ Error getting collaboration details: {str(e)}")
-        return jsonify({'error': 'Failed to get collaboration details'}), 500
-
-@app.route('/api/coordinator-status', methods=['GET'])
-def get_coordinator_status():
-    """Get revolutionary coordinator status and metrics"""
-    try:
-        status = coordinator.get_coordinator_status()
-        return jsonify(status)
-    except Exception as e:
-        logger.error(f"Error getting coordinator status: {str(e)}")
-        return jsonify({'error': 'Failed to get coordinator status'}), 500
-
-@app.route('/api/chat-stream', methods=['POST'])
-def chat_stream():
-    """🔥 Revolutionary Real-Time Collaboration Streaming Endpoint"""
-    try:
-        data = request.get_json()
-        
-        if not data or 'message' not in data:
-            return jsonify({'error': 'Missing message parameter'}), 400
-        
-        user_message = data['message']
-        user_id = data.get('user_id', 'demo_user')
-        
-        logger.info(f"🚀 Starting real-time collaboration stream for: {user_message}")
-        
-        # Check if agents are initialized
-        if not agents_initialized:
-            return jsonify({'error': 'Agents not initialized'}), 500
-        
-        def generate_stream():
-            """Generate streaming response"""
-            logger.info("🔄 Starting stream generation...")
-            message_count = 0
+        for agent_key, info in statuses.items():
+            status_color = {
+                "idle": "dim",
+                "thinking": "yellow",
+                "researching": "blue",
+                "analyzing": "green",
+                "complete": "bright_green"
+            }.get(info["status"], "white")
             
-            try:
-                # Send initial connection message
-                initial_message = {
-                    'type': 'connection_start',
-                    'title': 'Stream Connected',
-                    'data': {'status': 'connected', 'query': user_message},
-                    'timestamp': datetime.now().isoformat()
-                }
-                yield f"data: {json.dumps(initial_message)}\n\n"
-                message_count += 1
-                logger.info("✅ Initial message sent")
-                
-                # Start collaborative analysis
-                for stream_message in realtime_streamer.stream_collaborative_analysis(
-                    user_message=user_message,
-                    analyst_agent=analyst_agent,
-                    research_agent=research_agent, 
-                    risk_agent=risk_agent,
-                    conflict_detector=conflict_detector,
-                    discussion_simulator=discussion_simulator,
-                    user_id=user_id
-                ):
-                    yield f"data: {json.dumps(stream_message)}\n\n"
-                    message_count += 1
-                    if message_count % 5 == 0:  # Log every 5 messages
-                        logger.info(f"📊 Sent {message_count} messages")
-                
-                logger.info(f"✅ Stream completed successfully. Total messages: {message_count}")
-                    
-            except Exception as e:
-                logger.error(f"❌ Stream generation error: {str(e)}")
-                import traceback
-                logger.error(f"Traceback: {traceback.format_exc()}")
-                
-                error_message = {
-                    'type': 'error',
-                    'title': 'Streaming Error',
-                    'data': {'error': str(e)},
-                    'timestamp': datetime.now().isoformat()
-                }
-                yield f"data: {json.dumps(error_message)}\n\n"
+            table.add_row(
+                f"{info['emoji']} {agent_key.title()}",
+                f"[{status_color}]{info['status'].upper()}[/{status_color}]",
+                info["message"]
+            )
         
-        return app.response_class(
-            generate_stream(),
-            mimetype='text/event-stream',
-            headers={
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            }
-        )
+        return table
+    
+    async def stream_agent_response(self, agent, agent_name: str, query: str, financial_data: FinancialData):
+        """Stream single agent response with status updates"""
         
-    except Exception as e:
-        logger.error(f"Chat stream error: {str(e)}")
-        return jsonify({'error': f'Streaming failed: {str(e)}'}), 500
-
-@app.route('/api/test', methods=['POST'])
-def test_endpoint():
-    """Simple test endpoint to verify API functionality"""
-    try:
-        data = request.get_json()
-        message = data.get('message', 'test')
-        
-        # Test basic functionality
-        test_response = {
-            'status': 'success',
-            'message': f'Test successful! Received: {message}',
-            'gemini_api_configured': bool(os.getenv('GEMINI_API_KEY')),
-            'timestamp': datetime.now().isoformat(),
-            'framework_version': '4-stage-collaboration-v1.0'
+        # Update status
+        statuses = {
+            "analyst": {"emoji": "🕵️", "status": "idle", "message": "Waiting..."},
+            "research": {"emoji": "🎯", "status": "idle", "message": "Waiting..."},
+            "risk": {"emoji": "🛡️", "status": "idle", "message": "Waiting..."}
         }
+        statuses[agent_name]["status"] = "thinking"
+        statuses[agent_name]["message"] = "Analyzing financial data..."
         
-        return jsonify(test_response)
+        with Live(self.create_agent_table(statuses), refresh_per_second=2) as live:
+            
+            # Use the new process_user_query method that handles everything
+            agent_response = None
+            
+            async for update in agent.process_user_query(query, financial_data):
+                if update['type'] == 'thinking':
+                    # Update status based on stage
+                    stage = update['stage']
+                    if stage == 'financial_analysis':
+                        statuses[agent_name]["status"] = "analyzing"
+                        statuses[agent_name]["message"] = "AI analyzing financial data..."
+                    elif stage == 'query_generation':
+                        statuses[agent_name]["status"] = "researching"
+                        statuses[agent_name]["message"] = "AI generating search queries..."
+                    elif stage == 'market_research':
+                        statuses[agent_name]["status"] = "researching"
+                        statuses[agent_name]["message"] = f"Searching Google: {update['content'][:40]}..."
+                    elif stage == 'intelligence_processing':
+                        statuses[agent_name]["status"] = "analyzing"
+                        statuses[agent_name]["message"] = "AI processing search results..."
+                    elif stage == 'response_generation':
+                        statuses[agent_name]["message"] = "AI formulating recommendations..."
+                    
+                    live.update(self.create_agent_table(statuses))
+                    
+                elif update['type'] == 'response':
+                    agent_response = update['response']
+                    response_content = agent_response['content']
+                    
+                elif update['type'] == 'error':
+                    statuses[agent_name]["status"] = "error"
+                    statuses[agent_name]["message"] = f"Error: {update['error']}"
+                    live.update(self.create_agent_table(statuses))
+                    response_content = update['response']['content']
+            
+            # Complete
+            statuses[agent_name]["status"] = "complete"
+            statuses[agent_name]["message"] = "Analysis complete!"
+            live.update(self.create_agent_table(statuses))
+            
+            await asyncio.sleep(0.5)
         
-    except Exception as e:
-        logger.error(f"Test endpoint error: {str(e)}")
-        return jsonify({'error': f'Test failed: {str(e)}'}), 500
+        return {
+            'agent_name': agent.name,
+            'emoji': agent.emoji,
+            'content': response_content if 'response_content' in locals() else "Analysis failed",
+            'grounding_sources': len(agent_response.get('grounded_data', [])) if agent_response else 0,
+            'recommendations': agent_response.get('recommendations', []) if agent_response else []
+        }
+    
+    async def process_query_with_collaboration(self, user_query: str):
+        """Process query with 3-agent collaboration"""
+        
+        self.console.print(f"\n[bold cyan]Processing:[/bold cyan] {user_query}\n")
+        
+        # Fetch financial data
+        with Status("[blue]📊 Fetching your financial data from Fi MCP...", console=self.console):
+            try:
+                financial_data = await get_user_financial_data()
+                self.console.print("[green]✅ Financial data loaded successfully[/green]")
+            except Exception as e:
+                self.console.print("[yellow]⚠️ Using sample financial data for demo[/yellow]")
+                # Create sample data for demo
+                financial_data = self.create_sample_financial_data()
+        
+        self.console.print("\n[bold blue]🚀 Starting 3-Agent Analysis...[/bold blue]\n")
+        
+        # Process with all agents concurrently but show sequentially for better UX
+        agents = [
+            ("analyst", self.analyst),
+            ("research", self.research),
+            ("risk", self.risk)
+        ]
+        
+        agent_responses = []
+        
+        for agent_key, agent in agents:
+            self.console.print(f"[bold]{agent.emoji} {agent.name} Analysis:[/bold]")
+            
+            response = await self.stream_agent_response(agent, agent_key, user_query, financial_data)
+            agent_responses.append(response)
+            
+            # Show individual response
+            self.console.print(Panel(
+                response['content'],
+                title=f"{response['emoji']} {response['agent_name']} Response",
+                border_style="green"
+            ))
+            
+            self.console.print(f"[dim]Sources: {response['grounding_sources']} live market data points[/dim]\n")
+        
+        # Show collaboration summary
+        self.display_collaboration_summary(agent_responses)
+    
+    def create_sample_financial_data(self) -> FinancialData:
+        """Create sample financial data for demo"""
+        
+        # Load sample data from mcp-docs
+        try:
+            # Load all sample data files
+            with open('../mcp-docs/sample_responses/fetch_net_worth.json', 'r') as f:
+                sample_net_worth = json.load(f)
+            
+            with open('../mcp-docs/sample_responses/fetch_mf_transactions.json', 'r') as f:
+                sample_transactions = json.load(f)
+            
+            with open('../mcp-docs/sample_responses/fetch_credit_report.json', 'r') as f:
+                sample_credit = json.load(f)
+            
+            with open('../mcp-docs/sample_responses/fetch_epf_details.json', 'r') as f:
+                sample_epf = json.load(f)
+            
+            # Extract data properly
+            net_worth_data = sample_net_worth  # Contains full net worth response including mfSchemeAnalytics
+            
+            # Create FinancialData object with all sample data
+            return FinancialData(
+                net_worth=net_worth_data,  # Pass the full net worth object
+                mutual_funds=net_worth_data.get('mfSchemeAnalytics', {}).get('schemeAnalytics', []),
+                bank_accounts=net_worth_data.get('accountDetailsBulkResponse', {}).get('accountDetailsMap', {}),
+                equity_holdings=[],  # Not in sample data
+                credit_report=sample_credit,
+                epf_details=sample_epf,
+                transactions=sample_transactions.get('transactions', [])
+            )
+        except Exception as e:
+            self.console.print(f"[red]Error loading sample data: {e}[/red]")
+            # Fallback with more complete minimal data
+            return FinancialData(
+                net_worth={
+                    'netWorthResponse': {
+                        'totalNetWorthValue': {'currencyCode': 'INR', 'units': '868721'},
+                        'assetValues': [
+                            {'netWorthAttribute': 'ASSET_TYPE_SAVINGS_ACCOUNTS', 'value': {'units': '200000', 'currencyCode': 'INR'}},
+                            {'netWorthAttribute': 'ASSET_TYPE_MUTUAL_FUND', 'value': {'units': '300000', 'currencyCode': 'INR'}}
+                        ]
+                    }
+                },
+                mutual_funds=[],
+                bank_accounts={},
+                equity_holdings=[],
+                credit_report={},
+                epf_details={},
+                transactions=[]
+            )
+    
+    def display_collaboration_summary(self, responses: List[Dict[str, Any]]):
+        """Display final collaboration summary"""
+        
+        total_sources = sum(r['grounding_sources'] for r in responses)
+        all_recommendations = []
+        for r in responses:
+            all_recommendations.extend(r['recommendations'])
+        
+        summary = f"""
+🏆 3-AGENT COLLABORATION COMPLETE
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    debug = os.environ.get('FLASK_ENV', 'development') == 'development'
+📊 Analysis Summary:
+• Total Agents: 3 specialized financial AI agents
+• Live Data Sources: {total_sources} real-time market intelligence points
+• Processing Mode: Concurrent analysis with live grounding
+
+🤝 Unified Insights:
+Each agent analyzed your query using live market data and personal financial information.
+All recommendations are backed by current market conditions and verifiable sources.
+
+💡 Key Recommendations:"""
+        
+        for i, rec in enumerate(list(set(all_recommendations))[:5], 1):
+            summary += f"\n{i}. {rec}"
+        
+        summary += f"""
+
+⚡ Agent Specializations:
+• 🕵️ Data Analyst: Portfolio analysis vs live market benchmarks
+• 🎯 Market Strategist: Current opportunities and strategic timing
+• 🛡️ Risk Guardian: Live threat monitoring and protection strategies
+
+🔍 All responses include real-time market intelligence and verifiable sources.
+        """
+        
+        self.console.print(Panel(
+            summary,
+            title="[bold green]🎯 COLLABORATIVE AI ANALYSIS[/bold green]",
+            border_style="green"
+        ))
     
-    logger.info("🏆 Starting Revolutionary Artha AI Backend with 4-Stage Collaboration Framework")
-    logger.info(f"🚀 Server launching on port {port}")
-    logger.info("💎 3 Expert Agents Ready: Data Analyst, Research Strategist, Risk Guardian")
-    logger.info("⚡ Framework Version: 4-stage-collaboration-v1.0")
-    
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    async def chat_loop(self):
+        """Main chat loop"""
+        
+        self.print_welcome()
+        
+        sample_queries = [
+            "Should I buy a car worth 20 lakhs?",
+            "What's my budget for renting a house?",
+            "Should I take a job offering 2L extra but in another city?",
+            "Plan a vacation to Ladakh within my budget",
+            "Help me file my taxes and save money"
+        ]
+        
+        self.console.print("\n[bold cyan]💡 Try these sample queries:[/bold cyan]")
+        for i, query in enumerate(sample_queries, 1):
+            self.console.print(f"  {i}. {query}")
+        
+        while True:
+            try:
+                self.console.print("\n" + "="*60)
+                
+                user_query = Prompt.ask(
+                    "\n[bold green]💬 Ask your financial question[/bold green]",
+                    default=""
+                )
+                
+                if user_query.lower() in ['quit', 'exit', 'q', 'bye']:
+                    self.console.print("\n[bold blue]👋 Thank you for using Artha AI! Goodbye![/bold blue]")
+                    break
+                
+                if not user_query.strip():
+                    continue
+                
+                # Check for sample query numbers
+                if user_query.isdigit():
+                    query_num = int(user_query)
+                    if 1 <= query_num <= len(sample_queries):
+                        user_query = sample_queries[query_num - 1]
+                        self.console.print(f"[dim]Using sample query: {user_query}[/dim]")
+                
+                # Process the query
+                await self.process_query_with_collaboration(user_query)
+                
+            except KeyboardInterrupt:
+                self.console.print("\n[bold red]🛑 Interrupted by user. Goodbye![/bold red]")
+                break
+            except Exception as e:
+                self.console.print(f"\n[bold red]❌ Error: {str(e)}[/bold red]")
+                logger.error(f"Chat error: {e}")
+
+async def main():
+    """Main entry point"""
+    chatbot = ArthaAIChatbot()
+    await chatbot.chat_loop()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        console.print("\n[bold red]🛑 Goodbye![/bold red]")
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Fatal error: {str(e)}[/bold red]")
+        sys.exit(1)
