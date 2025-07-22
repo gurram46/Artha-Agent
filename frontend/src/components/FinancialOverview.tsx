@@ -173,7 +173,7 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
-            {overviewData.assetAllocation.map((asset, index) => (
+            {overviewData.assetAllocation.map((asset: any, index: number) => (
               <div key={index}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">

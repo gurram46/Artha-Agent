@@ -1,22 +1,31 @@
 """
 FastAPI server to expose Artha-Agent backend to Next.js frontend
+Enhanced with MoneyTruthEngine and AI-driven insights
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 import logging
 import sys
 import os
+import json
+from typing import Dict, Any
 
 # Add backend to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from main import ArthaAIChatbot
-from core.fi_mcp.client import get_user_financial_data
+from core.fi_mcp.real_client import get_user_financial_data, get_portfolio_summary
+from core.money_truth_engine import MoneyTruthEngine
+from agents.enhanced_analyst import EnhancedAnalystAgent
+from agents.enhanced_researcher import EnhancedResearchAgent
+from agents.enhanced_risk_advisor import EnhancedRiskAdvisorAgent
+from google import genai
+from config.settings import config
 
-app = FastAPI(title="Artha AI Backend API", version="1.0.0")
+app = FastAPI(title="Artha AI Backend API - Enhanced", version="2.0.0")
 
 # Enable CORS for Next.js frontend
 app.add_middleware(
@@ -27,8 +36,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize chatbot
+# Initialize chatbot and enhanced components
 chatbot = None
+money_truth_engine = None
+enhanced_analyst = None
+enhanced_researcher = None  
+enhanced_risk_advisor = None
 
 class QueryRequest(BaseModel):
     query: str
@@ -39,15 +52,35 @@ class QueryResponse(BaseModel):
     sources_count: int
     agents_used: list
 
-@app.on_event("startup")
+class InsightRequest(BaseModel):
+    analysis_type: str = "complete"  # complete, hidden_truths, future_wealth, etc.
+
+@app.on_event("startup") 
 async def startup_event():
-    """Initialize the chatbot on startup"""
-    global chatbot
+    """Initialize the chatbot and enhanced AI components"""
+    global chatbot, money_truth_engine, enhanced_analyst, enhanced_researcher, enhanced_risk_advisor
     try:
         chatbot = ArthaAIChatbot()
-        logging.info("🚀 Artha AI Backend initialized successfully")
+        
+        # Initialize enhanced agents
+        enhanced_analyst = EnhancedAnalystAgent()
+        enhanced_researcher = EnhancedResearchAgent()
+        enhanced_risk_advisor = EnhancedRiskAdvisorAgent()
+        
+        # Initialize Gemini client
+        gemini_client = genai.Client(api_key=config.GOOGLE_API_KEY)
+        
+        # Initialize MoneyTruthEngine
+        money_truth_engine = MoneyTruthEngine(
+            enhanced_analyst, 
+            enhanced_researcher, 
+            enhanced_risk_advisor,
+            gemini_client
+        )
+        
+        logging.info("🚀 Enhanced Artha AI Backend initialized successfully")
     except Exception as e:
-        logging.error(f"Failed to initialize backend: {e}")
+        logging.error(f"Failed to initialize enhanced backend: {e}")
 
 @app.get("/")
 async def root():
@@ -73,23 +106,27 @@ async def health_check():
 
 @app.get("/financial-data")
 async def get_financial_data():
-    """Get user's financial data from Fi MCP"""
+    """Get user's financial data from Fi MCP with portfolio summary"""
     try:
         financial_data = await get_user_financial_data()
+        portfolio_summary = get_portfolio_summary(financial_data)
+        
         return {
             "status": "success",
             "data": {
                 "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else None,
                 "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else None,
                 "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else None
-            }
+            },
+            "summary": portfolio_summary
         }
     except Exception as e:
         logging.error(f"Financial data fetch failed: {e}")
         return {
             "status": "error",
             "message": str(e),
-            "data": None
+            "data": None,
+            "summary": None
         }
 
 @app.post("/query", response_model=QueryResponse)
@@ -208,6 +245,213 @@ Provide a clear, personalized answer (max 300 words) with specific recommendatio
     except Exception as e:
         logging.error(f"Unified response generation failed: {e}")
         return "I've analyzed your request and can provide guidance based on your financial situation."
+
+# Enhanced API endpoints for MoneyTruthEngine
+
+@app.post("/api/money-truth")
+async def get_money_truth_insights(request: InsightRequest = InsightRequest()):
+    """Get comprehensive AI-driven money insights using MoneyTruthEngine"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Run complete analysis
+        insights = await money_truth_engine.analyze_complete(mcp_data)
+        
+        return {
+            "status": "success",
+            "insights": insights,
+            "analysis_type": request.analysis_type
+        }
+        
+    except Exception as e:
+        logging.error(f"Money truth insights failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@app.post("/api/real-time-insights")
+async def get_real_time_insights(query_request: QueryRequest):
+    """Get real-time AI insights for specific user queries"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Get real-time insights
+        insights = await money_truth_engine.get_real_time_insights(mcp_data, query_request.query)
+        
+        return {
+            "status": "success",
+            "query": query_request.query,
+            "insights": insights
+        }
+        
+    except Exception as e:
+        logging.error(f"Real-time insights failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Insights generation failed: {str(e)}")
+
+@app.post("/api/portfolio-health")
+async def get_portfolio_health():
+    """Get AI-driven portfolio health analysis"""
+    if not enhanced_analyst:
+        raise HTTPException(status_code=500, detail="Enhanced Analyst not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        portfolio_data = {
+            "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+            "timestamp": "current"
+        }
+        
+        # Get portfolio health analysis
+        health_analysis = await enhanced_analyst.analyze_portfolio_health(portfolio_data)
+        
+        return {
+            "status": "success",
+            "portfolio_health": health_analysis
+        }
+        
+    except Exception as e:
+        logging.error(f"Portfolio health analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Health analysis failed: {str(e)}")
+
+@app.post("/api/money-leaks")
+async def detect_money_leaks():
+    """Detect money leaks using AI analysis"""
+    if not enhanced_analyst:
+        raise HTTPException(status_code=500, detail="Enhanced Analyst not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Detect money leaks
+        leaks = await enhanced_analyst.detect_money_leaks(mcp_data)
+        
+        return {
+            "status": "success",
+            "money_leaks": leaks
+        }
+        
+    except Exception as e:
+        logging.error(f"Money leak detection failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Leak detection failed: {str(e)}")
+
+@app.post("/api/risk-assessment")
+async def get_risk_assessment():
+    """Get comprehensive risk assessment"""
+    if not enhanced_risk_advisor:
+        raise HTTPException(status_code=500, detail="Enhanced Risk Advisor not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        portfolio_data = {
+            "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+        }
+        
+        # Get risk assessment
+        risk_assessment = await enhanced_risk_advisor.assess_portfolio_risks(portfolio_data)
+        
+        return {
+            "status": "success",
+            "risk_assessment": risk_assessment
+        }
+        
+    except Exception as e:
+        logging.error(f"Risk assessment failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Risk assessment failed: {str(e)}")
+
+# WebSocket endpoint for real-time AI insights
+@app.websocket("/ws/live-insights")
+async def websocket_live_insights(websocket: WebSocket):
+    """WebSocket endpoint for streaming live AI insights"""
+    await websocket.accept()
+    
+    try:
+        while True:
+            # Wait for user query
+            query_data = await websocket.receive_text()
+            query_obj = json.loads(query_data)
+            user_query = query_obj.get("query", "")
+            
+            if not user_query:
+                continue
+                
+            # Send thinking status
+            await websocket.send_json({
+                "type": "thinking",
+                "message": "AI agents are analyzing your request...",
+                "status": "processing"
+            })
+            
+            try:
+                # Get financial data
+                financial_data = await get_user_financial_data()
+                mcp_data = {
+                    "data": {
+                        "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                        "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                        "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+                    }
+                }
+                
+                # Get real-time insights
+                if money_truth_engine:
+                    insights = await money_truth_engine.get_real_time_insights(mcp_data, user_query)
+                    
+                    # Send insights
+                    await websocket.send_json({
+                        "type": "insights",
+                        "query": user_query,
+                        "data": insights,
+                        "status": "complete"
+                    })
+                else:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "AI engine not available",
+                        "status": "error"
+                    })
+                    
+            except Exception as e:
+                await websocket.send_json({
+                    "type": "error", 
+                    "message": f"Analysis failed: {str(e)}",
+                    "status": "error"
+                })
+                
+    except WebSocketDisconnect:
+        logging.info("WebSocket client disconnected")
+    except Exception as e:
+        logging.error(f"WebSocket error: {e}")
 
 if __name__ == "__main__":
     import uvicorn

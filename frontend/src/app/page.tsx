@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Dashboard from '@/components/Dashboard';
 import ChatInterface from '@/components/ChatInterface';
 import FinancialOverview from '@/components/FinancialOverview';
+import MoneyTruthEngine from '@/components/MoneyTruthEngine';
 
 export default function Home() {
   const [financialData, setFinancialData] = useState(null);
@@ -16,7 +17,7 @@ export default function Home() {
 
   const fetchFinancialData = async () => {
     try {
-      const response = await fetch('http://localhost:8001/financial-data');
+      const response = await fetch('http://localhost:8003/financial-data');
       const data = await response.json();
       setFinancialData(data);
     } catch (error) {
@@ -83,6 +84,16 @@ export default function Home() {
                 >
                   Analytics
                 </button>
+                <button 
+                  onClick={() => setActiveTab('truth-engine')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'truth-engine' 
+                      ? 'text-blue-600 bg-blue-50' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  Money Truths
+                </button>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -133,6 +144,16 @@ export default function Home() {
           >
             Analytics
           </button>
+          <button 
+            onClick={() => setActiveTab('truth-engine')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+              activeTab === 'truth-engine' 
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-gray-600'
+            }`}
+          >
+            Truths
+          </button>
         </div>
       </div>
 
@@ -141,6 +162,7 @@ export default function Home() {
         {activeTab === 'dashboard' && <Dashboard financialData={financialData} />}
         {activeTab === 'chat' && <ChatInterface />}
         {activeTab === 'overview' && <FinancialOverview financialData={financialData} />}
+        {activeTab === 'truth-engine' && <MoneyTruthEngine financialData={financialData} />}
       </main>
     </div>
   );

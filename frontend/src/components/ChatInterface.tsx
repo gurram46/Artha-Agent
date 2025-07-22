@@ -65,7 +65,7 @@ export default function ChatInterface() {
     setMessages(prev => [...prev, processingMessage]);
 
     try {
-      const response = await fetch('http://localhost:8001/query', {
+      const response = await fetch('http://localhost:8003/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
