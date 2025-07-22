@@ -21,7 +21,7 @@ from main import ArthaAIChatbot
 from core.fi_mcp.real_client import get_user_financial_data, get_portfolio_summary
 from core.money_truth_engine import MoneyTruthEngine
 from agents.enhanced_analyst import EnhancedAnalystAgent
-from agents.enhanced_researcher import EnhancedResearchAgent
+from agents.research_agent.enhanced_strategist import EnhancedResearchAgent
 from agents.enhanced_risk_advisor import EnhancedRiskAdvisorAgent
 from google import genai
 from config.settings import config

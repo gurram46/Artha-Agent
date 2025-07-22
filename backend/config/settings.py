@@ -19,22 +19,22 @@ class Config:
     FI_MCP_URL = os.getenv("FI_MCP_URL", "https://mcp.fi.money:8080/mcp/stream")
     FI_MCP_AUTH_TOKEN = os.getenv("FI_MCP_AUTH_TOKEN")
     
-    # Performance Configuration - Optimized for Speed
-    MAX_GROUNDING_QUERIES = int(os.getenv("MAX_GROUNDING_QUERIES", "3"))  # Reduced from 5 to 3 for faster response
-    COLLABORATION_TIMEOUT = int(os.getenv("COLLABORATION_TIMEOUT", "8"))   # Reduced from 15 to 8 seconds
-    STREAMING_CHUNK_SIZE = int(os.getenv("STREAMING_CHUNK_SIZE", "1024"))  # Increased chunk size
-    ENABLE_RESPONSE_CACHING = os.getenv("ENABLE_RESPONSE_CACHING", "true").lower() == "true"
-    CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "600"))        # Increased cache time for better performance
+    # Performance Configuration - ENHANCED FOR MAXIMUM QUALITY
+    MAX_GROUNDING_QUERIES = int(os.getenv("MAX_GROUNDING_QUERIES", "7"))  # Increased to 7 for comprehensive research
+    COLLABORATION_TIMEOUT = int(os.getenv("COLLABORATION_TIMEOUT", "15"))   # Increased for quality analysis
+    STREAMING_CHUNK_SIZE = int(os.getenv("STREAMING_CHUNK_SIZE", "2048"))  # Larger chunks for quality content
+    ENABLE_RESPONSE_CACHING = os.getenv("ENABLE_RESPONSE_CACHING", "false").lower() == "true"  # Disabled for fresh quality analysis
+    CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))        # Reduced cache time for fresher quality
     PARALLEL_AGENT_PROCESSING = os.getenv("PARALLEL_AGENT_PROCESSING", "false").lower() == "true"  # Sequential for complete analysis
-    PARALLEL_SEARCH_PROCESSING = os.getenv("PARALLEL_SEARCH_PROCESSING", "true").lower() == "true"  # Parallel searches for speed
+    PARALLEL_SEARCH_PROCESSING = os.getenv("PARALLEL_SEARCH_PROCESSING", "true").lower() == "true"  # Parallel searches for efficiency
     GEMINI_GENERATION_CONFIG = {
-        "temperature": 0.4,  # Slightly higher for better generation
-        # Removed max_output_tokens to fix Gemini API bug
-        "top_p": 0.95,  # Higher for more diverse outputs
-        "top_k": 64  # Higher for better quality
+        "temperature": 0.3,  # Lower for more focused, quality responses
+        # Removed max_output_tokens to fix Gemini API bug - allowing unlimited quality output
+        "top_p": 0.9,  # Optimized for quality and relevance
+        "top_k": 40  # Optimized for quality generation
     }
-    RESPONSE_LENGTH_LIMIT = 12000  # Increased to prevent truncation
-    SEARCH_TIMEOUT_SECONDS = int(os.getenv("SEARCH_TIMEOUT_SECONDS", "30"))  # Increased search timeout for grounding
+    RESPONSE_LENGTH_LIMIT = 25000  # Significantly increased for comprehensive quality responses
+    SEARCH_TIMEOUT_SECONDS = int(os.getenv("SEARCH_TIMEOUT_SECONDS", "45"))  # Increased timeout for quality grounding
     
     # Logging Configuration
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

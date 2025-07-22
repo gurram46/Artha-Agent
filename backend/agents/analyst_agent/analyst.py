@@ -586,14 +586,11 @@ Return ONLY search query (max 20 words):"""
                     logger.error(f"Finish reason: {candidate.finish_reason}")
                     if hasattr(candidate, 'safety_ratings'):
                         logger.error(f"Safety ratings: {candidate.safety_ratings}")
-                logger.error("❌ SYSTEM FAILURE: AI query generation failed. Exiting program.")
-                import sys
-                sys.exit(1)
+                logger.warning("🔄 Using enhanced fallback query generation")
+                return self._generate_enhanced_fallback_query(user_query, financial_summary)
                 
         except Exception as e:
-            logger.error(f"❌ CRITICAL ERROR: AI query generation failed: {e}")
-            logger.error(f"❌ SYSTEM FAILURE: Cannot proceed without AI-generated query")
-            logger.error(f"❌ NO FALLBACKS ALLOWED - Shutting down program")
-            import sys
-            sys.exit(1)
+            logger.error(f"❌ Enhanced AI query generation failed: {e}")
+            logger.warning(f"🔄 Using enhanced fallback query generation approach")
+            return self._generate_enhanced_fallback_query(user_query, financial_summary)
     
