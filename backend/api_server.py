@@ -248,9 +248,11 @@ Provide a clear, personalized answer (max 300 words) with specific recommendatio
 
 # Enhanced API endpoints for MoneyTruthEngine
 
-@app.post("/api/money-truth")
-async def get_money_truth_insights(request: InsightRequest = InsightRequest()):
-    """Get comprehensive AI-driven money insights using MoneyTruthEngine"""
+# Individual streaming endpoints for each card analysis
+
+@app.post("/api/hidden-truths")
+async def get_hidden_truths():
+    """Get AI-driven hidden money truths - STREAMING"""
     if not money_truth_engine:
         raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
     
@@ -265,17 +267,100 @@ async def get_money_truth_insights(request: InsightRequest = InsightRequest()):
             }
         }
         
-        # Run complete analysis
-        insights = await money_truth_engine.analyze_complete(mcp_data)
+        # Run only hidden truths analysis
+        insights = await money_truth_engine.analyze_hidden_truths(mcp_data)
         
         return {
             "status": "success",
-            "insights": insights,
-            "analysis_type": request.analysis_type
+            "insights": insights
         }
         
     except Exception as e:
-        logging.error(f"Money truth insights failed: {e}")
+        logging.error(f"Hidden truths analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@app.post("/api/future-projection")
+async def get_future_projection():
+    """Get AI-driven future wealth projection - STREAMING"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
+    
+    try:
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Run only future projection analysis
+        insights = await money_truth_engine.calculate_future_wealth(mcp_data)
+        
+        return {
+            "status": "success",
+            "insights": insights
+        }
+        
+    except Exception as e:
+        logging.error(f"Future projection analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@app.post("/api/goal-reality")
+async def get_goal_reality():
+    """Get AI-driven goal reality check - STREAMING"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
+    
+    try:
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Run only goal reality analysis
+        insights = await money_truth_engine.life_goal_simulator(mcp_data)
+        
+        return {
+            "status": "success",
+            "insights": insights
+        }
+        
+    except Exception as e:
+        logging.error(f"Goal reality analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@app.post("/api/money-personality")
+async def get_money_personality():
+    """Get AI-driven money personality analysis - STREAMING"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
+    
+    try:
+        financial_data = await get_user_financial_data()
+        mcp_data = {
+            "data": {
+                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
+            }
+        }
+        
+        # Run only personality analysis
+        insights = await money_truth_engine.analyze_money_personality(mcp_data)
+        
+        return {
+            "status": "success",
+            "insights": insights
+        }
+        
+    except Exception as e:
+        logging.error(f"Money personality analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.post("/api/real-time-insights")

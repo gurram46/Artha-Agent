@@ -10,37 +10,88 @@ interface Props {
 }
 
 export default function Dashboard({ financialData }: Props) {
-  const [moneyTruthInsights, setMoneyTruthInsights] = useState<any>(null);
   const [portfolioHealth, setPortfolioHealth] = useState<any>(null);
   const [moneyLeaks, setMoneyLeaks] = useState<any>(null);
   const [riskAssessment, setRiskAssessment] = useState<any>(null);
-  const [isLoadingTruth, setIsLoadingTruth] = useState(false);
   const [isLoadingHealth, setIsLoadingHealth] = useState(false);
   const [isLoadingLeaks, setIsLoadingLeaks] = useState(false);
   const [isLoadingRisk, setIsLoadingRisk] = useState(false);
 
-  // Fetch Money Truth Engine insights
-  const fetchMoneyTruthInsights = async () => {
+  // Individual streaming fetch functions for each card
+  const [hiddenTruths, setHiddenTruths] = useState<any>(null);
+  const [futureProjection, setFutureProjection] = useState<any>(null);
+  const [goalReality, setGoalReality] = useState<any>(null);
+  const [moneyPersonality, setMoneyPersonality] = useState<any>(null);
+  const [isLoadingHidden, setIsLoadingHidden] = useState(false);
+  const [isLoadingFuture, setIsLoadingFuture] = useState(false);
+  const [isLoadingGoals, setIsLoadingGoals] = useState(false);
+  const [isLoadingPersonality, setIsLoadingPersonality] = useState(false);
+
+  const fetchHiddenTruths = async () => {
     if (!financialData) return;
-    
-    setIsLoadingTruth(true);
+    setIsLoadingHidden(true);
     try {
-      const response = await fetch('http://localhost:8003/api/money-truth', {
+      const response = await fetch('http://localhost:8003/api/hidden-truths', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          analysis_type: 'complete'
-        })
+        headers: { 'Content-Type': 'application/json' }
       });
-      
       const data = await response.json();
-      setMoneyTruthInsights(data.insights);
+      setHiddenTruths(data.insights);
     } catch (error) {
-      console.error('Failed to fetch money truth insights:', error);
+      console.error('Failed to fetch hidden truths:', error);
     } finally {
-      setIsLoadingTruth(false);
+      setIsLoadingHidden(false);
+    }
+  };
+
+  const fetchFutureProjection = async () => {
+    if (!financialData) return;
+    setIsLoadingFuture(true);
+    try {
+      const response = await fetch('http://localhost:8003/api/future-projection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      setFutureProjection(data.insights);
+    } catch (error) {
+      console.error('Failed to fetch future projection:', error);
+    } finally {
+      setIsLoadingFuture(false);
+    }
+  };
+
+  const fetchGoalReality = async () => {
+    if (!financialData) return;
+    setIsLoadingGoals(true);
+    try {
+      const response = await fetch('http://localhost:8003/api/goal-reality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      setGoalReality(data.insights);
+    } catch (error) {
+      console.error('Failed to fetch goal reality:', error);
+    } finally {
+      setIsLoadingGoals(false);
+    }
+  };
+
+  const fetchMoneyPersonality = async () => {
+    if (!financialData) return;
+    setIsLoadingPersonality(true);
+    try {
+      const response = await fetch('http://localhost:8003/api/money-personality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      setMoneyPersonality(data.insights);
+    } catch (error) {
+      console.error('Failed to fetch money personality:', error);
+    } finally {
+      setIsLoadingPersonality(false);
     }
   };
 
@@ -112,10 +163,15 @@ export default function Dashboard({ financialData }: Props) {
 
   useEffect(() => {
     if (financialData) {
-      fetchMoneyTruthInsights();
+      // Start all analyses in parallel - each updates independently 
+      fetchHiddenTruths();
       fetchPortfolioHealth();
       fetchMoneyLeaks();
       fetchRiskAssessment();
+      // Stagger these to avoid overwhelming the API
+      setTimeout(() => fetchFutureProjection(), 100);
+      setTimeout(() => fetchGoalReality(), 200);
+      setTimeout(() => fetchMoneyPersonality(), 300);
     }
   }, [financialData]);
 
@@ -165,9 +221,9 @@ export default function Dashboard({ financialData }: Props) {
       <MoneyTruthCard
         title="💡 Hidden Money Truths"
         subtitle="Shocking discoveries about your finances"
-        insights={moneyTruthInsights?.hidden_truths}
-        isLoading={isLoadingTruth}
-        onRefresh={fetchMoneyTruthInsights}
+        insights={hiddenTruths}
+        isLoading={isLoadingHidden}
+        onRefresh={fetchHiddenTruths}
         type="hidden_truths"
       />
 
@@ -208,40 +264,34 @@ export default function Dashboard({ financialData }: Props) {
       <LiveInsightsCard />
 
       {/* Future Wealth Projection */}
-      {moneyTruthInsights?.future_projection && (
-        <MoneyTruthCard
-          title="🔮 Future Wealth Projection"
-          subtitle="AI predicts your financial future"
-          insights={moneyTruthInsights.future_projection}
-          isLoading={false}
-          onRefresh={fetchMoneyTruthInsights}
-          type="future_projection"
-        />
-      )}
+      <MoneyTruthCard
+        title="🔮 Future Wealth Projection"
+        subtitle="AI predicts your financial future"
+        insights={futureProjection}
+        isLoading={isLoadingFuture}
+        onRefresh={fetchFutureProjection}
+        type="future_projection"
+      />
 
       {/* Goal Reality Check */}
-      {moneyTruthInsights?.goal_reality && (
-        <MoneyTruthCard
-          title="🎯 Life Goal Reality Check"
-          subtitle="Can you achieve your dreams?"
-          insights={moneyTruthInsights.goal_reality}
-          isLoading={false}
-          onRefresh={fetchMoneyTruthInsights}
-          type="goal_reality"
-        />
-      )}
+      <MoneyTruthCard
+        title="🎯 Life Goal Reality Check"
+        subtitle="Can you achieve your dreams?"
+        insights={goalReality}
+        isLoading={isLoadingGoals}
+        onRefresh={fetchGoalReality}
+        type="goal_reality"
+      />
 
       {/* Money Personality Analysis */}
-      {moneyTruthInsights?.personality && (
-        <MoneyTruthCard
-          title="🧠 Money Personality Analysis"
-          subtitle="What your behavior reveals about your wealth"
-          insights={moneyTruthInsights.personality}
-          isLoading={false}
-          onRefresh={fetchMoneyTruthInsights}
-          type="personality"
-        />
-      )}
+      <MoneyTruthCard
+        title="🧠 Money Personality Analysis"
+        subtitle="What your behavior reveals about your wealth"
+        insights={moneyPersonality}
+        isLoading={isLoadingPersonality}
+        onRefresh={fetchMoneyPersonality}
+        type="personality"
+      />
 
       {/* Portfolio Breakdown - Real Mutual Funds */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
