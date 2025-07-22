@@ -657,9 +657,16 @@ Be thorough and analytical using the research and market data provided."""
                     logger.error(f"Candidates: {risk_response.candidates}")
                     if hasattr(risk_response.candidates[0], 'finish_reason'):
                         logger.error(f"Finish reason: {risk_response.candidates[0].finish_reason}")
-                logger.error(f"❌ CRITICAL: Risk Agent failed - system cannot proceed")
-                import sys
-                sys.exit(1)
+                logger.error(f"❌ CRITICAL: Risk Agent failed - returning fallback response")
+                # Return a fallback response instead of crashing the server
+                return {
+                    'agent': 'Comprehensive Risk Assessment',
+                    'content': 'Risk assessment temporarily unavailable. Please consider general investment risks: market volatility, economic uncertainty, and portfolio diversification needs.',
+                    'emoji': '🛡️',
+                    'market_sources': len(market_intelligence.get('sources', [])),
+                    'data_analysis_integrated': True,
+                    'status': 'fallback'
+                }
             
             return {
                 'agent': 'Comprehensive Risk Assessment',

@@ -112,6 +112,80 @@ export default function MoneyTruthCard({
     );
   };
 
+  const renderMarkdownContent = (text: string) => {
+    if (!text) return null;
+    
+    // Parse markdown-style formatting
+    const lines = text.split('\n').filter(line => line.trim());
+    const elements = lines.map((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Headers
+      if (trimmedLine.startsWith('### ')) {
+        const headerText = trimmedLine.replace('### ', '');
+        return (
+          <h3 key={index} className="text-lg font-bold text-gray-900 mb-3 flex items-center">
+            {headerText}
+          </h3>
+        );
+      }
+      
+      if (trimmedLine.startsWith('## ')) {
+        const headerText = trimmedLine.replace('## ', '');
+        return (
+          <h2 key={index} className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            {headerText}
+          </h2>
+        );
+      }
+      
+      // Bullet points
+      if (trimmedLine.startsWith('• ')) {
+        const bulletText = trimmedLine.replace('• ', '');
+        return (
+          <div key={index} className="flex items-start space-x-3 mb-3 p-3 bg-white rounded-lg border border-gray-100">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-800 leading-relaxed">{bulletText}</p>
+          </div>
+        );
+      }
+      
+      // Bold text (**text**)
+      if (trimmedLine.includes('**') && trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        const boldText = trimmedLine.replace(/\*\*/g, '');
+        return (
+          <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 mb-3">
+            <p className="font-bold text-gray-900">{boldText}</p>
+          </div>
+        );
+      }
+      
+      // Action items (✅ **Action:** text)
+      if (trimmedLine.includes('**✅ Action:**')) {
+        const actionText = trimmedLine.replace('**✅ Action:**', '').trim();
+        return (
+          <div key={index} className="p-4 bg-green-50 rounded-lg border border-green-200 mb-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-600 font-bold">✅ Action:</span>
+              <p className="text-green-800 font-medium">{actionText}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      // Regular paragraphs
+      if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('•')) {
+        return (
+          <p key={index} className="text-gray-700 leading-relaxed mb-3">{trimmedLine}</p>
+        );
+      }
+      
+      return null;
+    }).filter(Boolean);
+    
+    return <div className="space-y-2">{elements}</div>;
+  };
+
   const renderInsightContent = () => {
     if (isLoading) {
       return renderLoadingState();
@@ -150,13 +224,11 @@ export default function MoneyTruthCard({
 
     return (
       <div className="space-y-6">
-        {/* Main insight content */}
-        <div className="prose prose-sm max-w-none">
+        {/* Main insight content with beautiful markdown rendering */}
+        <div className="max-w-none">
           {parsedInsights.ai_insights && (
-            <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-gray-800 leading-relaxed font-medium">
-                {parsedInsights.ai_insights}
-              </p>
+            <div className="space-y-4">
+              {renderMarkdownContent(parsedInsights.ai_insights)}
             </div>
           )}
 
@@ -167,21 +239,23 @@ export default function MoneyTruthCard({
           {type === 'personality' && renderPersonalityContent(parsedInsights)}
         </div>
 
-        {/* Shock factor indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-white rounded-lg border">
-            <div className="text-2xl font-bold text-red-600">🚨</div>
-            <div className="text-xs text-gray-600 mt-1">High Impact</div>
+        {/* Status indicators - only show when analysis is complete */}
+        {parsedInsights.ai_insights && typeof parsedInsights.ai_insights === 'string' && parsedInsights.ai_insights.length > 50 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-3 bg-white rounded-lg border">
+              <div className="text-2xl font-bold text-red-600">🚨</div>
+              <div className="text-xs text-gray-600 mt-1">High Impact</div>
+            </div>
+            <div className="text-center p-3 bg-white rounded-lg border">
+              <div className="text-2xl font-bold text-orange-600">💡</div>
+              <div className="text-xs text-gray-600 mt-1">Eye Opening</div>
+            </div>
+            <div className="text-center p-3 bg-white rounded-lg border">
+              <div className="text-2xl font-bold text-green-600">✅</div>
+              <div className="text-xs text-gray-600 mt-1">Actionable</div>
+            </div>
           </div>
-          <div className="text-center p-3 bg-white rounded-lg border">
-            <div className="text-2xl font-bold text-orange-600">💡</div>
-            <div className="text-xs text-gray-600 mt-1">Eye Opening</div>
-          </div>
-          <div className="text-center p-3 bg-white rounded-lg border">
-            <div className="text-2xl font-bold text-green-600">✅</div>
-            <div className="text-xs text-gray-600 mt-1">Actionable</div>
-          </div>
-        </div>
+        )}
       </div>
     );
   };

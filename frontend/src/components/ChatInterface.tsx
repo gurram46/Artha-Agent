@@ -1,15 +1,61 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import ErrorBoundary from './ErrorBoundary';
+import { Message, StreamMessage, DEFAULT_STREAMING_CONFIG, AgentDetail } from '@/types/chat';
+import ReactMarkdown from 'react-markdown';
 
-interface Message {
-  id: string;
-  type: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  processing?: boolean;
-}
+// Component for expandable agent details
+const AgentDetailsSection = ({ agentDetails }: { agentDetails: Record<string, AgentDetail> }) => {
+  const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
+
+  if (!agentDetails || Object.keys(agentDetails).length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 border-t border-gray-200 pt-4">
+      {Object.entries(agentDetails).map(([agentId, detail]) => (
+        <div key={agentId} className="mb-3">
+          <button
+            onClick={() => setExpandedAgent(expandedAgent === agentId ? null : agentId)}
+            className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <span>{detail.title}</span>
+            <svg
+              className={`w-4 h-4 transform transition-transform ${expandedAgent === agentId ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {expandedAgent === agentId && (
+            <div className="mt-2 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+              <ReactMarkdown
+                components={{
+                  h1: ({node, ...props}) => <h1 className="text-sm font-bold mb-1" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-xs font-semibold mb-1" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-xs font-semibold mb-1" {...props} />,
+                  p: ({node, ...props}) => <p className="mb-1 leading-relaxed text-xs" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc list-inside mb-1 space-y-0.5 text-xs" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-1 space-y-0.5 text-xs" {...props} />,
+                  li: ({node, ...props}) => <li className="leading-relaxed text-xs" {...props} />,
+                  code: ({node, ...props}) => <code className="bg-gray-200 px-1 py-0.5 rounded text-xs" {...props} />
+                }}
+              >
+                {detail.content}
+              </ReactMarkdown>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
@@ -50,66 +96,333 @@ export default function ChatInterface() {
       timestamp: new Date()
     };
 
+    const query = currentMessage;
     setMessages(prev => [...prev, userMessage]);
     setCurrentMessage('');
     setIsLoading(true);
 
-    // Add processing message
-    const processingMessage: Message = {
-      id: (Date.now() + 1).toString(),
+    // Add streaming message placeholder
+    const streamingMessageId = (Date.now() + 1).toString();
+    const streamingMessage: Message = {
+      id: streamingMessageId,
       type: 'assistant',
-      content: 'Analyzing with our 3 AI agents...',
+      content: '',
       timestamp: new Date(),
-      processing: true
+      streaming: true
     };
-    setMessages(prev => [...prev, processingMessage]);
+    setMessages(prev => [...prev, streamingMessage]);
+
+    let retryCount = 0;
+    const maxRetries = DEFAULT_STREAMING_CONFIG.maxRetries;
+    
+    const attemptRequest = async (): Promise<void> => {
+      let controller: AbortController | null = null;
+      let timeoutId: NodeJS.Timeout | null = null;
+      
+      try {
+        controller = new AbortController();
+        
+        // Set up timeout with proper cleanup
+        timeoutId = setTimeout(() => {
+          if (controller && !controller.signal.aborted) {
+            console.log('Request timed out after', DEFAULT_STREAMING_CONFIG.timeout, 'ms');
+            controller.abort();
+          }
+        }, DEFAULT_STREAMING_CONFIG.timeout);
+
+        // Try streaming first
+        const streamResponse = await fetch('http://localhost:8003/api/stream/query', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+          signal: controller.signal
+        });
+
+        // Clear timeout immediately after fetch completes
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
+        if (streamResponse.ok && streamResponse.body) {
+          await handleStreamingResponse(streamResponse, streamingMessageId);
+        } else {
+          throw new Error(`Streaming failed: ${streamResponse.status} ${streamResponse.statusText}`);
+        }
+
+      } catch (error) {
+        // Clean up timeout if still active
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        
+        console.error(`Request attempt ${retryCount + 1} failed:`, error);
+        
+        // Check if error is due to abort signal
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Request was aborted');
+        }
+        
+        if (retryCount < maxRetries && DEFAULT_STREAMING_CONFIG.fallbackToRegular) {
+          retryCount++;
+          
+          // Update status message
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === streamingMessageId
+                ? { ...msg, content: `Retrying... (${retryCount}/${maxRetries})`, streaming: true }
+                : msg
+            )
+          );
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, DEFAULT_STREAMING_CONFIG.retryDelay));
+          return attemptRequest();
+        } else {
+          // Final fallback to regular endpoint
+          await handleRegularResponse(query, streamingMessageId);
+        }
+      } finally {
+        // Ensure cleanup
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
 
     try {
+      await attemptRequest();
+    } catch (error) {
+      console.error('All attempts failed:', error);
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === streamingMessageId
+            ? {
+                ...msg,
+                content: 'Sorry, I encountered an error after multiple attempts. Please try again later.',
+                streaming: false
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStreamingResponse = async (response: Response, messageId: string) => {
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let lastUpdateTime = Date.now();
+    const throttleDelay = 16; // ~60fps updates
+    let pendingUpdate = '';
+    let updateTimeoutId: NodeJS.Timeout | null = null;
+
+    const flushPendingUpdate = () => {
+      if (pendingUpdate) {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === messageId
+              ? { ...msg, content: msg.content + pendingUpdate }
+              : msg
+          )
+        );
+        pendingUpdate = '';
+      }
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          // Flush any remaining updates
+          flushPendingUpdate();
+          if (updateTimeoutId) clearTimeout(updateTimeoutId);
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            console.log('📥 Received streaming data:', data); // Debug log
+            
+            if (data === '[DONE]') {
+              // Flush any pending updates before marking as done
+              flushPendingUpdate();
+              if (updateTimeoutId) clearTimeout(updateTimeoutId);
+              
+              console.log('✅ Stream completed, marking as done');
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === messageId
+                    ? { ...msg, streaming: false }
+                    : msg
+                )
+              );
+              return;
+            }
+
+            try {
+              const parsed: StreamMessage = JSON.parse(data);
+              console.log('📊 Parsed message:', parsed); // Debug log
+              
+              if (parsed.type === 'log' && parsed.content) {
+                console.log('🤖 AI Log:', parsed.content);
+                
+                // Add logs to the message content with proper formatting
+                setMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId
+                      ? { ...msg, content: msg.content + parsed.content + '\n\n', streaming: true }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === 'content' && parsed.content) {
+                console.log('💬 Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
+                
+                // Immediate update for better real-time feel
+                setMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId
+                      ? { ...msg, content: msg.content + parsed.content, streaming: true }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === 'status' && parsed.content) {
+                console.log('📋 Status update:', parsed.content);
+                
+                setMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId
+                      ? { ...msg, content: parsed.content, streaming: true }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === 'agent_details') {
+                console.log('📊 Agent details received:', parsed.agent);
+                
+                // Store agent details separately for expandable sections
+                setMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId
+                      ? { 
+                          ...msg, 
+                          agentDetails: {
+                            ...msg.agentDetails,
+                            [parsed.agent]: {
+                              title: parsed.title,
+                              content: parsed.content
+                            }
+                          }
+                        }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === 'error') {
+                console.error('❌ Streaming error:', parsed.content);
+                throw new Error(parsed.content);
+              }
+            } catch (e) {
+              if (e instanceof Error && e.message !== data) {
+                console.error('🔥 JSON parse error:', e);
+                throw e; // Re-throw actual errors
+              }
+              console.warn('⚠️ Skipping invalid JSON:', data);
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Clean up any pending timeouts
+      if (updateTimeoutId) {
+        clearTimeout(updateTimeoutId);
+      }
+      
+      console.error('Streaming error:', error);
+      
+      // Don't throw AbortError - handle it gracefully
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Streaming was aborted');
+        return;
+      }
+      
+      throw error; // Let the caller handle other errors
+    } finally {
+      // Final cleanup
+      if (updateTimeoutId) {
+        clearTimeout(updateTimeoutId);
+      }
+    }
+  };
+
+  const handleRegularResponse = async (query: string, messageId: string) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('http://localhost:8003/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: currentMessage }),
+        body: JSON.stringify({ query }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
 
-      // Remove processing message and add real response
-      setMessages(prev => {
-        const filtered = prev.filter(msg => !msg.processing);
-        return [
-          ...filtered,
-          {
-            id: (Date.now() + 2).toString(),
-            type: 'assistant',
-            content: data.response,
-            timestamp: new Date()
-          }
-        ];
-      });
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === messageId
+            ? {
+                ...msg,
+                content: data.response || 'No response received from AI agents',
+                streaming: false
+              }
+            : msg
+        )
+      );
 
     } catch (error) {
-      console.error('Error sending message:', error);
-      // Remove processing message and add error message
-      setMessages(prev => {
-        const filtered = prev.filter(msg => !msg.processing);
-        return [
-          ...filtered,
-          {
-            id: (Date.now() + 3).toString(),
-            type: 'assistant',
-            content: 'Sorry, I encountered an error. Please make sure the backend server is running on port 8001.',
-            timestamp: new Date()
-          }
-        ];
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Regular response error:', error);
+      let errorMessage = 'Sorry, I encountered an error.';
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timed out. The AI agents may be busy processing other requests.';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Cannot connect to the AI backend. Please ensure the server is running on port 8003.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === messageId
+            ? {
+                ...msg,
+                content: errorMessage,
+                streaming: false
+              }
+            : msg
+        )
+      );
     }
   };
 
@@ -117,7 +430,7 @@ export default function ChatInterface() {
     setCurrentMessage(query);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -125,7 +438,8 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="space-y-6">
+    <ErrorBoundary>
+      <div className="space-y-6">
       {/* Professional Header */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
@@ -202,7 +516,42 @@ export default function ChatInterface() {
                           <span className="text-sm">{message.content}</span>
                         </div>
                       ) : (
-                        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                        <div className="flex items-start">
+                          <div className="text-sm flex-1">
+                            {message.content ? (
+                              <>
+                                <ReactMarkdown 
+                                  components={{
+                                    // Custom styling for markdown elements
+                                    h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-2" {...props} />,
+                                    h2: ({node, ...props}) => <h2 className="text-md font-semibold mb-2" {...props} />,
+                                    h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1" {...props} />,
+                                    p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                                    strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                                    em: ({node, ...props}) => <em className="italic" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                                    li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
+                                    code: ({node, ...props}) => <code className="bg-gray-100 px-1 py-0.5 rounded text-xs" {...props} />,
+                                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic mb-2" {...props} />
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                                {message.type === 'assistant' && !message.streaming && (
+                                  <AgentDetailsSection agentDetails={message.agentDetails || {}} />
+                                )}
+                              </>
+                            ) : (
+                              message.streaming ? 'AI is typing...' : ''
+                            )}
+                          </div>
+                          {message.streaming && (
+                            <div className="ml-2 flex-shrink-0">
+                              <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          )}
+                        </div>
                       )}
                       <div className={`text-xs mt-1 ${message.type === 'user' ? 'text-gray-300' : 'text-gray-500'}`}>
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -221,7 +570,7 @@ export default function ChatInterface() {
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Ask about your finances, investments, or goals..."
                   className="flex-1 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   disabled={isLoading}
@@ -275,6 +624,7 @@ export default function ChatInterface() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

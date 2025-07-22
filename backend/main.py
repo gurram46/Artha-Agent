@@ -382,6 +382,33 @@ Type your financial questions or 'quit' to exit.
         # Direct, concise unified AI prompt for any financial question with conversation context
         net_worth_value = financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', '0')
         
+        # Extract real financial data from Fi MCP
+        net_worth_data = financial_data.net_worth.get('netWorthResponse', {})
+        assets = net_worth_data.get('assetValues', [])
+        liabilities = net_worth_data.get('liabilityValues', [])
+        
+        # Calculate bank balance and FD from assets
+        bank_balance = next((asset['value']['units'] for asset in assets if asset.get('netWorthAttribute') == 'ASSET_TYPE_SAVINGS_ACCOUNTS'), '0')
+        fd_value = next((asset['value']['units'] for asset in assets if asset.get('netWorthAttribute') == 'ASSET_TYPE_FIXED_DEPOSIT'), '0')
+        
+        # Get total debt from credit report (more accurate than net worth liabilities)
+        total_debt = '0'
+        if hasattr(financial_data, 'credit_report') and financial_data.credit_report:
+            credit_reports = financial_data.credit_report.get('creditReports', [])
+            if credit_reports and len(credit_reports) > 0:
+                credit_data = credit_reports[0].get('creditReportData', {})
+                total_outstanding = credit_data.get('creditAccount', {}).get('creditAccountSummary', {}).get('totalOutstandingBalance', {})
+                total_debt = total_outstanding.get('outstandingBalanceAll', '0')
+        
+        # Extract credit score
+        credit_score = 'N/A'
+        if financial_data.credit_report:
+            credit_reports = financial_data.credit_report.get('creditReports', [])
+            if credit_reports and len(credit_reports) > 0:
+                credit_data = credit_reports[0].get('creditReportData', {})
+                score_data = credit_data.get('score', {})
+                credit_score = score_data.get('bureauScore', 'N/A')
+        
         # Include conversation history for context
         conversation_context = ""
         if self.conversation_history:
@@ -390,18 +417,35 @@ Type your financial questions or 'quit' to exit.
                 conversation_context += f"{i}. Q: {conv['question']}\n   A: {conv['answer'][:200]}...\n"
         
         unified_prompt = f"""
-You are the Unified Financial Decision Agent. You are the ONLY agent with access to the user's personal financial data.
+You are the Unified Financial Decision Agent. You MUST provide specific, actionable answers to ANY financial question using market research and the user's financial data.
 
-The Research and Risk Agents have provided pure market analysis WITHOUT seeing the user's financial information. Your job is to combine their analysis with the user's specific financial situation to make a personalized recommendation.
+YOUR COMPREHENSIVE RESPONSIBILITY:
+- Investment advice: Specific stock names, amounts, sectors from research data
+- Loan decisions: EMI calculations, affordability analysis, loan recommendations
+- Budget planning: Expense allocation, savings targets, financial goal planning
+- Insurance advice: Coverage recommendations, premium calculations
+- Tax optimization: Tax-saving strategies, deduction recommendations
+- Debt management: Repayment strategies, consolidation advice
+- Retirement planning: Corpus calculations, investment timeline strategies
+- Financial product comparisons: Credit cards, mutual funds, FDs, etc.
+
+CRITICAL MANDATE:
+- NEVER refuse to answer financial questions - that's your primary job
+- Extract specific information from research and risk agent data
+- Provide concrete numbers, recommendations, and actionable steps
+- Use their financial capacity: ₹{bank_balance} available, ₹{total_debt} debt, {credit_score} credit score
+
+Financial capacity: ₹{bank_balance} available, ₹{total_debt} debt, {credit_score} credit score
 
 USER QUESTION: {user_query}
 
-USER'S PERSONAL FINANCIAL DATA (CONFIDENTIAL - only you have this):
+USER'S COMPLETE FINANCIAL PROFILE (Real Fi MCP Data - CONFIDENTIAL):
 - Net Worth: ₹{net_worth_value}
-- Available Liquid Funds: ₹520,968  
-- Emergency Fund: ₹432,887
-- Total Debt: ₹75,000
-- Investment Portfolio: Mixed risk profile with existing securities
+- Bank Balance: ₹{bank_balance}
+- Fixed Deposits: ₹{fd_value}
+- Total Debt: ₹{total_debt}
+- Credit Score: {credit_score}
+- Investment Portfolio: Multi-asset portfolio with detailed breakdown available
 
 {conversation_context}
 

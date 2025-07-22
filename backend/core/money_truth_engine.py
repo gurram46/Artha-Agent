@@ -66,21 +66,21 @@ class MoneyTruthEngine:
             financial_data_str = json.dumps(mcp_data, indent=2)
             
             prompt = f"""
-Based on this financial data, give me ONLY 3 short shocking truths:
+Analyze this financial data and reveal hidden insights:
 
 DATA: {financial_data_str}
 
-Format exactly like this:
-1. BIGGEST LEAK: [One sentence] - ₹[amount] lost
-   FIX: [One simple action]
+Find the 3 most critical financial issues from THEIR ACTUAL DATA:
+• Major money leaks or losses
+• Underperforming assets or idle money  
+• Missed opportunities for growth
 
-2. DEAD MONEY: [One sentence] - ₹[amount] idle  
-   FIX: [One simple action]
+For each issue:
+- State the problem clearly
+- Quantify the impact using REAL numbers from their data
+- Suggest specific actionable fix
 
-3. MISSED CHANCE: [One sentence] - ₹[amount] potential
-   FIX: [One simple action]
-
-Maximum 30 words per point. NO explanations.
+Use only their actual financial numbers. No assumptions.
 """
 
             response = await self._get_ai_response(prompt)
@@ -98,18 +98,18 @@ Maximum 30 words per point. NO explanations.
             financial_data_str = json.dumps(mcp_data, indent=2)
             
             prompt = f"""
-Quick wealth prediction:
+Predict wealth growth using ACTUAL data patterns:
 
 DATA: {financial_data_str}
 
-Give me exactly:
-1. At 40: ₹[amount]
-2. At 50: ₹[amount]
-3. At 60: ₹[amount]
-4. SIP needed for ₹1Cr: ₹[amount]/month
-5. Biggest missed opportunity: [One sentence]
+Analyze their current financial behavior and project:
+• Monthly savings/investment rate from their data
+• Current portfolio growth rate from XIRR/returns  
+• Realistic future wealth in 10, 20, 30 years
+• Monthly investment needed for their likely goals
+• Biggest opportunity to accelerate wealth building
 
-Max 20 words per point. Numbers only.
+Base projections on THEIR ACTUAL saving and investing patterns only.
 """
 
             response = await self._get_ai_response(prompt)
@@ -167,17 +167,23 @@ Max 30 words total. No explanations.
             financial_data_str = json.dumps(mcp_data, indent=2)
             
             prompt = f"""
-Goal reality check:
+AI Goal Reality Check:
 
 DATA: {financial_data_str}
 
-Check these goals:
-1. HOME ₹75L: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month
-2. EDUCATION ₹40L: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month  
-3. RETIREMENT ₹4Cr: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month
-4. EMERGENCY ₹15L: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month
+Analyze their ACTUAL financial data and identify:
+1. Current saving rate per month
+2. Existing goal-based investments (if any)
+3. Their likely financial goals based on age/income
+4. Calculate realistic monthly SIP needed for common goals
 
-Max 15 words per goal. Just status and SIP amount.
+Provide feasibility for their situation:
+- HOME: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month
+- RETIREMENT: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month  
+- EMERGENCY: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month
+- CHILD EDUCATION: [POSSIBLE/SHORT/NO] - Need ₹[amount]/month (if applicable)
+
+Base ALL amounts on their actual income, expenses, and financial capacity.
 """
 
             response = await self._get_ai_response(prompt)

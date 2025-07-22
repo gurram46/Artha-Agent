@@ -2,46 +2,71 @@
 
 import { useState, useEffect } from 'react';
 import MoneyTruthCard from './MoneyTruthCard';
+import AIInsightCard from './AIInsightCard';
+import { useFinancialInsights } from '../contexts/FinancialInsightsContext';
 
 interface Props {
   financialData: any;
 }
 
 export default function MoneyTruthEngine({ financialData }: Props) {
-  const [completeInsights, setCompleteInsights] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  // Use global financial insights context
+  const {
+    hiddenTruths,
+    futureProjection,
+    goalReality,
+    moneyPersonality,
+    portfolioHealth,
+    moneyLeaks,
+    riskAssessment,
+    isLoadingHidden,
+    isLoadingFuture,
+    isLoadingGoals,
+    isLoadingPersonality,
+    isLoadingHealth,
+    isLoadingLeaks,
+    isLoadingRisk,
+    fetchHiddenTruths,
+    fetchFutureProjection,
+    fetchGoalReality,
+    fetchMoneyPersonality,
+    fetchPortfolioHealth,
+    fetchMoneyLeaks,
+    fetchRiskAssessment,
+    clearAllData
+  } = useFinancialInsights();
 
-  const fetchCompleteInsights = async () => {
+  // Run all analyses when component loads
+  const runCompleteAnalysis = async () => {
     if (!financialData) return;
     
-    setIsLoading(true);
-    try {
-      const response = await fetch('http://localhost:8003/api/money-truth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          analysis_type: 'complete'
-        })
-      });
-      
-      const data = await response.json();
-      setCompleteInsights(data.insights);
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Failed to fetch complete money truth insights:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Run all analyses in parallel using the global context
+    await Promise.all([
+      fetchHiddenTruths(),
+      fetchFutureProjection(),
+      fetchGoalReality(),
+      fetchMoneyPersonality(),
+      fetchPortfolioHealth(),
+      fetchMoneyLeaks(),
+      fetchRiskAssessment()
+    ]);
   };
 
   useEffect(() => {
     if (financialData) {
-      fetchCompleteInsights();
+      // Only run analysis if we don't have fresh data
+      const hasCompleteData = hiddenTruths && futureProjection && goalReality && moneyPersonality && portfolioHealth && moneyLeaks && riskAssessment;
+      if (!hasCompleteData) {
+        runCompleteAnalysis();
+      }
     }
   }, [financialData]);
+
+  // Check if any analysis is currently loading
+  const isLoading = isLoadingHidden || isLoadingFuture || isLoadingGoals || isLoadingPersonality || isLoadingHealth || isLoadingLeaks || isLoadingRisk;
+  
+  // Check if we have complete results
+  const hasCompleteResults = hiddenTruths && futureProjection && goalReality && moneyPersonality && portfolioHealth && moneyLeaks && riskAssessment;
 
   if (!financialData?.data) {
     return (
@@ -228,6 +253,84 @@ export default function MoneyTruthEngine({ financialData }: Props) {
           )}
         </div>
       )}
+
+      {/* Individual Analysis Cards */}
+      <div className="space-y-8 mt-12">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Detailed Analysis</h2>
+          <p className="text-gray-600">Dive deeper into each aspect of your financial profile</p>
+        </div>
+
+        {/* Hidden Money Truths */}
+        <MoneyTruthCard
+          title="💡 Hidden Money Truths"
+          subtitle="Shocking discoveries about your finances"
+          insights={hiddenTruths}
+          isLoading={isLoadingHidden}
+          onRefresh={fetchHiddenTruths}
+          type="hidden_truths"
+        />
+
+        {/* Two Column Layout for Health & Leaks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AIInsightCard
+            title="🏥 Portfolio Health Check"
+            subtitle="AI diagnosis of your investments"
+            insights={portfolioHealth}
+            isLoading={isLoadingHealth}
+            onRefresh={fetchPortfolioHealth}
+            type="portfolio_health"
+          />
+          <AIInsightCard
+            title="🔍 Money Leak Detection"
+            subtitle="Where you're losing money secretly"
+            insights={moneyLeaks}
+            isLoading={isLoadingLeaks}
+            onRefresh={fetchMoneyLeaks}
+            type="money_leaks"
+          />
+        </div>
+
+        {/* Risk Assessment */}
+        <AIInsightCard
+          title="⚠️ Risk Assessment"
+          subtitle="AI-powered risk analysis and protection gaps"
+          insights={riskAssessment}
+          isLoading={isLoadingRisk}
+          onRefresh={fetchRiskAssessment}
+          type="risk_assessment"
+        />
+
+        {/* Future Wealth & Goals */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <MoneyTruthCard
+            title="🔮 Future Wealth Projection"
+            subtitle="AI predicts your financial future"
+            insights={futureProjection}
+            isLoading={isLoadingFuture}
+            onRefresh={fetchFutureProjection}
+            type="future_projection"
+          />
+          <MoneyTruthCard
+            title="🎯 Life Goal Reality Check"
+            subtitle="Can you achieve your dreams?"
+            insights={goalReality}
+            isLoading={isLoadingGoals}
+            onRefresh={fetchGoalReality}
+            type="goal_reality"
+          />
+        </div>
+
+        {/* Money Personality Analysis */}
+        <MoneyTruthCard
+          title="🧠 Money Personality Analysis"
+          subtitle="What your behavior reveals about your wealth"
+          insights={moneyPersonality}
+          isLoading={isLoadingPersonality}
+          onRefresh={fetchMoneyPersonality}
+          type="personality"
+        />
+      </div>
 
       {/* Empty State */}
       {!completeInsights && !isLoading && (
