@@ -5,6 +5,7 @@ import Dashboard from '@/components/Dashboard';
 import ChatInterface from '@/components/ChatInterface';
 import FinancialOverview from '@/components/FinancialOverview';
 import MoneyTruthEngine from '@/components/MoneyTruthEngine';
+import HydrationProvider from '@/components/HydrationProvider';
 
 export default function Home() {
   const [financialData, setFinancialData] = useState(null);

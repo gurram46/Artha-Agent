@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { StreamMessage, DEFAULT_STREAMING_CONFIG } from '@/types/chat';
+import { StreamMessage, DEFAULT_STREAMING_CONFIG, AgentMode } from '@/types/chat';
 
 interface UseStreamingChatOptions {
   apiEndpoint?: string;
@@ -71,7 +71,8 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}) => {
   const sendMessage = useCallback(
     async (
       message: string,
-      onUpdate: (content: string, streaming: boolean) => void
+      onUpdate: (content: string, streaming: boolean) => void,
+      mode?: AgentMode
     ): Promise<void> => {
       if (isLoading) return;
 
@@ -87,7 +88,10 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}) => {
           const streamResponse = await fetch(streamEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: message }),
+            body: JSON.stringify({ 
+              query: message,
+              mode: mode || 'research'
+            }),
             signal: abortControllerRef.current?.signal
           });
 
@@ -109,7 +113,10 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}) => {
             const fallbackResponse = await fetch(apiEndpoint, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: message }),
+              body: JSON.stringify({ 
+                query: message,
+                mode: mode || 'research'
+              }),
               signal: abortControllerRef.current?.signal
             });
 

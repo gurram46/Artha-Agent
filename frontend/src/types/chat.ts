@@ -1,3 +1,5 @@
+export type AgentMode = 'quick' | 'research';
+
 export interface AgentDetail {
   title: string;
   content: string;
@@ -10,6 +12,7 @@ export interface Message {
   timestamp: Date;
   processing?: boolean;
   streaming?: boolean;
+  mode?: AgentMode;
   agentDetails?: Record<string, AgentDetail>;
 }
 

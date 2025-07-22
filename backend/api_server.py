@@ -23,6 +23,7 @@ from core.money_truth_engine import MoneyTruthEngine
 from agents.enhanced_analyst import EnhancedAnalystAgent
 from agents.research_agent.enhanced_strategist import EnhancedResearchAgent
 from agents.enhanced_risk_advisor import EnhancedRiskAdvisorAgent
+from agents.quick_agent.quick_response import QuickResponseAgent
 from google import genai
 from config.settings import config
 
@@ -43,9 +44,11 @@ money_truth_engine = None
 enhanced_analyst = None
 enhanced_researcher = None  
 enhanced_risk_advisor = None
+quick_agent = None
 
 class QueryRequest(BaseModel):
     query: str
+    mode: str = "research"  # "quick" or "research"
 
 class QueryResponse(BaseModel):
     response: str
@@ -59,7 +62,7 @@ class InsightRequest(BaseModel):
 @app.on_event("startup") 
 async def startup_event():
     """Initialize the chatbot and enhanced AI components"""
-    global chatbot, money_truth_engine, enhanced_analyst, enhanced_researcher, enhanced_risk_advisor
+    global chatbot, money_truth_engine, enhanced_analyst, enhanced_researcher, enhanced_risk_advisor, quick_agent
     try:
         chatbot = ArthaAIChatbot()
         
@@ -67,6 +70,9 @@ async def startup_event():
         enhanced_analyst = EnhancedAnalystAgent()
         enhanced_researcher = EnhancedResearchAgent()
         enhanced_risk_advisor = EnhancedRiskAdvisorAgent()
+        
+        # Initialize quick response agent
+        quick_agent = QuickResponseAgent()
         
         # Initialize Gemini client
         gemini_client = genai.Client(api_key=config.GOOGLE_API_KEY)
@@ -132,7 +138,88 @@ async def get_financial_data():
 
 @app.post("/api/stream/query")
 async def stream_query(request: QueryRequest):
-    """Stream user financial query response using 3-agent system"""
+    """Stream user financial query response - routes to quick or research mode"""
+    if request.mode == "quick":
+        return await stream_quick_response(request)
+    else:
+        return await stream_research_response(request)
+
+@app.post("/api/deep-research")
+async def deep_research_endpoint(request: QueryRequest):
+    """Deep research endpoint - alias for research mode (frontend compatibility)"""
+    request.mode = "research"  # Force research mode for deep research
+    return await stream_research_response(request)
+
+@app.post("/api/quick-response")
+async def stream_quick_response(request: QueryRequest):
+    """Stream quick financial response using single agent with Google Search grounding"""
+    if not quick_agent:
+        raise HTTPException(status_code=500, detail="Quick agent not initialized")
+    
+    async def generate_quick_stream():
+        try:
+            newline = "\n"
+            
+            # Quick mode activation
+            quick_content = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}🚀 Single agent with Google Search grounding'
+            yield f"data: {json.dumps({'type': 'log', 'content': quick_content})}\n\n"
+            await asyncio.sleep(0.1)
+            
+            # Get financial data
+            yield f"data: {json.dumps({'type': 'log', 'content': '📊 Loading your financial profile...'})}\n\n"
+            financial_data = await get_user_financial_data()
+            await asyncio.sleep(0.1)
+            
+            yield f"data: {json.dumps({'type': 'log', 'content': '🔍 Searching real-time market data with Google...'})}\n\n"
+            await asyncio.sleep(0.2)
+            
+            # Generate quick response
+            response_data = await quick_agent.generate_quick_response(request.query, financial_data)
+            
+            sources_count = len(response_data.get("sources", []))
+            sources_msg = f'✅ Response generated with {sources_count} live sources'
+            yield f"data: {json.dumps({'type': 'log', 'content': sources_msg})}\n\n"
+            await asyncio.sleep(0.1)
+            
+            # Stream the response content
+            content = response_data.get('content', '')
+            for chunk in content.split():
+                yield f"data: {json.dumps({'type': 'content', 'content': chunk + ' '})}\n\n"
+                await asyncio.sleep(0.02)  # Fast streaming
+            
+            # Add source information if available
+            sources = response_data.get('sources', [])
+            if sources:
+                sources_text = f"{newline}{newline}📊 **Based on {len(sources)} live market sources:**{newline}"
+                for i, source in enumerate(sources[:3], 1):
+                    sources_text += f"{i}. {source.get('title', 'Market Source')}{newline}"
+                
+                for chunk in sources_text.split():
+                    yield f"data: {json.dumps({'type': 'content', 'content': chunk + ' '})}\n\n"
+                    await asyncio.sleep(0.01)
+            
+            yield f"data: [DONE]\n\n"
+            
+        except Exception as e:
+            logger.error(f"Quick response streaming error: {e}")
+            error_msg = f'Quick response error: {str(e)}'
+            yield f"data: {json.dumps({'type': 'error', 'content': error_msg})}\n\n"
+            yield f"data: [DONE]\n\n"
+    
+    return StreamingResponse(
+        generate_quick_stream(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        }
+    )
+
+async def stream_research_response(request: QueryRequest):
+    """Stream comprehensive research response using 3-agent system"""
     if not chatbot:
         raise HTTPException(status_code=500, detail="Backend not initialized")
     
@@ -142,10 +229,12 @@ async def stream_query(request: QueryRequest):
             separator_line = "━" * 30
             newline = "\n"
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🚀 **ARTHA AI SYSTEM ACTIVATED**{newline}{separator_line}'})}\n\n"
+            log_content = f'🚀 **ARTHA AI SYSTEM ACTIVATED**{newline}{separator_line}'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'📊 **ANALYST AGENT**: Awakening financial intelligence...{newline}🧠 Scanning your financial ecosystem{newline}⚡ Connecting to Fi MCP servers...'})}\n\n"
+            log_content = f'📊 **ANALYST AGENT**: Awakening financial intelligence...{newline}🧠 Scanning your financial ecosystem{newline}⚡ Connecting to Fi MCP servers...'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.3)
             
             # Get financial data
@@ -171,18 +260,22 @@ async def stream_query(request: QueryRequest):
             mf_value = next((asset['value']['units'] for asset in assets if asset.get('netWorthAttribute') == 'ASSET_TYPE_MUTUAL_FUND'), '0')
             epf_value = next((asset['value']['units'] for asset in assets if asset.get('netWorthAttribute') == 'ASSET_TYPE_EPF'), '0')
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'✅ **FI MCP DATA SYNC**: Complete financial profile loaded{newline}   • Net Worth: ₹{net_worth_value}{newline}   • Credit Score: {credit_score}{newline}   • Mutual Funds: ₹{mf_value}{newline}   • EPF Balance: ₹{epf_value}{newline}   • Asset categories: {mf_schemes}'})}\n\n"
+            log_content = f'✅ **FI MCP DATA SYNC**: Complete financial profile loaded{newline}   • Net Worth: ₹{net_worth_value}{newline}   • Credit Score: {credit_score}{newline}   • Mutual Funds: ₹{mf_value}{newline}   • EPF Balance: ₹{epf_value}{newline}   • Asset categories: {mf_schemes}'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🤖 **ANALYST AGENT**: Generating intelligent search query...{newline}📝 Query: {request.query}'})}\n\n"
+            log_content = f'🤖 **ANALYST AGENT**: Generating intelligent search query...{newline}📝 Query: {request.query}'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             # Generate search query
             search_query = await chatbot.analyst.generate_comprehensive_search_query(request.query, financial_data)
-            yield f"data: {json.dumps({'type': 'log', 'content': f'✨ **QUERY ENHANCED**: {search_query}{newline}🎯 AI transformed your question using financial context'})}\n\n"
+            log_content = f'✨ **QUERY ENHANCED**: {search_query}{newline}🎯 AI transformed your question using financial context'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.3)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🌐 **GOOGLE SEARCH ENGINE**: Initiating market intelligence scan...{newline}🔍 Searching across financial websites and expert sources'})}\n\n"
+            log_content = f'🌐 **GOOGLE SEARCH ENGINE**: Initiating market intelligence scan...{newline}🔍 Searching across financial websites and expert sources'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             # Get market intelligence
@@ -200,15 +293,18 @@ async def stream_query(request: QueryRequest):
             # If still empty, extract from sources or use a reasonable count based on sources
             queries_count = len(search_queries_used) if search_queries_used else max(1, sources_count // 3)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'✅ **MARKET SCAN COMPLETE**:{newline}   • Sources analyzed: {sources_count}{newline}   • Search queries executed: {queries_count}{newline}   • Data reliability: 98.5%'})}\n\n"
+            log_content = f'✅ **MARKET SCAN COMPLETE**:{newline}   • Sources analyzed: {sources_count}{newline}   • Search queries executed: {queries_count}{newline}   • Data reliability: 98.5%'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             if search_queries_used:
                 query_list = newline.join([f'   • {q}' for q in search_queries_used[:3]])
-                yield f"data: {json.dumps({'type': 'log', 'content': f'📡 **SEARCH QUERIES EXECUTED**:{newline}{query_list}'})}\n\n"
+                log_content = f'📡 **SEARCH QUERIES EXECUTED**:{newline}{query_list}'
+                yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
                 await asyncio.sleep(0.3)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🎯 **RESEARCH AGENT**: Analyzing market opportunities...{newline}💡 Processing {len(str(market_intelligence))} chars of market data'})}\n\n"
+            log_content = f'🎯 **RESEARCH AGENT**: Analyzing market opportunities...{newline}💡 Processing {len(str(market_intelligence))} chars of market data'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             # Process with research agent
@@ -217,10 +313,12 @@ async def stream_query(request: QueryRequest):
             )
             
             research_length = len(research_response.get('content', ''))
-            yield f"data: {json.dumps({'type': 'log', 'content': f'✅ **RESEARCH COMPLETE**: {research_length} chars of strategic analysis{newline}🧠 Identified investment opportunities and market trends{newline}📈 Strategy confidence: 94.2%'})}\n\n"
+            log_content = f'✅ **RESEARCH COMPLETE**: {research_length} chars of strategic analysis{newline}🧠 Identified investment opportunities and market trends{newline}📈 Strategy confidence: 94.2%'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🛡️ **RISK AGENT**: Initiating comprehensive risk assessment...{newline}⚡ Scanning for financial vulnerabilities and protection gaps'})}\n\n"
+            log_content = f'🛡️ **RISK AGENT**: Initiating comprehensive risk assessment...{newline}⚡ Scanning for financial vulnerabilities and protection gaps'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             # Process with risk agent
@@ -229,14 +327,17 @@ async def stream_query(request: QueryRequest):
             )
             
             risk_length = len(risk_response.get('content', ''))
-            yield f"data: {json.dumps({'type': 'log', 'content': f'✅ **RISK ANALYSIS COMPLETE**: {risk_length} chars processed{newline}🔒 Portfolio protection strategies identified{newline}⚖️ Risk-reward optimization: 96.8%'})}\n\n"
+            log_content = f'✅ **RISK ANALYSIS COMPLETE**: {risk_length} chars processed{newline}🔒 Portfolio protection strategies identified{newline}⚖️ Risk-reward optimization: 96.8%'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': f'🔥 **UNIFIED AI BRAIN**: Synthesizing all agent intelligence...{newline}🎯 Combining market research + risk analysis + your financial data{newline}⚡ Generating personalized recommendation...'})}\n\n"
+            log_content = f'🔥 **UNIFIED AI BRAIN**: Synthesizing all agent intelligence...{newline}🎯 Combining market research + risk analysis + your financial data{newline}⚡ Generating personalized recommendation...'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.3)
             
             response_separator = "━" * 50
-            yield f"data: {json.dumps({'type': 'log', 'content': f'{newline}{response_separator}{newline}✨ **AI RESPONSE STREAMING LIVE** ✨{newline}{response_separator}{newline}'})}\n\n"
+            log_content = f'{newline}{response_separator}{newline}✨ **AI RESPONSE STREAMING LIVE** ✨{newline}{response_separator}{newline}'
+            yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.2)
             
             # Generate unified response
@@ -255,7 +356,8 @@ async def stream_query(request: QueryRequest):
             newline = "\n"
             details_separator = "─" * 40
             
-            yield f"data: {json.dumps({'type': 'content', 'content': f'{newline}{newline}{details_separator}{newline}**📊 DETAILED AGENT ANALYSIS** *(Click to expand)*{newline}{details_separator}{newline}'})}\n\n"
+            content_text = f'{newline}{newline}{details_separator}{newline}**📊 DETAILED AGENT ANALYSIS** *(Click to expand)*{newline}{details_separator}{newline}'
+            yield f"data: {json.dumps({'type': 'content', 'content': content_text})}\n\n"
             
             # Add expandable sections for each agent
             analyst_content = f"**🤖 ANALYST AGENT FINDINGS:**{newline}{newline}Market Intelligence Sources: {agent_outputs['sources_count']}{newline}Search Queries Executed: {len(market_intelligence.get('search_queries', []))}{newline}{newline}**Key Market Data:**{newline}{market_intelligence.get('summary', 'Market analysis completed')}"
@@ -272,7 +374,8 @@ async def stream_query(request: QueryRequest):
             
         except Exception as e:
             logging.error(f"Streaming query failed: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'content': f'Error: {str(e)}'})}\n\n"
+            error_msg = f'Error: {str(e)}'
+            yield f"data: {json.dumps({'type': 'error', 'content': error_msg})}\n\n"
             yield f"data: [DONE]\n\n"
     
     return StreamingResponse(
@@ -633,7 +736,7 @@ async def stream_future_projection():
     async def generate():
         try:
             # Send initial status
-            yield f"data: {json.dumps({'type': 'status', 'message': '🔮 Projecting your financial future...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '🔮 Projecting your financial future...'})}\n\n"
             
             # Get financial data
             financial_data = await get_user_financial_data()
@@ -645,12 +748,12 @@ async def stream_future_projection():
                 }
             }
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '📈 Calculating wealth growth...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '📈 Calculating wealth growth...'})}\n\n"
             
             # Run analysis
             insights = await money_truth_engine.calculate_future_wealth(mcp_data)
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '💰 Generating projections...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '💰 Generating projections...'})}\n\n"
             
             # Stream the response character by character for typing effect
             response_text = insights.get('ai_projection', 'Analysis complete')
@@ -662,15 +765,15 @@ async def stream_future_projection():
             current_text = ""
             for char in formatted_response:
                 current_text += char
-                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\\n\\n"
+                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms delay for typing effect
             
             # Send completion
-            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\n\n"
             
         except Exception as e:
             logging.error(f"Streaming failed: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/plain")
 
@@ -683,7 +786,7 @@ async def stream_goal_reality():
     async def generate():
         try:
             # Send initial status
-            yield f"data: {json.dumps({'type': 'status', 'message': '🎯 Analyzing your life goals...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '🎯 Analyzing your life goals...'})}\n\n"
             
             # Get financial data
             financial_data = await get_user_financial_data()
@@ -695,12 +798,12 @@ async def stream_goal_reality():
                 }
             }
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '🔥 Checking goal feasibility...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '🔥 Checking goal feasibility...'})}\n\n"
             
             # Run analysis
             insights = await money_truth_engine.life_goal_simulator(mcp_data)
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '💡 Reality check complete...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '💡 Reality check complete...'})}\n\n"
             
             # Stream the response character by character for typing effect
             response_text = insights.get('goal_analysis', insights.get('ai_insights', 'Analysis complete'))
@@ -712,15 +815,15 @@ async def stream_goal_reality():
             current_text = ""
             for char in formatted_response:
                 current_text += char
-                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\\n\\n"
+                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms delay for typing effect
             
             # Send completion
-            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\n\n"
             
         except Exception as e:
             logging.error(f"Streaming failed: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/plain")
 
@@ -733,7 +836,7 @@ async def stream_money_personality():
     async def generate():
         try:
             # Send initial status
-            yield f"data: {json.dumps({'type': 'status', 'message': '🧠 Analyzing your money personality...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '🧠 Analyzing your money personality...'})}\n\n"
             
             # Get financial data
             financial_data = await get_user_financial_data()
@@ -745,12 +848,12 @@ async def stream_money_personality():
                 }
             }
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '💰 Reading behavioral patterns...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '💰 Reading behavioral patterns...'})}\n\n"
             
             # Run analysis
             insights = await money_truth_engine.analyze_money_personality(mcp_data)
             
-            yield f"data: {json.dumps({'type': 'status', 'message': '✨ Personality analysis complete...'})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': '✨ Personality analysis complete...'})}\n\n"
             
             # Stream the response character by character for typing effect
             response_text = insights.get('personality_analysis', insights.get('ai_insights', 'Analysis complete'))
@@ -762,15 +865,15 @@ async def stream_money_personality():
             current_text = ""
             for char in formatted_response:
                 current_text += char
-                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\\n\\n"
+                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms delay for typing effect
             
             # Send completion
-            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\n\n"
             
         except Exception as e:
             logging.error(f"Streaming failed: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\\n\\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/plain")
 
@@ -1060,4 +1163,4 @@ async def websocket_live_insights(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8003)

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import ErrorBoundary from './ErrorBoundary';
-import { Message, StreamMessage, DEFAULT_STREAMING_CONFIG, AgentDetail } from '@/types/chat';
+import { Message, StreamMessage, DEFAULT_STREAMING_CONFIG, AgentDetail, AgentMode } from '@/types/chat';
 import ReactMarkdown from 'react-markdown';
 
 // Component for expandable agent details
@@ -62,12 +62,13 @@ export default function ChatInterface() {
     {
       id: '1',
       type: 'assistant',
-      content: 'Hello! I\'m your AI financial advisor powered by 3 specialized agents. I have access to your complete financial data through Fi MCP. Ask me anything about your finances, investments, or financial planning.',
-      timestamp: new Date()
+      content: 'Hello! I\'m your AI financial advisor. Choose **Quick Response** for fast answers using single agent with Google Search, or **Deep Research** for comprehensive 3-agent analysis. I have access to your complete financial data through Fi MCP.',
+      timestamp: new Date('2024-01-01T00:00:00Z') // Fixed timestamp to prevent hydration mismatch
     }
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [agentMode, setAgentMode] = useState<AgentMode>('research');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -93,7 +94,8 @@ export default function ChatInterface() {
       id: Date.now().toString(),
       type: 'user',
       content: currentMessage,
-      timestamp: new Date()
+      timestamp: new Date(),
+      mode: agentMode
     };
 
     const query = currentMessage;
@@ -108,7 +110,8 @@ export default function ChatInterface() {
       type: 'assistant',
       content: '',
       timestamp: new Date(),
-      streaming: true
+      streaming: true,
+      mode: agentMode
     };
     setMessages(prev => [...prev, streamingMessage]);
 
@@ -136,7 +139,10 @@ export default function ChatInterface() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ 
+            query,
+            mode: agentMode 
+          }),
           signal: controller.signal
         });
 
@@ -445,17 +451,29 @@ export default function ChatInterface() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">AI Financial Assistant</h2>
-            <p className="text-sm text-gray-600 mt-1">Powered by 3 specialized AI agents with real-time Fi data</p>
+            <p className="text-sm text-gray-600 mt-1">
+              {agentMode === 'quick' 
+                ? 'Single agent with Google Search grounding for fast responses' 
+                : 'Powered by 3 specialized AI agents with comprehensive research'}
+            </p>
           </div>
           <div className="flex items-center space-x-2">
             <div className="flex -space-x-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">A</div>
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-xs font-medium text-green-600">R</div>
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">R</div>
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
+                {agentMode === 'quick' ? '⚡' : 'A'}
+              </div>
+              {agentMode === 'research' && (
+                <>
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-xs font-medium text-green-600">R</div>
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">R</div>
+                </>
+              )}
             </div>
             <div className="flex items-center space-x-1 text-sm text-gray-600">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>All agents online</span>
+              <span>
+                {agentMode === 'quick' ? 'Quick mode ready' : 'All agents online'}
+              </span>
             </div>
           </div>
         </div>
@@ -553,8 +571,17 @@ export default function ChatInterface() {
                           )}
                         </div>
                       )}
-                      <div className={`text-xs mt-1 ${message.type === 'user' ? 'text-gray-300' : 'text-gray-500'}`}>
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <div className={`text-xs mt-1 flex items-center justify-between ${message.type === 'user' ? 'text-gray-300' : 'text-gray-500'}`}>
+                        <span>{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {message.mode && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            message.mode === 'quick' 
+                              ? 'bg-green-100 text-green-600' 
+                              : 'bg-purple-100 text-purple-600'
+                          }`}>
+                            {message.mode === 'quick' ? '⚡ Quick' : '🔬 Research'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -563,8 +590,37 @@ export default function ChatInterface() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Agent Mode Selection */}
+            <div className="border-t border-gray-200 px-6 py-3 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Response Mode:</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setAgentMode('quick')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                      agentMode === 'quick'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                  >
+                    ⚡ Quick Response
+                  </button>
+                  <button
+                    onClick={() => setAgentMode('research')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                      agentMode === 'research'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                  >
+                    🔬 Deep Research
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Input Area */}
-            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
+            <div className="border-t border-gray-100 px-6 py-4 bg-white">
               <div className="flex space-x-3">
                 <input
                   type="text"

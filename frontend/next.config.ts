@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
     // Disable type checking during builds for hackathon
     ignoreBuildErrors: true,
   },
+  experimental: {
+    // Enable experimental suppression of hydration warnings
+    suppressHydrationWarning: true,
+  },
+  reactStrictMode: false, // Disable strict mode to reduce hydration warnings
 };
 
 export default nextConfig;
