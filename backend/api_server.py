@@ -12,6 +12,7 @@ import logging
 import sys
 import os
 import json
+from datetime import datetime
 from typing import Dict, Any
 
 # Add backend to path
@@ -24,6 +25,7 @@ from agents.enhanced_analyst import EnhancedAnalystAgent
 from agents.research_agent.enhanced_strategist import EnhancedResearchAgent
 from agents.enhanced_risk_advisor import EnhancedRiskAdvisorAgent
 from agents.quick_agent.quick_response import QuickResponseAgent
+from agents.stock_agents.stock_analyst import get_stock_analyst
 from google import genai
 from config.settings import config
 
@@ -45,6 +47,7 @@ enhanced_analyst = None
 enhanced_researcher = None  
 enhanced_risk_advisor = None
 quick_agent = None
+stock_analyst = None
 
 class QueryRequest(BaseModel):
     query: str
@@ -59,20 +62,37 @@ class QueryResponse(BaseModel):
 class InsightRequest(BaseModel):
     analysis_type: str = "complete"  # complete, hidden_truths, future_wealth, etc.
 
+class StockAnalysisRequest(BaseModel):
+    symbol: str
+    company_name: str = ""
+    user_profile: Dict[str, Any]
+    stock_data: Dict[str, Any] = {}
+
 @app.on_event("startup") 
 async def startup_event():
     """Initialize the chatbot and enhanced AI components"""
-    global chatbot, money_truth_engine, enhanced_analyst, enhanced_researcher, enhanced_risk_advisor, quick_agent
+    global chatbot, money_truth_engine, enhanced_analyst, enhanced_researcher, enhanced_risk_advisor, quick_agent, stock_analyst
     try:
+        print("🚀 Initializing Production-Grade Financial AI System...")
+        
+        # Initialize main chatbot
+        print("📊 Loading Financial Data Intelligence Agent...")
         chatbot = ArthaAIChatbot()
         
         # Initialize enhanced agents
+        print("🎯 Loading Strategic Research Agent...")
         enhanced_analyst = EnhancedAnalystAgent()
         enhanced_researcher = EnhancedResearchAgent()
+        
+        print("🛡️ Loading Comprehensive Risk Agent...")
         enhanced_risk_advisor = EnhancedRiskAdvisorAgent()
         
         # Initialize quick response agent
         quick_agent = QuickResponseAgent()
+        
+        # Initialize stock analysis agent
+        print("📈 Loading Stock Analysis Agent...")
+        stock_analyst = get_stock_analyst()
         
         # Initialize Gemini client
         gemini_client = genai.Client(api_key=config.GOOGLE_API_KEY)
@@ -85,9 +105,21 @@ async def startup_event():
             gemini_client
         )
         
+        # Health check
+        agent_count = sum([
+            1 if enhanced_analyst else 0,
+            1 if enhanced_researcher else 0, 
+            1 if enhanced_risk_advisor else 0,
+            1 if stock_analyst else 0
+        ])
+        
+        print(f"🔍 Health Check: {agent_count}/4 agents operational")
+        print("✅ Production System Ready - All AI Agents Online!")
+        
         logging.info("🚀 Enhanced Artha AI Backend initialized successfully")
     except Exception as e:
         logging.error(f"Failed to initialize enhanced backend: {e}")
+        print(f"❌ System initialization failed: {e}")
 
 @app.get("/")
 async def root():
@@ -1096,6 +1128,107 @@ async def get_risk_assessment():
     except Exception as e:
         logging.error(f"Risk assessment failed: {e}")
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {str(e)}")
+
+# Stock Analysis API endpoint
+@app.post("/api/stock/full-analysis")
+async def stock_full_analysis(request: StockAnalysisRequest):
+    """
+    Generate comprehensive stock analysis with personalized recommendations.
+    This endpoint integrates stock research and recommendations for the frontend.
+    """
+    try:
+        # Check if stock analyst is available
+        if not stock_analyst:
+            raise HTTPException(
+                status_code=503, 
+                detail="Stock analysis agent not available. Please ensure Google AI API key is configured."
+            )
+        
+        # Extract request data
+        symbol = request.symbol
+        company_name = request.company_name or symbol.replace('.NS', '').replace('.BSE', '')
+        user_profile = request.user_profile
+        stock_data = request.stock_data
+        
+        # Validate required fields
+        if not symbol:
+            raise HTTPException(status_code=400, detail="Stock symbol is required")
+        
+        if not user_profile:
+            raise HTTPException(status_code=400, detail="User investment profile is required")
+        
+        # Log the analysis request
+        logging.info(f"🔍 Stock analysis requested for {symbol} by user with {user_profile.get('riskTolerance', 'unknown')} risk tolerance")
+        
+        # Perform comprehensive stock analysis
+        analysis_result = await stock_analyst.analyze_stock_full(
+            symbol=symbol,
+            company_name=company_name,
+            user_profile=user_profile,
+            stock_data=stock_data
+        )
+        
+        # Log successful completion
+        logging.info(f"✅ Stock analysis completed for {symbol}: Score {analysis_result['summary']['score']}, Sentiment {analysis_result['summary']['sentiment']}")
+        
+        return {
+            "success": True,
+            "symbol": symbol,
+            "company_name": company_name,
+            "recommendation": analysis_result["recommendation"],
+            "research": analysis_result["research"],
+            "summary": analysis_result["summary"],
+            "analysis_timestamp": analysis_result["analysis_timestamp"],
+            "agent_info": {
+                "agent_type": "Stock Analysis Specialist",
+                "research_sources": len(analysis_result["research"].get("sources", [])),
+                "confidence_level": analysis_result["summary"]["confidence"],
+                "analysis_depth": analysis_result["summary"]["research_quality"]["analysis_depth"]
+            }
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Log the error
+        logging.error(f"❌ Stock analysis failed for {request.symbol}: {str(e)}")
+        
+        # Return error response
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Stock analysis failed: {str(e)}. Please check that the Google AI API key is properly configured."
+        )
+
+# Health check for stock agents
+@app.get("/api/stock/health")
+async def stock_health_check():
+    """Check the health and status of stock analysis agents."""
+    try:
+        agent_status = {
+            "stock_analyst_available": stock_analyst is not None,
+            "google_ai_configured": bool(os.getenv("GOOGLE_API_KEY")),
+            "status": "healthy" if stock_analyst else "unavailable",
+            "capabilities": [
+                "Stock Research",
+                "Investment Recommendations", 
+                "Risk Assessment",
+                "Personalized Analysis"
+            ] if stock_analyst else [],
+            "last_check": datetime.now().isoformat()
+        }
+        
+        return agent_status
+        
+    except Exception as e:
+        return {
+            "stock_analyst_available": False,
+            "google_ai_configured": False,
+            "status": "error",
+            "error": str(e),
+            "capabilities": [],
+            "last_check": datetime.now().isoformat()
+        }
 
 # WebSocket endpoint for real-time AI insights
 @app.websocket("/ws/live-insights")
