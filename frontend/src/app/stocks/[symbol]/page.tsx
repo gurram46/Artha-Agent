@@ -303,44 +303,13 @@ export default function StockDetailPage() {
 
         {/* AI Recommendation Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
-              <span>🤖</span>
-              <span>AI Investment Advisor</span>
-            </h2>
-            {!recommendation && userProfile && (
-              <button
-                onClick={fetchAIRecommendation}
-                disabled={recommendationLoading}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-              >
-                {recommendationLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🧠</span>
-                    <span>Get AI Recommendation</span>
-                  </>
-                )}
-              </button>
-            )}
-            {!userProfile && (
-              <button
-                onClick={() => router.push('/')}
-                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-              >
-                <span>⚙️</span>
-                <span>Set Up Profile</span>
-              </button>
-            )}
-          </div>
           <StockSpeedometer 
             recommendation={recommendation}
             loading={recommendationLoading}
             symbol={symbol}
+            userProfile={userProfile}
+            onAnalysisStart={fetchAIRecommendation}
+            onProfileSetup={() => router.push('/')}
           />
         </div>
 

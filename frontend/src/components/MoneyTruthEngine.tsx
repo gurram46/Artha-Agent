@@ -106,14 +106,12 @@ export default function MoneyTruthEngine({ financialData }: Props) {
           </div>
           <div className="mt-6 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {lastUpdated && (
-                <span className="text-red-100 text-sm">
-                  Last updated: {lastUpdated.toLocaleString()}
-                </span>
-              )}
+              <span className="text-red-100 text-sm">
+                Last updated: {new Date().toLocaleString()}
+              </span>
             </div>
             <button
-              onClick={fetchCompleteInsights}
+              onClick={runCompleteAnalysis}
               disabled={isLoading}
               className="bg-white text-red-600 px-6 py-2 rounded-lg font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
             >

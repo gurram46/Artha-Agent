@@ -1129,7 +1129,95 @@ async def get_risk_assessment():
         logging.error(f"Risk assessment failed: {e}")
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {str(e)}")
 
-# Stock Analysis API endpoint
+# Stock Analysis Streaming API endpoint
+@app.post("/api/stock/analysis-stream")  
+async def stock_analysis_stream(request: StockAnalysisRequest):
+    """
+    Stream real-time logs during stock analysis for hackathon demo effect.
+    """
+    # Create a queue for real-time logs
+    log_queue = asyncio.Queue()
+    
+    async def log_callback(message):
+        await log_queue.put(message)
+    
+    async def generate_analysis_stream():
+        try:
+            # Check if stock analyst is available
+            if not stock_analyst:
+                yield f"data: {json.dumps({'type': 'error', 'content': 'Stock analysis agent not available'})}\n\n"
+                return
+            
+            # Extract request data
+            symbol = request.symbol
+            company_name = request.company_name or symbol.replace('.NS', '').replace('.BSE', '')
+            user_profile = request.user_profile
+            stock_data = request.stock_data
+            
+            # Real AI analysis - only actual research logs
+            yield f"data: {json.dumps({'type': 'log', 'content': f'🔍 Starting stock analysis for {company_name}...'})}\n\n"
+            
+            # Start the analysis in a background task
+            analysis_task = asyncio.create_task(
+                stock_analyst.analyze_stock_full(
+                    symbol=symbol,
+                    company_name=company_name,
+                    user_profile=user_profile,
+                    stock_data=stock_data,
+                    log_callback=log_callback
+                )
+            )
+            
+            # Stream logs in real-time
+            while not analysis_task.done():
+                try:
+                    # Wait for a log message with a short timeout
+                    log_message = await asyncio.wait_for(log_queue.get(), timeout=0.1)
+                    yield f"data: {json.dumps({'type': 'log', 'content': log_message})}\n\n"
+                except asyncio.TimeoutError:
+                    # No log message received, continue waiting
+                    pass
+            
+            # Get the final analysis result
+            analysis_result = await analysis_task
+            
+            score = analysis_result["summary"]["score"]
+            sentiment = analysis_result["summary"]["sentiment"]
+            yield f"data: {json.dumps({'type': 'log', 'content': f'✨ Artha has spoken! {sentiment} verdict with {score}/100 confidence!'})}\n\n"
+            await asyncio.sleep(0.5)
+            
+            # Send final result
+            result = {
+                "success": True,
+                "symbol": symbol,
+                "company_name": company_name,
+                "recommendation": analysis_result["recommendation"],
+                "research": analysis_result["research"],
+                "summary": analysis_result["summary"],
+                "analysis_timestamp": analysis_result["analysis_timestamp"]
+            }
+            
+            yield f"data: {json.dumps({'type': 'result', 'content': result})}\n\n"
+            yield f"data: [DONE]\n\n"
+            
+        except Exception as e:
+            logging.error(f"❌ Streaming stock analysis failed: {str(e)}")
+            yield f"data: {json.dumps({'type': 'error', 'content': f'Analysis failed: {str(e)}'})}\n\n"
+            yield f"data: [DONE]\n\n"
+    
+    return StreamingResponse(
+        generate_analysis_stream(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        }
+    )
+
+# Stock Analysis API endpoint (non-streaming)
 @app.post("/api/stock/full-analysis")
 async def stock_full_analysis(request: StockAnalysisRequest):
     """

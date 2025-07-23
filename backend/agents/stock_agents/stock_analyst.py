@@ -53,7 +53,7 @@ class StockAnalysisAgent:
             max_output_tokens=2000
         )
     
-    async def analyze_stock_full(self, symbol: str, company_name: str, user_profile: Dict, stock_data: Dict) -> Dict[str, Any]:
+    async def analyze_stock_full(self, symbol: str, company_name: str, user_profile: Dict, stock_data: Dict, log_callback=None) -> Dict[str, Any]:
         """
         Perform complete stock analysis including research and personalized recommendation.
         
@@ -68,13 +68,20 @@ class StockAnalysisAgent:
         """
         print(f"🔍 Starting full stock analysis for {symbol}...")
         
+        # Real-time logging function
+        async def log(message):
+            if log_callback:
+                await log_callback(message)
+        
         try:
             # Step 1: Research the stock
-            research_data = await self._research_stock(symbol, company_name)
+            await log(f"📊 Researching {company_name} fundamentals...")
+            research_data = await self._research_stock(symbol, company_name, log_callback)
             
-            # Step 2: Generate personalized recommendation
+            # Step 2: Generate personalized recommendation  
+            await log(f"🧠 Generating personalized investment recommendation...")
             recommendation = await self._generate_recommendation(
-                symbol, company_name, research_data, user_profile, stock_data
+                symbol, company_name, research_data, user_profile, stock_data, log_callback
             )
             
             return {
@@ -97,10 +104,45 @@ class StockAnalysisAgent:
             
         except Exception as e:
             print(f"❌ Error in full stock analysis: {e}")
-            # Return fallback analysis
-            return await self._generate_fallback_analysis(symbol, company_name, user_profile, stock_data)
+            import traceback
+            print("Full traceback:")
+            traceback.print_exc()
+            # Return a proper error response instead of raising
+            return {
+                "symbol": symbol,
+                "company_name": company_name,
+                "research": {
+                    "analysis": f"Analysis failed: {str(e)}",
+                    "key_insights": [],
+                    "sources": [],
+                    "confidence": 0.0,
+                    "research_timestamp": datetime.now().isoformat()
+                },
+                "recommendation": {
+                    "score": 0,
+                    "sentiment": "Error",
+                    "strengths": [],
+                    "weaknesses": [],
+                    "considerations": [],
+                    "confidence": 0.0,
+                    "reasoning": f"Analysis failed: {str(e)}",
+                    "full_analysis": f"Error: {str(e)}",
+                    "recommendation_timestamp": datetime.now().isoformat()
+                },
+                "user_profile": user_profile,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "summary": {
+                    "score": 0,
+                    "sentiment": "Error",
+                    "confidence": 0.0,
+                    "research_quality": {
+                        "sources_count": 0,
+                        "analysis_depth": "failed"
+                    }
+                }
+            }
     
-    async def _research_stock(self, symbol: str, company_name: str) -> Dict[str, Any]:
+    async def _research_stock(self, symbol: str, company_name: str, log_callback=None) -> Dict[str, Any]:
         """Research stock using Google Grounding."""
         try:
             clean_symbol = symbol.replace('.NS', '').replace('.BSE', '')
@@ -122,14 +164,43 @@ class StockAnalysisAgent:
             
             print(f"🔍 Researching {company_name}...")
             
+            # Real-time logging function
+            async def log(message):
+                if log_callback:
+                    await log_callback(message)
+            
+            await log(f"🔍 Analyzing market data for {company_name}...")
+            
+            # Use higher token limit to avoid truncation
+            simple_research_config = types.GenerateContentConfig(
+                temperature=0.3,
+                max_output_tokens=4000
+            )
+            
+            await log(f"🤖 Querying Gemini AI for research insights...")
+            
             response = await asyncio.to_thread(
                 self.client.models.generate_content,
                 model="gemini-2.5-flash",
                 contents=research_query,
-                config=self.research_config
+                config=simple_research_config
             )
             
-            research_text = response.text if hasattr(response, 'text') else str(response)
+            # Extract text from response
+            research_text = None
+            if hasattr(response, 'candidates') and response.candidates and len(response.candidates) > 0:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and candidate.content:
+                    if hasattr(candidate.content, 'parts') and candidate.content.parts and len(candidate.content.parts) > 0:
+                        research_text = candidate.content.parts[0].text
+            
+            # Fallback methods
+            if not research_text and hasattr(response, 'text') and response.text:
+                research_text = response.text
+                
+            if not research_text:
+                research_text = f"Research failed: Unable to extract response text"
+                print(f"⚠️ Failed to extract research text from response: {type(response)}")
             
             # Extract sources and metadata
             sources = []
@@ -145,8 +216,12 @@ class StockAnalysisAgent:
                         for chunk in chunks
                     ]
             
+            await log(f"📈 Extracting key insights from research data...")
+            
             # Extract key insights
             key_insights = self._extract_key_insights(research_text)
+            
+            await log(f"✅ Research completed - found {len(key_insights)} key insights")
             
             return {
                 "analysis": research_text,
@@ -171,7 +246,7 @@ class StockAnalysisAgent:
             }
     
     async def _generate_recommendation(self, symbol: str, company_name: str, research_data: Dict, 
-                                     user_profile: Dict, stock_data: Dict) -> Dict[str, Any]:
+                                     user_profile: Dict, stock_data: Dict, log_callback=None) -> Dict[str, Any]:
         """Generate personalized investment recommendation."""
         try:
             # Prepare user profile context
@@ -202,33 +277,117 @@ class StockAnalysisAgent:
             - Investment Goal: {investment_goal}
             - Monthly Investment Budget: ₹{monthly_investment:,}
             
-            Provide a personalized investment recommendation with:
+            CRITICAL: Format your response EXACTLY as follows (use these exact headers and markdown formatting):
             
-            1. RECOMMENDATION SCORE (0-100): Based on research quality and user suitability
-            2. INVESTMENT SENTIMENT: Strong Buy/Buy/Hold/Sell/Strong Sell
-            3. KEY STRENGTHS (3-5 points): Why this stock is good for this investor
-            4. KEY CONCERNS (3-5 points): Risks and limitations for this investor
-            5. INVESTMENT CONSIDERATIONS (3-5 points): Important factors to monitor
-            6. CONFIDENCE LEVEL (0.0-1.0): How confident you are in this recommendation
-            7. SUGGESTED ALLOCATION: How much to invest given their budget
-            8. REASONING: 2-3 sentence explanation of the recommendation
+            RECOMMENDATION SCORE: [number 0-100]
             
-            Consider the user's risk tolerance and investment horizon carefully in your analysis.
+            INVESTMENT SENTIMENT: [Strong Buy/Buy/Hold/Sell/Strong Sell]
+            
+            KEY STRENGTHS:
+            • **[Strength Title]:** [detailed explanation with specific data and metrics]
+            • **[Strength Title]:** [detailed explanation with specific data and metrics]
+            • **[Strength Title]:** [detailed explanation with specific data and metrics]
+            • **[Strength Title]:** [detailed explanation with specific data and metrics]
+            
+            KEY CONCERNS:
+            • **[Concern Title]:** [detailed explanation with specific risks and challenges]
+            • **[Concern Title]:** [detailed explanation with specific risks and challenges]
+            • **[Concern Title]:** [detailed explanation with specific risks and challenges]
+            • **[Concern Title]:** [detailed explanation with specific risks and challenges]
+            
+            INVESTMENT CONSIDERATIONS:
+            • **[Consideration Title]:** [detailed actionable advice with specific recommendations]
+            • **[Consideration Title]:** [detailed actionable advice with specific recommendations]
+            • **[Consideration Title]:** [detailed actionable advice with specific recommendations]
+            
+            CONFIDENCE LEVEL: [0.0-1.0]
+            
+            REASONING: [2-3 sentence explanation]
+            
+            IMPORTANT: Use **bold** markdown formatting for titles in each bullet point. Be specific and detailed in your strengths, concerns, and considerations. Each point should be actionable and relevant to this specific stock and investor profile.
             """
             
             print(f"🎯 Generating recommendation for {company_name}...")
+            
+            # Real-time logging function
+            async def log(message):
+                if log_callback:
+                    await log_callback(message)
+            
+            await log(f"⚖️ Analyzing investment risks and opportunities...")
+            await log(f"🎯 Matching analysis with your {risk_tolerance} risk profile...")
+            
+            # Use higher token limit to avoid truncation
+            simple_config = types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=4000
+            )
+            
+            await log(f"🤖 Generating AI recommendation with Gemini 2.5...")
             
             response = await asyncio.to_thread(
                 self.client.models.generate_content,
                 model="gemini-2.5-flash",
                 contents=recommendation_prompt,
-                config=self.recommendation_config
+                config=simple_config
             )
             
-            recommendation_text = response.text if hasattr(response, 'text') else str(response)
+            # DEBUG: Check for safety issues or other problems
+            print(f"🔍 Full response: {response}")
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'finish_reason'):
+                    print(f"🔍 Finish reason: {candidate.finish_reason}")
+                if hasattr(candidate, 'safety_ratings'):
+                    print(f"🔍 Safety ratings: {candidate.safety_ratings}")
+                if hasattr(candidate, 'content') and candidate.content:
+                    print(f"🔍 Content parts: {candidate.content.parts}")
+            
+            # Extract text from response 
+            recommendation_text = None
+            if hasattr(response, 'candidates') and response.candidates and len(response.candidates) > 0:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and candidate.content and candidate.content.parts:
+                    if len(candidate.content.parts) > 0 and hasattr(candidate.content.parts[0], 'text'):
+                        recommendation_text = candidate.content.parts[0].text
+            
+            # Fallback methods
+            if not recommendation_text and hasattr(response, 'text') and response.text:
+                recommendation_text = response.text
+                
+            if not recommendation_text:
+                # Try to understand why the response is empty
+                error_msg = f"AI response is empty. "
+                if hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, 'finish_reason'):
+                        error_msg += f"Finish reason: {candidate.finish_reason}. "
+                    if hasattr(candidate, 'safety_ratings'):
+                        error_msg += f"Safety ratings: {candidate.safety_ratings}. "
+                error_msg += f"Response type: {type(response)}"
+                raise Exception(error_msg)
+            
+            # DEBUG: Log the extracted text
+            print(f"🤖 Raw AI response for {company_name}:")
+            print("="*80)
+            print(recommendation_text)
+            print("="*80)
+            
+            await log(f"📊 Parsing AI recommendation structure...")
             
             # Parse structured recommendation
             parsed_rec = self._parse_recommendation(recommendation_text)
+            
+            await log(f"✅ Analysis complete! Generated {parsed_rec.get('sentiment', 'Hold')} recommendation with {parsed_rec.get('score', 50)}/100 score")
+            
+            # DEBUG: Log the parsed results
+            print(f"📊 Parsed recommendation for {company_name}:")
+            print(f"   Score: {parsed_rec.get('score', 'N/A')}")
+            print(f"   Sentiment: {parsed_rec.get('sentiment', 'N/A')}")
+            print(f"   Strengths ({len(parsed_rec.get('strengths', []))}): {parsed_rec.get('strengths', [])}")
+            print(f"   Concerns ({len(parsed_rec.get('concerns', []))}): {parsed_rec.get('concerns', [])}")
+            print(f"   Considerations ({len(parsed_rec.get('considerations', []))}): {parsed_rec.get('considerations', [])}")
+            print("="*80)
             
             return {
                 "score": parsed_rec.get("score", 50),
@@ -260,7 +419,22 @@ class StockAnalysisAgent:
             
         except Exception as e:
             print(f"⚠️ Recommendation generation failed: {e}")
-            return self._generate_basic_recommendation(symbol, user_profile, stock_data)
+            import traceback
+            print("Full traceback for recommendation generation:")
+            traceback.print_exc()
+            
+            # Return error instead of basic recommendation
+            return {
+                "score": 0,
+                "sentiment": "Error",
+                "strengths": [],
+                "weaknesses": [],
+                "considerations": [],
+                "confidence": 0.0,
+                "reasoning": f"Recommendation generation failed: {str(e)}",
+                "full_analysis": f"Error in recommendation: {str(e)}",
+                "recommendation_timestamp": datetime.now().isoformat()
+            }
     
     def _extract_key_insights(self, text: str) -> List[str]:
         """Extract key insights from research text."""
@@ -312,31 +486,31 @@ class StockAnalysisAgent:
                 line_lower = line.lower()
                 
                 # Extract score
-                if 'score' in line_lower and any(char.isdigit() for char in line):
+                if line_lower.startswith('recommendation score:'):
                     numbers = [int(s) for s in line.split() if s.isdigit()]
                     if numbers:
                         parsed["score"] = min(100, max(0, numbers[0]))
                 
                 # Extract sentiment
-                if 'sentiment' in line_lower or 'recommendation' in line_lower:
+                elif line_lower.startswith('investment sentiment:'):
                     if 'strong buy' in line_lower:
                         parsed["sentiment"] = "Strong Buy"
-                    elif 'buy' in line_lower:
-                        parsed["sentiment"] = "Buy" 
-                    elif 'hold' in line_lower:
-                        parsed["sentiment"] = "Hold"
-                    elif 'sell' in line_lower:
-                        parsed["sentiment"] = "Sell"
                     elif 'strong sell' in line_lower:
                         parsed["sentiment"] = "Strong Sell"
+                    elif 'buy' in line_lower:
+                        parsed["sentiment"] = "Buy"
+                    elif 'sell' in line_lower:
+                        parsed["sentiment"] = "Sell"
+                    elif 'hold' in line_lower:
+                        parsed["sentiment"] = "Hold"
                 
                 # Extract confidence
-                if 'confidence' in line_lower:
+                elif line_lower.startswith('confidence level:'):
                     try:
                         # Look for decimal numbers
                         parts = line.replace(',', '.').split()
                         for part in parts:
-                            if '.' in part:
+                            try:
                                 num = float(part)
                                 if 0 <= num <= 1:
                                     parsed["confidence"] = num
@@ -344,30 +518,51 @@ class StockAnalysisAgent:
                                 elif 0 <= num <= 100:
                                     parsed["confidence"] = num / 100
                                     break
+                            except ValueError:
+                                continue
                     except:
                         pass
                 
-                # Identify sections
-                if 'strengths' in line_lower or 'positives' in line_lower:
+                # Handle section headers
+                elif line_lower.startswith('key strengths:'):
                     current_section = 'strengths'
-                elif 'concerns' in line_lower or 'risks' in line_lower or 'weaknesses' in line_lower:
+                elif line_lower.startswith('key concerns:'):
                     current_section = 'concerns'
-                elif 'considerations' in line_lower or 'factors' in line_lower:
+                elif line_lower.startswith('investment considerations:'):
                     current_section = 'considerations'
-                elif 'reasoning' in line_lower or 'explanation' in line_lower:
+                elif line_lower.startswith('reasoning:'):
                     current_section = 'reasoning'
-                elif current_section and line.startswith(('•', '-', '*', '1.', '2.', '3.', '4.', '5.')):
-                    # Add bullet point to current section
-                    cleaned = line.lstrip('•-*0123456789. ').strip()
-                    if len(cleaned) > 10 and current_section in ['strengths', 'concerns', 'considerations']:
+                    # Also capture the reasoning on the same line
+                    reasoning_text = line[len('reasoning:'):].strip()
+                    if reasoning_text:
+                        parsed["reasoning"] = reasoning_text
+                
+                # Handle bullet points
+                elif current_section and line.startswith('•'):
+                    cleaned = line.lstrip('• ').strip()
+                    if len(cleaned) > 5 and current_section in ['strengths', 'concerns', 'considerations']:
                         parsed[current_section].append(cleaned)
-                elif current_section == 'reasoning' and len(line) > 20:
-                    parsed["reasoning"] += line + " "
+                
+                # Handle multi-line reasoning
+                elif current_section == 'reasoning' and len(line) > 10 and not line.lower().startswith(('key ', 'investment ', 'recommendation ', 'confidence ')):
+                    if parsed["reasoning"]:
+                        parsed["reasoning"] += " " + line
+                    else:
+                        parsed["reasoning"] = line
             
             # Clean up reasoning
             parsed["reasoning"] = parsed["reasoning"].strip()
             if not parsed["reasoning"]:
-                parsed["reasoning"] = f"Recommendation based on analysis of {parsed['score']}/100 score with {parsed['sentiment']} sentiment."
+                parsed["reasoning"] = f"Recommendation based on analysis with {parsed['score']}/100 score and {parsed['sentiment']} sentiment."
+            
+            # Debug output
+            print(f"🔍 Parsing results:")
+            print(f"   - Score: {parsed['score']}")
+            print(f"   - Sentiment: {parsed['sentiment']}")
+            print(f"   - Strengths found: {len(parsed['strengths'])}")  
+            print(f"   - Concerns found: {len(parsed['concerns'])}")
+            print(f"   - Considerations found: {len(parsed['considerations'])}")
+            print(f"   - Confidence: {parsed['confidence']}")
             
         except Exception as e:
             print(f"⚠️ Error parsing recommendation: {e}")
@@ -396,55 +591,34 @@ class StockAnalysisAgent:
         return min(100, max(0, alignment))
     
     def _generate_basic_recommendation(self, symbol: str, user_profile: Dict, stock_data: Dict) -> Dict[str, Any]:
-        """Generate a basic recommendation when AI analysis fails."""
-        base_score = 50
-        sentiment = "Hold"
-        
-        # Simple rules based on user profile
-        risk_tolerance = user_profile.get("riskTolerance", "moderate")
-        
-        if risk_tolerance == "conservative":
-            base_score = 45
-            sentiment = "Hold"
-        elif risk_tolerance == "aggressive":
-            base_score = 60
-            sentiment = "Buy"
+        """Generate a basic recommendation when AI analysis fails - should be avoided."""
+        print("⚠️ WARNING: Using basic recommendation - AI analysis failed!")
         
         return {
-            "score": base_score,
-            "sentiment": sentiment,
-            "strengths": [
-                "Established company in the market",
-                "Part of major Indian stock indices"
-            ],
-            "weaknesses": [
-                "Limited analysis available",
-                "Requires manual research"
-            ],
-            "considerations": [
-                "Monitor quarterly results",
-                "Review sector trends",
-                "Consider broader market conditions"
-            ],
-            "confidence": 0.4,
-            "suggested_allocation": f"₹{min(user_profile.get('monthlyInvestment', 10000), 5000):,}",
-            "reasoning": "Basic recommendation due to limited analysis capabilities.",
-            "alignment_score": base_score,
+            "score": 50,
+            "sentiment": "Hold",
+            "strengths": [],  # No hardcoded data
+            "weaknesses": [],  # No hardcoded data
+            "considerations": [],  # No hardcoded data
+            "confidence": 0.3,
+            "suggested_allocation": "₹0",
+            "reasoning": "AI analysis failed - please try again later.",
+            "alignment_score": 50,
             "action_plan": {
-                "primary_action": sentiment,
-                "suggested_amount": 5000,
+                "primary_action": "Hold",
+                "suggested_amount": 0,
                 "timeframe": user_profile.get("investmentHorizon", "medium"),
-                "monitoring_points": ["Quarterly results", "Sector performance", "Market conditions"]
+                "monitoring_points": []
             },
             "scoring_breakdown": {
                 "components": {
-                    "technical_score": base_score,
-                    "fundamental_score": base_score,
-                    "market_sentiment_score": base_score,
-                    "risk_alignment_score": base_score
+                    "technical_score": 50,
+                    "fundamental_score": 50,
+                    "market_sentiment_score": 50,
+                    "risk_alignment_score": 50
                 }
             },
-            "full_analysis": "Basic analysis - AI research unavailable",
+            "full_analysis": "AI analysis unavailable",
             "recommendation_timestamp": datetime.now().isoformat()
         }
     
