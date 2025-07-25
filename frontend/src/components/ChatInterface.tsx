@@ -391,21 +391,31 @@ export default function ChatInterface() {
               } else if (parsed.type === 'content' && parsed.content) {
                 console.log('💬 Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
                 
-                // Filter out unwanted footer text and dividers
+                // Filter out unwanted footer text and dividers while preserving spacing
                 const filteredContent = parsed.content
-                  .replace(/─{30,}.*?─{30,}/gs, '') // Remove lines of dashes with content
-                  .replace(/──────────────────────────────────────── 📊 DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, '')
-                  .replace(/📊 DETAILED AGENT ANALYSIS \(Click to expand\)/g, '')
+                  .replace(/─{30,}.*?─{30,}/gs, ' ') // Remove lines of dashes with content, add space
+                  .replace(/──────────────────────────────────────── 📊 DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, ' ')
+                  .replace(/📊 DETAILED AGENT ANALYSIS \(Click to expand\)/g, ' ')
+                  .replace(/\s+/g, ' ') // Replace multiple spaces with single space
                   .trim();
                 
                 if (filteredContent) {
-                  // Immediate update for better real-time feel
+                  // Immediate update for better real-time feel with proper spacing
                   setMessages(prev => 
-                    prev.map(msg => 
-                      msg.id === messageId
-                        ? { ...msg, content: msg.content + filteredContent, streaming: true }
-                        : msg
-                    )
+                    prev.map(msg => {
+                      if (msg.id === messageId) {
+                        // Ensure proper spacing between chunks
+                        let newContent = msg.content;
+                        if (newContent && !newContent.endsWith(' ') && !newContent.endsWith('\n') && 
+                            !filteredContent.startsWith(' ') && !filteredContent.startsWith('\n')) {
+                          // Add space if both parts don't have whitespace at the junction
+                          newContent += ' ';
+                        }
+                        newContent += filteredContent;
+                        return { ...msg, content: newContent, streaming: true };
+                      }
+                      return msg;
+                    })
                   );
                 }
               } else if (parsed.type === 'status' && parsed.content) {

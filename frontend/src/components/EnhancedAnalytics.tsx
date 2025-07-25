@@ -200,111 +200,144 @@ const EnhancedAnalytics = () => {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
-          title="Net Worth"
-          value={analyticsData.netWorthFormatted}
-          subtitle={`Assets: ${formatCurrency(analyticsData.totalAssets)} | Liabilities: ${formatCurrency(analyticsData.totalLiabilities)}`}
-          icon={
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-            </svg>
-          }
-        />
+        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Net Worth</p>
+              <p className="text-xs text-gray-500 font-medium">Assets vs Liabilities</p>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{analyticsData.netWorthFormatted}</h3>
+            <p className="text-sm text-gray-600">
+              Assets: <span className="font-semibold text-green-600">{formatCurrency(analyticsData.totalAssets)}</span> | 
+              Liabilities: <span className="font-semibold text-red-600">{formatCurrency(analyticsData.totalLiabilities)}</span>
+            </p>
+          </div>
+        </UnifiedCard>
 
-        <StatCard
-          title="Portfolio Returns"
-          value={`${analyticsData.avgXIRR > 0 ? '+' : ''}${analyticsData.avgXIRR.toFixed(1)}%`}
-          subtitle={`Avg XIRR across ${analyticsData.mutualFundCount} funds`}
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          }
-          trend={{
-            value: analyticsData.avgXIRR > 0 ? 'Positive' : analyticsData.avgXIRR < 0 ? 'Negative' : 'Neutral',
-            type: analyticsData.avgXIRR > 0 ? 'positive' : analyticsData.avgXIRR < 0 ? 'negative' : 'neutral'
-          }}
-        />
+        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Portfolio Returns</p>
+              <p className="text-xs text-gray-500 font-medium">Avg XIRR across {analyticsData.mutualFundCount} funds</p>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-3xl font-bold text-gray-900 tracking-tight">
+              {analyticsData.avgXIRR > 0 ? '+' : ''}{analyticsData.avgXIRR.toFixed(1)}%
+            </h3>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+              analyticsData.avgXIRR > 0 
+                ? 'bg-green-100 text-green-700' 
+                : analyticsData.avgXIRR < 0
+                ? 'bg-red-100 text-red-700'
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {analyticsData.avgXIRR > 0 ? 'Positive' : analyticsData.avgXIRR < 0 ? 'Negative' : 'Neutral'}
+            </div>
+          </div>
+        </UnifiedCard>
 
-        <StatCard
-          title="Credit Health"
-          value={analyticsData.creditScore}
-          subtitle={analyticsData.creditHealth}
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          }
-          trend={{
-            value: analyticsData.creditHealth,
-            type: analyticsData.creditHealth === 'Excellent' ? 'positive' : analyticsData.creditHealth === 'Good' ? 'neutral' : 'negative'
-          }}
-        />
+        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Credit Health</p>
+              <p className="text-xs text-gray-500 font-medium">{analyticsData.creditHealth}</p>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{analyticsData.creditScore}</h3>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+              analyticsData.creditHealth === 'Excellent' 
+                ? 'bg-green-100 text-green-700' 
+                : analyticsData.creditHealth === 'Good'
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {analyticsData.creditHealth}
+            </div>
+          </div>
+        </UnifiedCard>
       </div>
 
       {/* Asset Allocation Chart */}
-      <UnifiedCard>
-        <CardHeader>
-          <h3 className={designSystem.typography.heading.medium}>Asset Allocation</h3>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {analyticsData.assetAllocation.map((asset, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: asset.color }}
-                    ></div>
-                    <span className="font-medium">{asset.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-semibold">{formatCurrency(asset.value)}</span>
-                    <span className="text-slate-500 ml-2">({asset.percentage.toFixed(1)}%)</span>
-                  </div>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
+      <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Asset Allocation</h3>
+          <p className="text-sm text-gray-600">Portfolio distribution by asset class</p>
+        </div>
+        <div className="space-y-4">
+          {analyticsData.assetAllocation.map((asset, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2">
                   <div 
-                    className="h-2 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${asset.percentage}%`,
-                      backgroundColor: asset.color 
-                    }}
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: asset.color }}
                   ></div>
+                  <span className="font-medium text-gray-900">{asset.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-semibold text-gray-900">{formatCurrency(asset.value)}</span>
+                  <span className="text-gray-500 ml-2">({asset.percentage.toFixed(1)}%)</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${asset.percentage}%`,
+                    backgroundColor: asset.color 
+                  }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </UnifiedCard>
 
       {/* Performance Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UnifiedCard>
-          <CardHeader>
-            <h3 className={designSystem.typography.heading.medium}>Investment Performance</h3>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Investment Performance</h3>
+          </div>
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-slate-600">Total Invested</span>
-              <span className="font-semibold">{formatCurrency(analyticsData.totalInvested)}</span>
+              <span className="text-gray-600 font-medium">Total Invested</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(analyticsData.totalInvested)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-600">Current Value</span>
-              <span className="font-semibold">{formatCurrency(analyticsData.totalCurrent)}</span>
+              <span className="text-gray-600 font-medium">Current Value</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(analyticsData.totalCurrent)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-600">Total Returns</span>
+              <span className="text-gray-600 font-medium">Total Returns</span>
               <span className={`font-semibold ${
                 analyticsData.totalReturns >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {analyticsData.totalReturns >= 0 ? '+' : ''}{formatCurrency(analyticsData.totalReturns)}
               </span>
             </div>
-            <div className="border-t pt-4">
+            <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center">
-                <span className="text-slate-600">Return Percentage</span>
+                <span className="text-gray-600 font-medium">Return Percentage</span>
                 <span className={`font-semibold ${
                   analyticsData.totalReturns >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
@@ -316,40 +349,40 @@ const EnhancedAnalytics = () => {
                 </span>
               </div>
             </div>
-          </CardContent>
+          </div>
         </UnifiedCard>
 
-        <UnifiedCard>
-          <CardHeader>
-            <h3 className={designSystem.typography.heading.medium}>Top & Bottom Performers</h3>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Top & Bottom Performers</h3>
+          </div>
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-slate-600 mb-2">Best Performer</p>
+              <p className="text-sm text-gray-600 font-medium mb-2">Best Performer</p>
               <p className="font-semibold text-green-600 text-sm">
                 {analyticsData.bestPerformer}
               </p>
             </div>
             <div>
-              <p className="text-sm text-slate-600 mb-2">Needs Attention</p>
+              <p className="text-sm text-gray-600 font-medium mb-2">Needs Attention</p>
               <p className="font-semibold text-red-600 text-sm">
                 {analyticsData.worstPerformer}
               </p>
             </div>
-            <div className="border-t pt-4">
-              <p className="text-sm text-slate-600 mb-2">EPF Balance</p>
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-sm text-gray-600 font-medium mb-2">EPF Balance</p>
               <p className="font-semibold text-blue-600">
                 {formatCurrency(analyticsData.epfBalance)}
               </p>
             </div>
-          </CardContent>
+          </div>
         </UnifiedCard>
       </div>
 
       {/* Data Source Indicator */}
-      <div className={`flex items-center justify-center space-x-2 ${designSystem.typography.body.small}`}>
+      <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-        <span>Live data from Artha AI backend</span>
+        <span className="font-medium">Live data from Artha AI backend</span>
         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
       </div>
     </div>
