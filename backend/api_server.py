@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from main import ArthaAIChatbot
-from core.fi_mcp.real_client import get_user_financial_data, get_portfolio_summary
+from core.fi_mcp.production_client import get_user_financial_data, initiate_fi_authentication, check_authentication_status, logout_user
 from core.money_truth_engine import MoneyTruthEngine
 from agents.enhanced_analyst import EnhancedAnalystAgent
 from agents.research_agent.enhanced_strategist import EnhancedResearchAgent
@@ -71,6 +71,10 @@ class StockAnalysisRequest(BaseModel):
     company_name: str = ""
     user_profile: Dict[str, Any]
     stock_data: Dict[str, Any] = {}
+
+class FiAuthRequest(BaseModel):
+    phone_number: str
+    passcode: str
 
 @app.on_event("startup") 
 async def startup_event():
@@ -144,29 +148,117 @@ async def health_check():
         }
     }
 
+@app.post("/api/fi-auth/initiate")
+async def fi_money_initiate_auth():
+    """Initiate Fi Money web-based authentication flow"""
+    try:
+        result = await initiate_fi_authentication()
+        
+        if result["success"]:
+            if result.get("login_required"):
+                return {
+                    "status": "login_required",
+                    "login_url": result["login_url"],
+                    "session_id": result["session_id"],
+                    "message": result["message"]
+                }
+            else:
+                return {
+                    "status": "already_authenticated",
+                    "message": result["message"]
+                }
+        else:
+            return {
+                "status": "error",
+                "message": result.get("error", "Failed to initiate authentication")
+            }
+            
+    except Exception as e:
+        logging.error(f"Fi Money authentication initiation error: {e}")
+        return {
+            "status": "error",
+            "message": f"Authentication initiation error: {str(e)}"
+        }
+
+@app.get("/api/fi-auth/status")
+async def fi_auth_status():
+    """Check Fi Money authentication status"""
+    try:
+        status = await check_authentication_status()
+        return {
+            "status": "success",
+            "auth_status": status
+        }
+    except Exception as e:
+        logging.error(f"Auth status check failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@app.post("/api/fi-auth/logout")
+async def fi_logout():
+    """Logout from Fi Money"""
+    try:
+        await logout_user()
+        return {
+            "status": "success",
+            "message": "Successfully logged out from Fi Money"
+        }
+    except Exception as e:
+        logging.error(f"Logout failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 @app.get("/financial-data")
 async def get_financial_data():
-    """Get user's financial data from Fi MCP with portfolio summary"""
+    """Get user's real-time financial data from Fi Money MCP - NO FALLBACKS"""
     try:
+        # Check authentication first
+        auth_status = await check_authentication_status()
+        if not auth_status.get('authenticated', False):
+            return {
+                "status": "unauthenticated",
+                "message": "Please authenticate with Fi Money first",
+                "auth_required": True
+            }
+        
+        # Fetch real-time data from Fi Money
         financial_data = await get_user_financial_data()
-        portfolio_summary = get_portfolio_summary(financial_data)
+        
+        # Extract portfolio summary from real data
+        total_net_worth = financial_data.get_total_net_worth()
+        assets = financial_data.get_assets_breakdown()
+        liabilities = financial_data.get_liabilities_breakdown()
         
         return {
             "status": "success",
             "data": {
-                "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else None,
-                "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else None,
-                "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else None
+                "net_worth": financial_data.net_worth,
+                "credit_report": financial_data.credit_report,
+                "epf_details": financial_data.epf_details,
+                "mf_transactions": financial_data.mf_transactions,
+                "bank_transactions": financial_data.bank_transactions
             },
-            "summary": portfolio_summary
+            "summary": {
+                "total_net_worth": total_net_worth,
+                "total_net_worth_formatted": f"₹{total_net_worth:,.2f}",
+                "assets": assets,
+                "liabilities": liabilities,
+                "data_source": "Fi Money MCP Server (Real-time)",
+                "session_info": auth_status
+            }
         }
+        
     except Exception as e:
-        logging.error(f"Financial data fetch failed: {e}")
+        logging.error(f"Real-time financial data fetch failed: {e}")
         return {
             "status": "error",
-            "message": str(e),
+            "message": f"Failed to fetch real-time data from Fi Money: {str(e)}",
             "data": None,
-            "summary": None
+            "auth_required": "Session expired" in str(e) or "Not authenticated" in str(e)
         }
 
 @app.post("/api/stream/query")

@@ -98,9 +98,10 @@ class MCPDataService {
       epf_details: MCPEPFDetails;
     };
     error?: string;
+    authRequired?: boolean;
   }> {
     try {
-      console.log('🔄 Fetching real financial data from backend API...');
+      console.log('🔄 Fetching real-time financial data from Fi Money MCP...');
 
       // Check cache first
       const now = Date.now();
@@ -112,31 +113,41 @@ class MCPDataService {
         };
       }
 
-      // Fetch from backend API
+      // Fetch from Fi Money MCP via backend (NO FALLBACKS)
       const response = await fetch(`${this.backendUrl}/financial-data`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Add timeout
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: AbortSignal.timeout(15000) // 15 second timeout for real API
       });
 
       if (!response.ok) {
-        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Fi Money MCP API error: ${response.status} ${response.statusText}`);
       }
 
       const backendData: BackendFinancialData = await response.json();
 
+      // Handle authentication required
+      if (backendData.status === 'unauthenticated') {
+        console.warn('🔐 Fi Money authentication required');
+        return {
+          success: false,
+          error: backendData.message || 'Authentication required',
+          authRequired: true
+        };
+      }
+
       if (backendData.status !== 'success') {
-        throw new Error(backendData.status || 'Backend returned error status');
+        throw new Error(backendData.message || 'Fi Money MCP server error');
       }
 
       // Cache the successful response
       this.cachedData = backendData;
       this.lastFetch = now;
 
-      console.log('✅ Successfully fetched financial data from backend');
+      console.log('✅ Successfully fetched real-time data from Fi Money MCP');
+      console.log(`📊 Data source: ${backendData.summary?.data_source || 'Fi Money MCP'}`);
 
       return {
         success: true,
@@ -144,57 +155,144 @@ class MCPDataService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to fetch data from backend, falling back to static data:', error);
+      console.error('❌ Failed to fetch real-time data from Fi Money MCP:', error);
       
-      // Fallback to static MCP data if backend is unavailable
-      return await this.loadStaticMCPData();
+      // NO FALLBACKS - Production ready
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to connect to Fi Money MCP server',
+        authRequired: error instanceof Error && (error.message.includes('authentication') || error.message.includes('expired'))
+      };
     }
   }
 
-  // Fallback method to load static data from mcp-docs if backend is down
-  private async loadStaticMCPData(): Promise<{
+  // Fi Money Web Authentication Methods
+  async initiateWebAuthentication(): Promise<{
     success: boolean;
-    data?: {
-      net_worth: MCPNetWorthResponse;
-      credit_report: MCPCreditReport;
-      epf_details: MCPEPFDetails;
-    };
-    error?: string;
+    loginRequired?: boolean;
+    loginUrl?: string;
+    sessionId?: string;
+    message: string;
   }> {
     try {
-      console.log('🔄 Falling back to static MCP data from docs...');
+      console.log('🌐 Initiating Fi Money web authentication...');
+      
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
 
-      // Load all MCP data files from static files
-      const [netWorthResponse, creditReportResponse, epfResponse] = await Promise.all([
-        fetch('/mcp-docs/sample_responses/fetch_net_worth.json'),
-        fetch('/mcp-docs/sample_responses/fetch_credit_report.json'),
-        fetch('/mcp-docs/sample_responses/fetch_epf_details.json')
-      ]);
-
-      if (!netWorthResponse.ok || !creditReportResponse.ok || !epfResponse.ok) {
-        throw new Error('Failed to load static MCP data files');
+      if (!response.ok) {
+        throw new Error(`Authentication initiation failed: ${response.status}`);
       }
 
-      const netWorthData = await netWorthResponse.json();
-      const creditReportData = await creditReportResponse.json();
-      const epfData = await epfResponse.json();
-
-      console.log('✅ Successfully loaded static MCP data from docs (fallback)');
-
-      return {
-        success: true,
-        data: {
-          net_worth: netWorthData,
-          credit_report: creditReportData,
-          epf_details: epfData
-        }
-      };
-
+      const result = await response.json();
+      
+      if (result.status === 'login_required') {
+        console.log('🔗 Fi Money login URL received');
+        return {
+          success: true,
+          loginRequired: true,
+          loginUrl: result.login_url,
+          sessionId: result.session_id,
+          message: result.message
+        };
+      } else if (result.status === 'already_authenticated') {
+        console.log('✅ Already authenticated with Fi Money');
+        return {
+          success: true,
+          loginRequired: false,
+          message: result.message
+        };
+      } else {
+        console.error('❌ Fi Money authentication initiation failed');
+        return {
+          success: false,
+          message: result.message || 'Authentication initiation failed'
+        };
+      }
+      
     } catch (error) {
-      console.error('❌ Failed to load static MCP data:', error);
+      console.error('❌ Fi Money authentication initiation error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error loading financial data'
+        message: error instanceof Error ? error.message : 'Authentication initiation error'
+      };
+    }
+  }
+
+  async checkAuthenticationStatus(): Promise<{
+    authenticated: boolean;
+    expiresInMinutes?: number;
+    message?: string;
+  }> {
+    try {
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Status check failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        const authStatus = result.auth_status;
+        return {
+          authenticated: authStatus.authenticated || false,
+          expiresInMinutes: authStatus.expires_in_minutes,
+          message: authStatus.message
+        };
+      } else {
+        return {
+          authenticated: false,
+          message: result.message
+        };
+      }
+      
+    } catch (error) {
+      console.error('❌ Auth status check error:', error);
+      return {
+        authenticated: false,
+        message: 'Status check failed'
+      };
+    }
+  }
+
+  async logout(): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000)
+      });
+
+      const result = await response.json();
+      
+      // Clear cache regardless of response
+      this.cachedData = null;
+      this.lastFetch = 0;
+      
+      return {
+        success: result.status === 'success',
+        message: result.message
+      };
+      
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      return {
+        success: false,
+        message: 'Logout failed'
       };
     }
   }
