@@ -2,14 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import MoneyTruthCard from './MoneyTruthCard';
-import AIInsightCard from './AIInsightCard';
+import UnifiedCard from '@/components/ui/UnifiedCard';
+import UnifiedButton from '@/components/ui/UnifiedButton';
 import { useFinancialInsights } from '../contexts/FinancialInsightsContext';
+import { designSystem } from '@/styles/designSystem';
 
 interface Props {
   financialData: any;
 }
 
 export default function MoneyTruthEngine({ financialData }: Props) {
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'focused'>('grid');
+  
   // Use global financial insights context
   const {
     hiddenTruths,
@@ -36,319 +41,323 @@ export default function MoneyTruthEngine({ financialData }: Props) {
     clearAllData
   } = useFinancialInsights();
 
-  // Run all analyses when component loads
-  const runCompleteAnalysis = async () => {
-    if (!financialData) return;
-    
-    // Run all analyses in parallel using the global context
-    await Promise.all([
-      fetchHiddenTruths(),
-      fetchFutureProjection(),
-      fetchGoalReality(),
-      fetchMoneyPersonality(),
-      fetchPortfolioHealth(),
-      fetchMoneyLeaks(),
-      fetchRiskAssessment()
-    ]);
+  const agents = [
+    {
+      id: 'hidden_truths',
+      icon: '🚨',
+      title: 'Hidden Money Truths',
+      subtitle: 'Shocking discoveries hidden in your data',
+      description: 'Uncover shocking financial discoveries that will make you say "I had NO IDEA!" Our AI detective reveals surprising money patterns, hidden inefficiencies, and eye-opening comparisons.',
+      features: ['Surprising money patterns', 'Hidden waste & inefficiencies', 'Eye-opening peer comparisons', 'Shocking trajectory implications'],
+      gradient: 'from-red-500 to-pink-500',
+      bgGradient: 'from-red-50 to-pink-50',
+      borderColor: 'border-red-200',
+      fetchFunction: fetchHiddenTruths,
+      isLoading: isLoadingHidden,
+      data: hiddenTruths,
+      type: 'hidden_truths' as const
+    },
+    {
+      id: 'future_projection',
+      icon: '🔮',
+      title: 'Future Wealth Projection',
+      subtitle: 'AI predicts your financial future',
+      description: 'Our AI crystal ball analyzes your current patterns to predict your financial future with 3 detailed scenarios: best case, realistic, and worst case projections.',
+      features: ['5, 10, 20 year projections', 'Best/realistic/worst scenarios', 'Growth acceleration strategies', 'Timeline milestones'],
+      gradient: 'from-purple-500 to-indigo-500',
+      bgGradient: 'from-purple-50 to-indigo-50',
+      borderColor: 'border-purple-200',
+      fetchFunction: fetchFutureProjection,
+      isLoading: isLoadingFuture,
+      data: futureProjection,
+      type: 'future_projection' as const
+    },
+    {
+      id: 'portfolio_health',
+      icon: '🏥',
+      title: 'Portfolio Health Check',
+      subtitle: 'Medical-style investment diagnosis',
+      description: 'Get a comprehensive health checkup for your investments with our AI doctor. Receive a health score, critical issue detection, and a detailed treatment plan.',
+      features: ['Health score 0-100', 'Critical issues detection', 'Specific treatment plan', 'Recovery recommendations'],
+      gradient: 'from-emerald-500 to-teal-500',
+      bgGradient: 'from-emerald-50 to-teal-50',
+      borderColor: 'border-emerald-200',
+      fetchFunction: fetchPortfolioHealth,
+      isLoading: isLoadingHealth,
+      data: portfolioHealth,
+      type: 'portfolio_health' as const
+    },
+    {
+      id: 'goal_reality',
+      icon: '🎯',
+      title: 'Goal Reality Check',
+      subtitle: 'Brutal honesty about your dreams',
+      description: 'Our AI provides brutal honesty about whether your financial goals are actually achievable. Get realistic timelines, required savings, and alternative strategies.',
+      features: ['Realistic goal analysis', 'Required monthly savings', 'Alternative strategies', 'Achievement probability'],
+      gradient: 'from-green-500 to-emerald-500',
+      bgGradient: 'from-green-50 to-emerald-50',
+      borderColor: 'border-green-200',
+      fetchFunction: fetchGoalReality,
+      isLoading: isLoadingGoals,
+      data: goalReality,
+      type: 'goal_reality' as const
+    },
+    {
+      id: 'money_personality',
+      icon: '🧠',
+      title: 'Money Personality',
+      subtitle: 'Deep psychological money analysis',
+      description: 'Discover your financial DNA with deep psychological analysis of your money behavior patterns, wealth potential, and growth limitations.',
+      features: ['Money archetype analysis', 'Behavioral pattern insights', 'Growth limitation detection', 'Wealth potential assessment'],
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-50 to-cyan-50',
+      borderColor: 'border-blue-200',
+      fetchFunction: fetchMoneyPersonality,
+      isLoading: isLoadingPersonality,
+      data: moneyPersonality,
+      type: 'personality' as const
+    },
+    {
+      id: 'money_leaks',
+      icon: '🔍',
+      title: 'Money Leak Detection',
+      subtitle: 'Find where you\'re secretly losing money',
+      description: 'Our AI detective does forensic work to find exactly where you\'re secretly losing money and provides immediate fixes to plug those leaks.',
+      features: ['Hidden money drains', 'Quantified monthly losses', 'Immediate leak fixes', 'Prevention strategies'],
+      gradient: 'from-yellow-500 to-orange-500',
+      bgGradient: 'from-yellow-50 to-orange-50',
+      borderColor: 'border-yellow-200',
+      fetchFunction: fetchMoneyLeaks,
+      isLoading: isLoadingLeaks,
+      data: moneyLeaks,
+      type: 'money_leaks' as const
+    },
+    {
+      id: 'risk_assessment',
+      icon: '⚠️',
+      title: 'Risk Assessment',
+      subtitle: 'Comprehensive threat analysis',
+      description: 'Get a comprehensive analysis of financial threats and protection gaps in your wealth with detailed mitigation strategies and insurance recommendations.',
+      features: ['Critical risk identification', 'Protection gap analysis', 'Mitigation strategies', 'Insurance recommendations'],
+      gradient: 'from-red-500 to-rose-500',
+      bgGradient: 'from-red-50 to-rose-50',
+      borderColor: 'border-red-200',
+      fetchFunction: fetchRiskAssessment,
+      isLoading: isLoadingRisk,
+      data: riskAssessment,
+      type: 'risk_assessment' as const
+    }
+  ];
+
+  const handleAgentClick = (agentId: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+      setSelectedAgent(agentId);
+      setViewMode('focused');
+      agent.fetchFunction();
+    }
   };
 
-  useEffect(() => {
-    if (financialData) {
-      // Only run analysis if we don't have fresh data
-      const hasCompleteData = hiddenTruths && futureProjection && goalReality && moneyPersonality && portfolioHealth && moneyLeaks && riskAssessment;
-      if (!hasCompleteData) {
-        runCompleteAnalysis();
-      }
-    }
-  }, [financialData]);
+  const handleBackToGrid = () => {
+    setViewMode('grid');
+    setSelectedAgent(null);
+  };
 
-  // Check if any analysis is currently loading
-  const isLoading = isLoadingHidden || isLoadingFuture || isLoadingGoals || isLoadingPersonality || isLoadingHealth || isLoadingLeaks || isLoadingRisk;
-  
-  // Check if we have complete results
-  const hasCompleteResults = hiddenTruths && futureProjection && goalReality && moneyPersonality && portfolioHealth && moneyLeaks && riskAssessment;
+  const selectedAgentData = selectedAgent ? agents.find(a => a.id === selectedAgent) : null;
 
   if (!financialData?.data) {
     return (
-      <div className="text-center py-12">
-        <div className="text-gray-500">No financial data available</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <UnifiedCard className="text-center max-w-md">
+          <div className="text-6xl mb-6">📊</div>
+          <h2 className={`${designSystem.typography.heading.large} mb-4`}>No Financial Data Available</h2>
+          <p className={designSystem.typography.body.default}>Please connect your financial accounts to access Money Truth Engine</p>
+        </UnifiedCard>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-red-600 via-red-700 to-orange-600 rounded-2xl p-8 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
-        <div className="relative z-10">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="text-4xl">🔍</div>
-            <div>
-              <h1 className="text-3xl font-bold">Money Truth Engine</h1>
-              <p className="text-red-100 mt-2">AI-powered analysis revealing hidden financial insights</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold">100%</div>
-              <div className="text-red-100 text-sm">AI-Driven Analysis</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">5</div>
-              <div className="text-red-100 text-sm">Killer Features</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">Real-Time</div>
-              <div className="text-red-100 text-sm">Live Insights</div>
-            </div>
-          </div>
-          <div className="mt-6 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-red-100 text-sm">
-                Last updated: {new Date().toLocaleString()}
-              </span>
-            </div>
-            <button
-              onClick={runCompleteAnalysis}
-              disabled={isLoading}
-              className="bg-white text-red-600 px-6 py-2 rounded-lg font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
-            >
-              {isLoading ? '🔄 Analyzing...' : '🚀 Run Complete Analysis'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Analysis Progress */}
-      {isLoading && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Money Truth Engine Running...
-            </h3>
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-red-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
-                <div className="text-center p-3 bg-red-50 rounded-lg border border-red-100">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-red-300 border-t-red-600 mx-auto mb-2"></div>
-                  <div className="font-medium text-red-800">Hidden Truths</div>
-                  <div className="text-red-600 text-xs">Detecting patterns...</div>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-300 border-t-purple-600 mx-auto mb-2" style={{animationDelay: '0.2s'}}></div>
-                  <div className="font-medium text-purple-800">Future Wealth</div>
-                  <div className="text-purple-600 text-xs">Projecting scenarios...</div>
-                </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-300 border-t-blue-600 mx-auto mb-2" style={{animationDelay: '0.4s'}}></div>
-                  <div className="font-medium text-blue-800">Portfolio Health</div>
-                  <div className="text-blue-600 text-xs">Diagnosing issues...</div>
-                </div>
-                <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-green-300 border-t-green-600 mx-auto mb-2" style={{animationDelay: '0.6s'}}></div>
-                  <div className="font-medium text-green-800">Goal Reality</div>
-                  <div className="text-green-600 text-xs">Simulating outcomes...</div>
-                </div>
-                <div className="text-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-indigo-300 border-t-indigo-600 mx-auto mb-2" style={{animationDelay: '0.8s'}}></div>
-                  <div className="font-medium text-indigo-800">Personality</div>
-                  <div className="text-indigo-600 text-xs">Analyzing behavior...</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Insights Grid */}
-      {completeInsights && !isLoading && (
-        <div className="space-y-8">
-          {/* Hidden Money Truths - Priority #1 */}
-          <MoneyTruthCard
-            title="🚨 Hidden Money Truths"
-            subtitle="Shocking discoveries that will change how you see your finances"
-            insights={completeInsights.hidden_truths}
-            isLoading={false}
-            onRefresh={fetchCompleteInsights}
-            type="hidden_truths"
-          />
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Future Wealth Projection */}
-            <MoneyTruthCard
-              title="🔮 Future Wealth Projection"
-              subtitle="AI predicts your financial future based on current patterns"
-              insights={completeInsights.future_projection}
-              isLoading={false}
-              onRefresh={fetchCompleteInsights}
-              type="future_projection"
-            />
-
-            {/* Portfolio Health Check */}
-            <MoneyTruthCard
-              title="🏥 Portfolio Health Diagnosis"
-              subtitle="Comprehensive AI analysis of your investment health"
-              insights={completeInsights.portfolio_health}
-              isLoading={false}
-              onRefresh={fetchCompleteInsights}
-              type="portfolio_health"
-            />
-          </div>
-
-          {/* Goal Reality Check - Full Width */}
-          <MoneyTruthCard
-            title="🎯 Life Goal Reality Check"
-            subtitle="Can you actually achieve your dreams? AI simulation reveals the truth"
-            insights={completeInsights.goal_reality}
-            isLoading={false}
-            onRefresh={fetchCompleteInsights}
-            type="goal_reality"
-          />
-
-          {/* Money Personality Analysis */}
-          <MoneyTruthCard
-            title="🧠 Money Personality Deep Dive"
-            subtitle="What your financial behavior reveals about your wealth potential"
-            insights={completeInsights.personality}
-            isLoading={false}
-            onRefresh={fetchCompleteInsights}
-            type="personality"
-          />
-
-          {/* Unified Summary */}
-          {completeInsights.unified_summary && (
-            <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 text-white">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="text-4xl">🎯</div>
+  // Focused view for selected agent
+  if (viewMode === 'focused' && selectedAgentData) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        {/* Header with back button */}
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200">
+          <div className={`${designSystem.layout.container} py-4`}>
+            <div className="flex items-center space-x-4">
+              <UnifiedButton
+                onClick={handleBackToGrid}
+                variant="secondary"
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Back to All Agents</span>
+              </UnifiedButton>
+              <div className="flex items-center space-x-3">
+                <div className={`text-3xl`}>{selectedAgentData.icon}</div>
                 <div>
-                  <h2 className="text-2xl font-bold">AI Summary & Action Plan</h2>
-                  <p className="text-gray-300 mt-1">Your complete financial roadmap</p>
+                  <h1 className={designSystem.typography.heading.large}>{selectedAgentData.title}</h1>
+                  <p className={designSystem.typography.body.default}>{selectedAgentData.subtitle}</p>
                 </div>
               </div>
-              <div className="space-y-4">
-                {typeof completeInsights.unified_summary === 'string' ? (
-                  <p className="text-gray-100 leading-relaxed text-lg">
-                    {completeInsights.unified_summary}
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {completeInsights.unified_summary.unified_summary && (
-                      <p className="text-gray-100 leading-relaxed text-lg">
-                        {completeInsights.unified_summary.unified_summary}
-                      </p>
-                    )}
-                  </div>
-                )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className={`${designSystem.layout.container} ${designSystem.layout.section}`}>
+          <MoneyTruthCard
+            title={`${selectedAgentData.icon} ${selectedAgentData.title}`}
+            subtitle={selectedAgentData.subtitle}
+            insights={selectedAgentData.data}
+            isLoading={selectedAgentData.isLoading}
+            onRefresh={selectedAgentData.fetchFunction}
+            type={selectedAgentData.type}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className={`relative ${designSystem.layout.container} py-20`}>
+          <div className="text-center text-white">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <div className="text-6xl">🔍</div>
+              <div>
+                <h1 className="text-5xl font-bold mb-2">Money Truth Engine</h1>
+                <p className="text-xl text-blue-100">AI-powered analysis revealing hidden financial insights</p>
               </div>
             </div>
-          )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-2">7</div>
+                <div className="text-blue-100">Specialized AI Agents</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-2">100%</div>
+                <div className="text-blue-100">AI-Driven Analysis</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-2">Real-Time</div>
+                <div className="text-blue-100">Live Insights</div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      {/* Individual Analysis Cards */}
-      <div className="space-y-8 mt-12">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Detailed Analysis</h2>
-          <p className="text-gray-600">Dive deeper into each aspect of your financial profile</p>
-        </div>
-
-        {/* Hidden Money Truths */}
-        <MoneyTruthCard
-          title="💡 Hidden Money Truths"
-          subtitle="Shocking discoveries about your finances"
-          insights={hiddenTruths}
-          isLoading={isLoadingHidden}
-          onRefresh={fetchHiddenTruths}
-          type="hidden_truths"
-        />
-
-        {/* Two Column Layout for Health & Leaks */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AIInsightCard
-            title="🏥 Portfolio Health Check"
-            subtitle="AI diagnosis of your investments"
-            insights={portfolioHealth}
-            isLoading={isLoadingHealth}
-            onRefresh={fetchPortfolioHealth}
-            type="portfolio_health"
-          />
-          <AIInsightCard
-            title="🔍 Money Leak Detection"
-            subtitle="Where you're losing money secretly"
-            insights={moneyLeaks}
-            isLoading={isLoadingLeaks}
-            onRefresh={fetchMoneyLeaks}
-            type="money_leaks"
-          />
-        </div>
-
-        {/* Risk Assessment */}
-        <AIInsightCard
-          title="⚠️ Risk Assessment"
-          subtitle="AI-powered risk analysis and protection gaps"
-          insights={riskAssessment}
-          isLoading={isLoadingRisk}
-          onRefresh={fetchRiskAssessment}
-          type="risk_assessment"
-        />
-
-        {/* Future Wealth & Goals */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MoneyTruthCard
-            title="🔮 Future Wealth Projection"
-            subtitle="AI predicts your financial future"
-            insights={futureProjection}
-            isLoading={isLoadingFuture}
-            onRefresh={fetchFutureProjection}
-            type="future_projection"
-          />
-          <MoneyTruthCard
-            title="🎯 Life Goal Reality Check"
-            subtitle="Can you achieve your dreams?"
-            insights={goalReality}
-            isLoading={isLoadingGoals}
-            onRefresh={fetchGoalReality}
-            type="goal_reality"
-          />
-        </div>
-
-        {/* Money Personality Analysis */}
-        <MoneyTruthCard
-          title="🧠 Money Personality Analysis"
-          subtitle="What your behavior reveals about your wealth"
-          insights={moneyPersonality}
-          isLoading={isLoadingPersonality}
-          onRefresh={fetchMoneyPersonality}
-          type="personality"
-        />
       </div>
 
-      {/* Empty State */}
-      {!completeInsights && !isLoading && (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-6">🔍</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Ready to Uncover Your Money Truths?
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Our AI will analyze your complete financial data and reveal shocking insights
-            about your money that you've never seen before.
+      {/* Agents Grid */}
+      <div className={`${designSystem.layout.container} ${designSystem.layout.section}`}>
+        <div className="text-center mb-12">
+          <h2 className={`${designSystem.typography.heading.xlarge} mb-4`}>Choose Your AI Financial Detective</h2>
+          <p className={`${designSystem.typography.body.large} max-w-3xl mx-auto`}>
+            Each specialized AI agent analyzes different aspects of your financial life. 
+            Click on any agent to get deep insights tailored to your specific situation.
           </p>
-          <button
-            onClick={fetchCompleteInsights}
-            className="bg-red-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-red-700 transition-colors text-lg"
-          >
-            🚀 Start AI Analysis
-          </button>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {agents.map((agent) => (
+            <UnifiedCard
+              key={agent.id}
+              className={`group relative hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden ${agent.borderColor} border-2`}
+              onClick={() => handleAgentClick(agent.id)}
+              hover={false}
+            >
+              {/* Gradient overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${agent.bgGradient} opacity-50`}></div>
+              
+              {/* Content */}
+              <div className="relative">
+                {/* Icon and title */}
+                <div className="text-center mb-6">
+                  <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                    {agent.icon}
+                  </div>
+                  <h3 className={`${designSystem.typography.heading.medium} mb-2`}>{agent.title}</h3>
+                  <p className={`${designSystem.typography.body.small} mb-4`}>{agent.subtitle}</p>
+                </div>
+
+                {/* Description */}
+                <p className={`${designSystem.typography.body.small} mb-6 leading-relaxed`}>
+                  {agent.description}
+                </p>
+
+                {/* Features */}
+                <div className="mb-6">
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                    What you'll discover:
+                  </h4>
+                  <ul className="space-y-2">
+                    {agent.features.map((feature, idx) => (
+                      <li key={idx} className="text-xs text-slate-600 flex items-start">
+                        <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Action button */}
+                <UnifiedButton
+                  className={`w-full bg-gradient-to-r ${agent.gradient} hover:shadow-lg transition-all duration-300 transform group-hover:scale-105`}
+                  disabled={agent.isLoading}
+                  isLoading={agent.isLoading}
+                  variant="primary"
+                >
+                  {!agent.isLoading && (
+                    <span>🚀 Analyze with {agent.title}</span>
+                  )}
+                </UnifiedButton>
+
+                {/* Status indicator */}
+                <div className="flex items-center justify-center mt-4 space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    agent.isLoading ? 'bg-yellow-500 animate-pulse' : 
+                    agent.data ? 'bg-green-500' : 'bg-slate-300'
+                  }`}></div>
+                  <span className="text-xs text-slate-500">
+                    {agent.isLoading ? 'Analyzing' : agent.data ? 'Complete' : 'Ready'}
+                  </span>
+                </div>
+              </div>
+            </UnifiedCard>
+          ))}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-16 text-center">
+          <UnifiedCard className="max-w-2xl mx-auto">
+            <h3 className={`${designSystem.typography.heading.large} mb-4`}>Quick Actions</h3>
+            <div className="flex flex-wrap justify-center gap-4">
+              <UnifiedButton
+                onClick={() => agents.forEach(agent => agent.fetchFunction())}
+                variant="primary"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg"
+              >
+                🚀 Run All Agents
+              </UnifiedButton>
+              <UnifiedButton
+                onClick={clearAllData}
+                variant="secondary"
+                className="bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:shadow-lg"
+              >
+                🔄 Clear All Data
+              </UnifiedButton>
+            </div>
+          </UnifiedCard>
+        </div>
+      </div>
     </div>
   );
 }

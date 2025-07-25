@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface MoneyTruthCardProps {
   title: string;
@@ -8,7 +9,7 @@ interface MoneyTruthCardProps {
   insights: any;
   isLoading: boolean;
   onRefresh: () => void;
-  type: 'hidden_truths' | 'future_projection' | 'goal_reality' | 'personality';
+  type: 'hidden_truths' | 'future_projection' | 'goal_reality' | 'personality' | 'portfolio_health' | 'money_leaks' | 'risk_assessment';
 }
 
 export default function MoneyTruthCard({ 
@@ -47,6 +48,24 @@ export default function MoneyTruthCard({
           bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
           header: 'bg-blue-50 border-blue-100'
         };
+      case 'portfolio_health':
+        return {
+          border: 'border-emerald-200',
+          bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
+          header: 'bg-emerald-50 border-emerald-100'
+        };
+      case 'money_leaks':
+        return {
+          border: 'border-yellow-200',
+          bg: 'bg-gradient-to-br from-yellow-50 to-amber-50',
+          header: 'bg-yellow-50 border-yellow-100'
+        };
+      case 'risk_assessment':
+        return {
+          border: 'border-red-200',
+          bg: 'bg-gradient-to-br from-red-50 to-pink-50',
+          header: 'bg-red-50 border-red-100'
+        };
       default:
         return {
           border: 'border-gray-200',
@@ -63,7 +82,10 @@ export default function MoneyTruthCard({
       hidden_truths: 'Uncovering hidden financial patterns...',
       future_projection: 'Calculating future wealth trajectories...',
       goal_reality: 'Analyzing life goal feasibility...',
-      personality: 'Evaluating money behavior patterns...'
+      personality: 'Evaluating money behavior patterns...',
+      portfolio_health: 'Diagnosing investment health...',
+      money_leaks: 'Detecting money drains and leaks...',
+      risk_assessment: 'Analyzing financial risks and threats...'
     };
 
     return (
@@ -115,75 +137,40 @@ export default function MoneyTruthCard({
   const renderMarkdownContent = (text: string) => {
     if (!text) return null;
     
-    // Parse markdown-style formatting
-    const lines = text.split('\n').filter(line => line.trim());
-    const elements = lines.map((line, index) => {
-      const trimmedLine = line.trim();
-      
-      // Headers
-      if (trimmedLine.startsWith('### ')) {
-        const headerText = trimmedLine.replace('### ', '');
-        return (
-          <h3 key={index} className="text-lg font-bold text-gray-900 mb-3 flex items-center">
-            {headerText}
-          </h3>
-        );
-      }
-      
-      if (trimmedLine.startsWith('## ')) {
-        const headerText = trimmedLine.replace('## ', '');
-        return (
-          <h2 key={index} className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            {headerText}
-          </h2>
-        );
-      }
-      
-      // Bullet points
-      if (trimmedLine.startsWith('• ')) {
-        const bulletText = trimmedLine.replace('• ', '');
-        return (
-          <div key={index} className="flex items-start space-x-3 mb-3 p-3 bg-white rounded-lg border border-gray-100">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-gray-800 leading-relaxed">{bulletText}</p>
-          </div>
-        );
-      }
-      
-      // Bold text (**text**)
-      if (trimmedLine.includes('**') && trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
-        const boldText = trimmedLine.replace(/\*\*/g, '');
-        return (
-          <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 mb-3">
-            <p className="font-bold text-gray-900">{boldText}</p>
-          </div>
-        );
-      }
-      
-      // Action items (✅ **Action:** text)
-      if (trimmedLine.includes('**✅ Action:**')) {
-        const actionText = trimmedLine.replace('**✅ Action:**', '').trim();
-        return (
-          <div key={index} className="p-4 bg-green-50 rounded-lg border border-green-200 mb-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-green-600 font-bold">✅ Action:</span>
-              <p className="text-green-800 font-medium">{actionText}</p>
-            </div>
-          </div>
-        );
-      }
-      
-      // Regular paragraphs
-      if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('•')) {
-        return (
-          <p key={index} className="text-gray-700 leading-relaxed mb-3">{trimmedLine}</p>
-        );
-      }
-      
-      return null;
-    }).filter(Boolean);
-    
-    return <div className="space-y-2">{elements}</div>;
+    return (
+      <div className="prose prose-sm max-w-none">
+        <ReactMarkdown
+          components={{
+            h1: ({children}) => <h1 className="text-2xl font-bold text-gray-900 mb-4">{children}</h1>,
+            h2: ({children}) => <h2 className="text-xl font-bold text-gray-900 mb-3">{children}</h2>,
+            h3: ({children}) => <h3 className="text-lg font-bold text-gray-900 mb-3">{children}</h3>,
+            p: ({children}) => <p className="text-gray-700 leading-relaxed mb-3">{children}</p>,
+            ul: ({children}) => <ul className="space-y-2 mb-4">{children}</ul>,
+            li: ({children}) => (
+              <li className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-100">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="text-gray-800 leading-relaxed">{children}</div>
+              </li>
+            ),
+            strong: ({children}) => (
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 mb-3 inline-block w-full">
+                <span className="font-bold text-gray-900">{children}</span>
+              </div>
+            ),
+            blockquote: ({children}) => (
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200 mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-600 font-bold">💡 Insight:</span>
+                  <div className="text-green-800 font-medium">{children}</div>
+                </div>
+              </div>
+            )
+          }}
+        >
+          {text}
+        </ReactMarkdown>
+      </div>
+    );
   };
 
   const renderInsightContent = () => {

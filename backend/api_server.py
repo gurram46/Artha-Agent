@@ -15,6 +15,10 @@ import json
 from datetime import datetime
 from typing import Dict, Any
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Add backend to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -98,12 +102,9 @@ async def startup_event():
         gemini_client = genai.Client(api_key=config.GOOGLE_API_KEY)
         
         # Initialize MoneyTruthEngine
-        money_truth_engine = MoneyTruthEngine(
-            enhanced_analyst, 
-            enhanced_researcher, 
-            enhanced_risk_advisor,
-            gemini_client
-        )
+        print("🔍 Loading Money Truth Engine with specialized agents...")
+        money_truth_engine = MoneyTruthEngine(gemini_client)
+        logger.info("💡 MoneyTruthEngine initialized with 7 specialized AI agents")
         
         # Health check
         agent_count = sum([
@@ -684,15 +685,20 @@ Provide a clear, personalized answer (max 300 words) with specific recommendatio
 async def stream_hidden_truths():
     """Stream AI-driven hidden money truths with typing effect"""
     if not money_truth_engine:
+        print("❌ MoneyTruthEngine not initialized for hidden-truths request")
         raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
     
     async def generate():
         try:
+            print("🚨 API REQUEST: Hidden Truths analysis started")
+            
             # Send initial status
             yield f"data: {json.dumps({'type': 'status', 'message': '🔍 Analyzing your financial data...'})}\n\n"
             
             # Get financial data
+            print("📊 Fetching user financial data...")
             financial_data = await get_user_financial_data()
+            
             mcp_data = {
                 "data": {
                     "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
@@ -701,10 +707,20 @@ async def stream_hidden_truths():
                 }
             }
             
+            print(f"💾 MCP data prepared - size: {len(str(mcp_data))} characters")
+            
             yield f"data: {json.dumps({'type': 'status', 'message': '🤖 AI analyzing patterns...'})}\n\n"
             
             # Run analysis
+            print("🔍 Starting MoneyTruthEngine.analyze_hidden_truths...")
+            analysis_start = datetime.now()
+            
             insights = await money_truth_engine.analyze_hidden_truths(mcp_data)
+            
+            analysis_time = (datetime.now() - analysis_start).total_seconds()
+            print(f"⚡ Hidden Truths analysis completed in {analysis_time:.2f}s")
+            print(f"📝 Analysis result type: {type(insights)}")
+            print(f"📊 Result keys: {list(insights.keys()) if isinstance(insights, dict) else 'Not a dict'}")
             
             yield f"data: {json.dumps({'type': 'status', 'message': '📊 Generating insights...'})}\n\n"
             

@@ -1,58 +1,162 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import UnifiedCard, { CardContent } from '@/components/ui/UnifiedCard';
+import UnifiedButton from '@/components/ui/UnifiedButton';
 import ErrorBoundary from './ErrorBoundary';
 import { Message, StreamMessage, DEFAULT_STREAMING_CONFIG, AgentDetail, AgentMode } from '@/types/chat';
 import ReactMarkdown from 'react-markdown';
+import { designSystem } from '@/styles/designSystem';
 
-// Component for expandable agent details
-const AgentDetailsSection = ({ agentDetails }: { agentDetails: Record<string, AgentDetail> }) => {
+// Real-time AI Agent Progress Tracker
+const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<string, AgentDetail>, isComplete: boolean }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
-  if (!agentDetails || Object.keys(agentDetails).length === 0) {
+  // Get actual agents from the real data
+  const activeAgents = Object.entries(agentDetails || {}).map(([agentId, detail]) => ({
+    id: agentId,
+    name: detail.title,
+    content: detail.content,
+    status: 'completed'
+  }));
+
+  if (activeAgents.length === 0) {
     return null;
   }
 
   return (
-    <div className="mt-4 border-t border-gray-200 pt-4">
-      {Object.entries(agentDetails).map(([agentId, detail]) => (
-        <div key={agentId} className="mb-3">
-          <button
-            onClick={() => setExpandedAgent(expandedAgent === agentId ? null : agentId)}
-            className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <span>{detail.title}</span>
-            <svg
-              className={`w-4 h-4 transform transition-transform ${expandedAgent === agentId ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {expandedAgent === agentId && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
-              <ReactMarkdown
-                components={{
-                  h1: ({node, ...props}) => <h1 className="text-sm font-bold mb-1" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="text-xs font-semibold mb-1" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-xs font-semibold mb-1" {...props} />,
-                  p: ({node, ...props}) => <p className="mb-1 leading-relaxed text-xs" {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                  ul: ({node, ...props}) => <ul className="list-disc list-inside mb-1 space-y-0.5 text-xs" {...props} />,
-                  ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-1 space-y-0.5 text-xs" {...props} />,
-                  li: ({node, ...props}) => <li className="leading-relaxed text-xs" {...props} />,
-                  code: ({node, ...props}) => <code className="bg-gray-200 px-1 py-0.5 rounded text-xs" {...props} />
-                }}
-              >
-                {detail.content}
-              </ReactMarkdown>
+    <div className="my-4">
+      {/* Real-time Agent Progress Header */}
+      <div 
+        className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/80 to-purple-50/80 border border-blue-200/50 rounded-2xl cursor-pointer hover:from-blue-100/80 hover:to-purple-100/80 transition-all duration-300"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              isComplete ? 'bg-green-500' : 'bg-blue-500'
+            } shadow-lg`}>
+              {isComplete ? (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <div className="flex space-x-0.5">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              )}
             </div>
-          )}
+            {!isComplete && (
+              <div className="absolute -inset-1 bg-blue-400 rounded-full animate-ping opacity-30"></div>
+            )}
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900 text-base">
+              {isComplete ? '✅ AI Analysis Complete' : '🧠 AI Agents Working...'}
+            </h4>
+            <p className="text-xs text-blue-600 font-medium">
+              {activeAgents.length} {activeAgents.length === 1 ? 'agent' : 'agents'} {isComplete ? 'completed' : 'analyzing'}
+            </p>
+          </div>
         </div>
-      ))}
+        <div className="flex items-center space-x-3">
+          <div className="text-xs bg-white/60 px-3 py-1 rounded-full font-semibold text-blue-700">
+            {isComplete ? 'View Analysis' : 'In Progress'}
+          </div>
+          <svg
+            className={`w-5 h-5 text-gray-500 transform transition-transform duration-300 ${
+              isExpanded ? 'rotate-180' : ''
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Real-time Agent Analysis */}
+      {isExpanded && (
+        <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+          {activeAgents.map((agent, index) => {
+            // Generate colors for different agents
+            const colors = [
+              { bg: 'bg-blue-500', border: 'border-blue-200', bgLight: 'bg-blue-50/30' },
+              { bg: 'bg-purple-500', border: 'border-purple-200', bgLight: 'bg-purple-50/30' },
+              { bg: 'bg-green-500', border: 'border-green-200', bgLight: 'bg-green-50/30' },
+              { bg: 'bg-orange-500', border: 'border-orange-200', bgLight: 'bg-orange-50/30' },
+              { bg: 'bg-pink-500', border: 'border-pink-200', bgLight: 'bg-pink-50/30' }
+            ];
+            const color = colors[index % colors.length];
+            
+            return (
+              <div key={agent.id} className={`border rounded-xl transition-all duration-300 ${color.border} ${color.bgLight}`}>
+                <div 
+                  className="flex items-center justify-between p-4 cursor-pointer"
+                  onClick={() => setExpandedAgent(expandedAgent === agent.id ? null : agent.id)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg ${color.bg}`}>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-base">{agent.name}</h5>
+                      <p className="text-xs text-green-600 font-semibold flex items-center">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                        Analysis complete
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                      ✅ Done
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-gray-400 transform transition-transform ${
+                        expandedAgent === agent.id ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Real Agent Analysis Content */}
+                {expandedAgent === agent.id && (
+                  <div className="px-4 pb-4">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 shadow-sm">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2 text-gray-900" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-sm font-semibold mb-2 text-gray-800" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1 text-gray-700" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-2 leading-relaxed text-sm text-gray-700" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm" {...props} />,
+                          li: ({node, ...props}) => <li className="leading-relaxed text-sm text-gray-700" {...props} />,
+                          code: ({node, ...props}) => <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs" {...props} />
+                        }}
+                      >
+                        {agent.content}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -63,7 +167,8 @@ export default function ChatInterface() {
       id: '1',
       type: 'assistant',
       content: 'Hello! I\'m your AI financial advisor. Choose **Quick Response** for fast answers using single agent with Google Search, or **Deep Research** for comprehensive 3-agent analysis. I have access to your complete financial data through Fi MCP.',
-      timestamp: new Date('2024-01-01T00:00:00Z') // Fixed timestamp to prevent hydration mismatch
+      timestamp: new Date('2024-01-01T00:00:00Z'), // Fixed timestamp to prevent hydration mismatch
+      agentDetails: {}
     }
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -282,26 +387,27 @@ export default function ChatInterface() {
               
               if (parsed.type === 'log' && parsed.content) {
                 console.log('🤖 AI Log:', parsed.content);
-                
-                // Add logs to the message content with proper formatting
-                setMessages(prev => 
-                  prev.map(msg => 
-                    msg.id === messageId
-                      ? { ...msg, content: msg.content + parsed.content + '\n\n', streaming: true }
-                      : msg
-                  )
-                );
+                // Skip adding logs to message content - they'll be handled separately
               } else if (parsed.type === 'content' && parsed.content) {
                 console.log('💬 Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
                 
-                // Immediate update for better real-time feel
-                setMessages(prev => 
-                  prev.map(msg => 
-                    msg.id === messageId
-                      ? { ...msg, content: msg.content + parsed.content, streaming: true }
-                      : msg
-                  )
-                );
+                // Filter out unwanted footer text and dividers
+                const filteredContent = parsed.content
+                  .replace(/─{30,}.*?─{30,}/gs, '') // Remove lines of dashes with content
+                  .replace(/──────────────────────────────────────── 📊 DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, '')
+                  .replace(/📊 DETAILED AGENT ANALYSIS \(Click to expand\)/g, '')
+                  .trim();
+                
+                if (filteredContent) {
+                  // Immediate update for better real-time feel
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === messageId
+                        ? { ...msg, content: msg.content + filteredContent, streaming: true }
+                        : msg
+                    )
+                  );
+                }
               } else if (parsed.type === 'status' && parsed.content) {
                 console.log('📋 Status update:', parsed.content);
                 
@@ -313,9 +419,9 @@ export default function ChatInterface() {
                   )
                 );
               } else if (parsed.type === 'agent_details') {
-                console.log('📊 Agent details received:', parsed.agent);
+                console.log('📊 Real-time agent details received:', parsed.agent, parsed.title);
                 
-                // Store agent details separately for expandable sections
+                // Update agent details in real-time as they complete
                 setMessages(prev => 
                   prev.map(msg => 
                     msg.id === messageId
@@ -324,10 +430,11 @@ export default function ChatInterface() {
                           agentDetails: {
                             ...msg.agentDetails,
                             [parsed.agent]: {
-                              title: parsed.title,
-                              content: parsed.content
+                              title: parsed.title || `Agent ${parsed.agent}`,
+                              content: parsed.content || 'Analysis in progress...'
                             }
-                          }
+                          },
+                          streaming: true
                         }
                       : msg
                   )
@@ -445,241 +552,205 @@ export default function ChatInterface() {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6">
-      {/* Professional Header */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">AI Financial Assistant</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {agentMode === 'quick' 
-                ? 'Single agent with Google Search grounding for fast responses' 
-                : 'Powered by 3 specialized AI agents with comprehensive research'}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
-                {agentMode === 'quick' ? '⚡' : 'A'}
-              </div>
-              {agentMode === 'research' && (
-                <>
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-xs font-medium text-green-600">R</div>
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">R</div>
-                </>
-              )}
-            </div>
-            <div className="flex items-center space-x-1 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>
-                {agentMode === 'quick' ? 'Quick mode ready' : 'All agents online'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {exampleQueries.map((query, index) => (
-            <button
-              key={index}
-              onClick={() => handleExampleQuery(query.text)}
-              className="p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors group text-left"
-            >
-              <div className="flex items-start space-x-2">
-                <span className="text-lg">{query.icon}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500">{query.category}</p>
-                  <p className="text-sm text-gray-700 group-hover:text-gray-900 mt-0.5 line-clamp-2">{query.text}</p>
+      <div className="max-w-6xl mx-auto">
+        {/* Modern Premium Chat Interface */}
+        <div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl overflow-hidden shadow-2xl">
+          {/* Premium Header with Glass Effect */}
+          <div className="border-b border-gray-200/30 px-6 py-4 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">Artha AI</h2>
+                  <p className="text-sm text-gray-500 font-medium">Financial Intelligence Assistant</p>
                 </div>
               </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Chat Container */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardContent className="p-0">
-          <div className="h-[500px] flex flex-col">
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex mb-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex items-start space-x-2 max-w-[70%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.type === 'user' 
-                        ? 'bg-gray-700 text-white text-sm font-medium' 
-                        : 'bg-blue-100 text-blue-600 text-xs font-medium'
-                    }`}>
-                      {message.type === 'user' ? 'U' : 'AI'}
-                    </div>
-                    <div className={`rounded-lg px-4 py-3 ${
-                      message.type === 'user'
-                        ? 'bg-gray-700 text-white'
-                        : message.processing
-                        ? 'bg-gray-100 text-gray-600'
-                        : 'bg-gray-50 text-gray-800 border border-gray-200'
-                    }`}>
-                      {message.processing ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                          </div>
-                          <span className="text-sm">{message.content}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-start">
-                          <div className="text-sm flex-1">
-                            {message.content ? (
-                              <>
-                                <ReactMarkdown 
-                                  components={{
-                                    // Custom styling for markdown elements
-                                    h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-2" {...props} />,
-                                    h2: ({node, ...props}) => <h2 className="text-md font-semibold mb-2" {...props} />,
-                                    h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1" {...props} />,
-                                    p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
-                                    strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                                    em: ({node, ...props}) => <em className="italic" {...props} />,
-                                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
-                                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
-                                    li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
-                                    code: ({node, ...props}) => <code className="bg-gray-100 px-1 py-0.5 rounded text-xs" {...props} />,
-                                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic mb-2" {...props} />
-                                  }}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                                {message.type === 'assistant' && !message.streaming && (
-                                  <AgentDetailsSection agentDetails={message.agentDetails || {}} />
-                                )}
-                              </>
-                            ) : (
-                              message.streaming ? 'AI is typing...' : ''
-                            )}
-                          </div>
-                          {message.streaming && (
-                            <div className="ml-2 flex-shrink-0">
-                              <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className={`text-xs mt-1 flex items-center justify-between ${message.type === 'user' ? 'text-gray-300' : 'text-gray-500'}`}>
-                        <span>{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        {message.mode && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            message.mode === 'quick' 
-                              ? 'bg-green-100 text-green-600' 
-                              : 'bg-purple-100 text-purple-600'
-                          }`}>
-                            {message.mode === 'quick' ? '⚡ Quick' : '🔬 Research'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Agent Mode Selection */}
-            <div className="border-t border-gray-200 px-6 py-3 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Response Mode:</span>
-                <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex bg-gray-100/80 rounded-2xl p-1 backdrop-blur-sm">
                   <button
                     onClick={() => setAgentMode('quick')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                      agentMode === 'quick'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
+                      agentMode === 'quick' 
+                        ? 'bg-white text-blue-600 shadow-md transform scale-105' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
-                    ⚡ Quick Response
+                    ⚡ Quick
                   </button>
                   <button
                     onClick={() => setAgentMode('research')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                      agentMode === 'research'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
+                      agentMode === 'research' 
+                        ? 'bg-white text-blue-600 shadow-md transform scale-105' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
-                    🔬 Deep Research
+                    🔬 Research
                   </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Input Area */}
-            <div className="border-t border-gray-100 px-6 py-4 bg-white">
-              <div className="flex space-x-3">
+          {/* Premium Message Area with Modern Bubbles */}
+          <div className="h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-white/40 to-gray-50/40 backdrop-blur-sm">
+            {messages.map((message) => (
+              <div key={message.id} className="mb-4">
+                <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] group ${
+                    message.type === 'user' 
+                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg' 
+                      : 'bg-white/90 text-gray-900 border border-gray-200/50 shadow-md backdrop-blur-sm'
+                  } rounded-3xl px-5 py-3 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}>
+                    {message.processing ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <span className="text-sm">Thinking...</span>
+                      </div>
+                    ) : (
+                      <div>
+                        {/* Real-time AI Thinking Process */}
+                        {message.type === 'assistant' && (message.agentDetails && Object.keys(message.agentDetails).length > 0) && (
+                          <AIThinkingProcess 
+                            agentDetails={message.agentDetails} 
+                            isComplete={!message.streaming}
+                          />
+                        )}
+                        
+                        {/* Main Response Content */}
+                        {message.content ? (
+                          <div className={message.type === 'assistant' && message.agentDetails ? 'mt-4 pt-4 border-t border-gray-200/50' : ''}>
+                            <ReactMarkdown 
+                              components={{
+                                h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2 text-current" {...props} />,
+                                h2: ({node, ...props}) => <h2 className="text-sm font-semibold mb-2 text-current" {...props} />,
+                                h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1 text-current" {...props} />,
+                                p: ({node, ...props}) => <p className="mb-2 leading-relaxed text-sm text-current" {...props} />,
+                                strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-0.5 text-sm" {...props} />,
+                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-0.5 text-sm" {...props} />,
+                                li: ({node, ...props}) => <li className="leading-relaxed text-sm" {...props} />,
+                                code: ({node, ...props}) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                              }}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          message.streaming && (!message.agentDetails || Object.keys(message.agentDetails).length === 0) ? (
+                            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200/50">
+                              <div className="relative">
+                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                                  <div className="flex space-x-0.5">
+                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                  </div>
+                                </div>
+                                <div className="absolute -inset-1 bg-blue-400 rounded-full animate-ping opacity-30"></div>
+                              </div>
+                              <div>
+                                <span className="text-sm font-bold text-gray-900">🧠 Artha AI is initializing...</span>
+                                <p className="text-xs text-blue-600 font-medium">Connecting to financial agents</p>
+                              </div>
+                            </div>
+                          ) : ''
+                        )}
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-200/30">
+                          <div className="text-xs text-gray-500 font-medium">
+                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          {message.mode && (
+                            <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                              message.mode === 'quick' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              <span>{message.mode === 'quick' ? '⚡' : '🔬'}</span>
+                              <span>{message.mode === 'quick' ? 'Quick' : 'Research'}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Premium Input Area with Glass Effect */}
+          <div className="border-t border-gray-200/30 px-6 py-5 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-xl">
+            <div className="flex items-end space-x-4">
+              <div className="flex-1 relative">
                 <input
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about your finances, investments, or goals..."
-                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Ask about your portfolio, investments, or financial goals..."
+                  className="w-full px-6 py-4 bg-white/80 border border-gray-200/50 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md"
                   disabled={isLoading}
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleSendMessage}
+                disabled={!currentMessage.trim() || isLoading}
+                className={`p-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform ${
+                  !currentMessage.trim() || isLoading
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 active:scale-95'
+                }`}
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            
+            {/* Modern Example Questions */}
+            <div className="mt-4 flex flex-wrap gap-3">
+              {exampleQueries.slice(0, 3).map((query, index) => (
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!currentMessage.trim() || isLoading}
-                  className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                    currentMessage.trim() && !isLoading
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
+                  key={index}
+                  onClick={() => handleExampleQuery(query.text)}
+                  className="group flex items-center space-x-2 px-4 py-2 bg-white/60 border border-gray-200/50 text-gray-700 rounded-2xl hover:bg-white/80 hover:border-blue-300/50 hover:text-blue-700 transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-md"
                 >
-                  {isLoading ? (
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : 'Send'}
+                  <span className="text-sm">{query.icon}</span>
+                  <span className="text-sm font-medium">{query.text}</span>
                 </button>
-              </div>
-              <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                <div className="flex items-center space-x-3">
-                  <span>Press Enter to send</span>
-                  <span>•</span>
-                  <span>Shift + Enter for new line</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="flex items-center space-x-1">
-                    <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                    </svg>
-                    <span>Analyst</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
-                    </svg>
-                    <span>Research</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <svg className="w-3 h-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd"/>
-                    </svg>
-                    <span>Risk</span>
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        {/* Modern Quick Start Tips */}
+        <div className="mt-6 text-center">
+          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 rounded-2xl">
+            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-blue-700 font-medium">
+              Powered by advanced AI agents with real-time market data & portfolio analysis
+            </p>
+          </div>
+        </div>
       </div>
     </ErrorBoundary>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface FinancialOverviewProps {
@@ -10,9 +11,10 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
   
   // Process financial data for detailed overview
   const processOverviewData = (data: any) => {
-    if (!data?.data) return null;
+    if (!data?.summary && !data?.data) return null;
 
-    const mcpData = data.data;
+    // Handle both old format (from static files) and new format (from backend)
+    const mcpData = data.data || data;
     const netWorthData = mcpData.net_worth;
     const creditData = mcpData.credit_report;
     const epfData = mcpData.epf_details;
@@ -82,12 +84,67 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
     };
   };
 
-  const overviewData = processOverviewData(financialData);
+  // Add loading state and better error handling
+  const [isLoading, setIsLoading] = useState(true);
+  const [overviewData, setOverviewData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!overviewData) {
+  useEffect(() => {
+    const loadOverviewData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        if (!financialData) {
+          // If no data passed, fetch directly from backend
+          const mcpService = (await import('../services/mcpDataService')).default.getInstance();
+          const result = await mcpService.loadMCPData();
+          
+          if (result.success && result.data) {
+            const processed = processOverviewData(result);
+            setOverviewData(processed);
+          } else {
+            setError('Failed to load financial data');
+          }
+        } else {
+          // Use passed data
+          const processed = processOverviewData(financialData);
+          setOverviewData(processed);
+        }
+      } catch (err) {
+        console.error('Error loading overview data:', err);
+        setError('Error loading financial overview');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOverviewData();
+  }, [financialData]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-gray-500">Loading financial overview...</p>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading financial analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !overviewData) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">{error || 'No financial data available'}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -151,12 +208,12 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <p className={`text-2xl font-semibold ${getScoreColor(parseInt(overviewData.creditScore))}`}>
-              {overviewData.creditScore}
+            <p className={`text-2xl font-semibold ${getScoreColor(parseInt(overviewData.creditScore || '0'))}`}>
+              {overviewData.creditScore || 'N/A'}
             </p>
             <div className="mt-2">
-              <span className={`text-sm font-medium ${getScoreColor(parseInt(overviewData.creditScore))}`}>
-                {getScoreLabel(parseInt(overviewData.creditScore))}
+              <span className={`text-sm font-medium ${getScoreColor(parseInt(overviewData.creditScore || '0'))}`}>
+                {overviewData.creditScore ? getScoreLabel(parseInt(overviewData.creditScore)) : 'Not Available'}
               </span>
             </div>
           </CardContent>
@@ -257,11 +314,11 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-gray-900">Credit Overview</CardTitle>
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                parseInt(overviewData.creditScore) >= 750 ? 'bg-green-100 text-green-700' :
-                parseInt(overviewData.creditScore) >= 650 ? 'bg-yellow-100 text-yellow-700' :
+                parseInt(overviewData.creditScore || '0') >= 750 ? 'bg-green-100 text-green-700' :
+                parseInt(overviewData.creditScore || '0') >= 650 ? 'bg-yellow-100 text-yellow-700' :
                 'bg-red-100 text-red-700'
               }`}>
-                Score: {overviewData.creditScore}
+                Score: {overviewData.creditScore || 'N/A'}
               </span>
             </div>
           </CardHeader>

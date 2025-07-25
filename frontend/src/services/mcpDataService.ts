@@ -1,6 +1,6 @@
 /**
- * MCP Data Service - Loads real financial data from MCP docs
- * This service reads actual Fi MCP response data from the mcp-docs directory
+ * Enhanced Financial Data Service - Fetches real financial data from backend API
+ * This service connects to the Artha AI backend for live financial data
  */
 
 interface MCPAsset {
@@ -56,13 +56,32 @@ interface MCPEPFDetails {
   };
 }
 
+interface BackendFinancialData {
+  status: string;
+  data: {
+    net_worth: MCPNetWorthResponse;
+    credit_report: MCPCreditReport;
+    epf_details: MCPEPFDetails;
+  };
+  summary: {
+    total_net_worth_formatted: string;
+    total_assets: number;
+    total_liabilities: number;
+    credit_score: string;
+  };
+}
+
 class MCPDataService {
   private static instance: MCPDataService;
-  private netWorthData: MCPNetWorthResponse | null = null;
-  private creditReportData: MCPCreditReport | null = null;
-  private epfData: MCPEPFDetails | null = null;
+  private backendUrl: string;
+  private cachedData: BackendFinancialData | null = null;
+  private lastFetch: number = 0;
+  private cacheDuration: number = 30000; // 30 seconds cache
 
-  private constructor() {}
+  private constructor() {
+    // Default to localhost backend, can be configured via environment
+    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8003';
+  }
 
   static getInstance(): MCPDataService {
     if (!MCPDataService.instance) {
@@ -81,45 +100,169 @@ class MCPDataService {
     error?: string;
   }> {
     try {
-      console.log('🔄 Loading real MCP financial data from docs...');
+      console.log('🔄 Fetching real financial data from backend API...');
 
-      // Load all MCP data files
+      // Check cache first
+      const now = Date.now();
+      if (this.cachedData && (now - this.lastFetch) < this.cacheDuration) {
+        console.log('✅ Using cached financial data');
+        return {
+          success: true,
+          data: this.cachedData.data
+        };
+      }
+
+      // Fetch from backend API
+      const response = await fetch(`${this.backendUrl}/financial-data`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add timeout
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+      }
+
+      const backendData: BackendFinancialData = await response.json();
+
+      if (backendData.status !== 'success') {
+        throw new Error(backendData.status || 'Backend returned error status');
+      }
+
+      // Cache the successful response
+      this.cachedData = backendData;
+      this.lastFetch = now;
+
+      console.log('✅ Successfully fetched financial data from backend');
+
+      return {
+        success: true,
+        data: backendData.data
+      };
+
+    } catch (error) {
+      console.error('❌ Failed to fetch data from backend, falling back to static data:', error);
+      
+      // Fallback to static MCP data if backend is unavailable
+      return await this.loadStaticMCPData();
+    }
+  }
+
+  // Fallback method to load static data from mcp-docs if backend is down
+  private async loadStaticMCPData(): Promise<{
+    success: boolean;
+    data?: {
+      net_worth: MCPNetWorthResponse;
+      credit_report: MCPCreditReport;
+      epf_details: MCPEPFDetails;
+    };
+    error?: string;
+  }> {
+    try {
+      console.log('🔄 Falling back to static MCP data from docs...');
+
+      // Load all MCP data files from static files
       const [netWorthResponse, creditReportResponse, epfResponse] = await Promise.all([
         fetch('/mcp-docs/sample_responses/fetch_net_worth.json'),
         fetch('/mcp-docs/sample_responses/fetch_credit_report.json'),
         fetch('/mcp-docs/sample_responses/fetch_epf_details.json')
       ]);
 
-      if (!netWorthResponse.ok) {
-        throw new Error(`Failed to load net worth data: ${netWorthResponse.status}`);
-      }
-      if (!creditReportResponse.ok) {
-        throw new Error(`Failed to load credit report: ${creditReportResponse.status}`);
-      }
-      if (!epfResponse.ok) {
-        throw new Error(`Failed to load EPF data: ${epfResponse.status}`);
+      if (!netWorthResponse.ok || !creditReportResponse.ok || !epfResponse.ok) {
+        throw new Error('Failed to load static MCP data files');
       }
 
-      this.netWorthData = await netWorthResponse.json();
-      this.creditReportData = await creditReportResponse.json();
-      this.epfData = await epfResponse.json();
+      const netWorthData = await netWorthResponse.json();
+      const creditReportData = await creditReportResponse.json();
+      const epfData = await epfResponse.json();
 
-      console.log('✅ Successfully loaded real MCP data from docs');
+      console.log('✅ Successfully loaded static MCP data from docs (fallback)');
 
       return {
         success: true,
         data: {
-          net_worth: this.netWorthData,
-          credit_report: this.creditReportData,
-          epf_details: this.epfData
+          net_worth: netWorthData,
+          credit_report: creditReportData,
+          epf_details: epfData
         }
       };
 
     } catch (error) {
-      console.error('❌ Failed to load MCP data:', error);
+      console.error('❌ Failed to load static MCP data:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error loading MCP data'
+        error: error instanceof Error ? error.message : 'Unknown error loading financial data'
+      };
+    }
+  }
+
+  // New method to get additional portfolio insights from backend
+  async getPortfolioInsights(): Promise<{
+    success: boolean;
+    insights?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${this.backendUrl}/api/portfolio-health`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Portfolio insights API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        insights: data.portfolio_health
+      };
+
+    } catch (error) {
+      console.warn('Portfolio insights not available:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Portfolio insights unavailable'
+      };
+    }
+  }
+
+  // New method to get risk assessment from backend
+  async getRiskAssessment(): Promise<{
+    success: boolean;
+    assessment?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${this.backendUrl}/api/risk-assessment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Risk assessment API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        assessment: data.risk_assessment
+      };
+
+    } catch (error) {
+      console.warn('Risk assessment not available:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Risk assessment unavailable'
       };
     }
   }
