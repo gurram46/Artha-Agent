@@ -15,6 +15,7 @@ from google.genai import types
 from agents.money_truth_agents.portfolio_health_agent import PortfolioHealthAgent
 from agents.money_truth_agents.risk_assessment_agent import RiskAssessmentAgent
 from agents.money_truth_agents.trip_planning_agent import TripPlanningAgent
+from agents.money_truth_agents.investment_recommendation_agent import InvestmentRecommendationAgent
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +31,9 @@ class MoneyTruthEngine:
         self.portfolio_health_agent = PortfolioHealthAgent(gemini_client)
         self.risk_assessment_agent = RiskAssessmentAgent(gemini_client)
         self.trip_planning_agent = TripPlanningAgent(gemini_client)
+        self.investment_recommendation_agent = InvestmentRecommendationAgent(gemini_client)
         
-        logger.info("MoneyTruthEngine initialized with 3 core AI agents")
+        logger.info("MoneyTruthEngine initialized with 4 core AI agents")
     
     async def analyze_complete(self, mcp_data: Dict[str, Any]) -> Dict[str, Any]:
         """Complete AI-driven analysis using core financial agents"""
@@ -44,6 +46,7 @@ class MoneyTruthEngine:
             logger.info("  - 🏥 Portfolio Health Agent")
             logger.info("  - ⚠️ Risk Assessment Agent")
             logger.info("  - 🧳 Trip Planning Agent")
+            logger.info("  - 📈 Investment Recommendation Agent")
             
             # Run core AI agents in parallel
             logger.info("🚀 Launching core agents for financial analysis...")
@@ -159,4 +162,17 @@ class MoneyTruthEngine:
             return result
         except Exception as e:
             logger.error(f"🧳 TRIP PLANNING AGENT FAILED: {str(e)}")
+            raise
+    
+    async def get_investment_recommendations(self, mcp_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get comprehensive investment recommendations using specialized agent"""
+        logger.info("📈 INVESTMENT RECOMMENDATION AGENT: Starting investment analysis...")
+        start_time = datetime.now()
+        try:
+            result = await self.investment_recommendation_agent.analyze(mcp_data)
+            analysis_time = (datetime.now() - start_time).total_seconds()
+            logger.info(f"📈 INVESTMENT RECOMMENDATIONS: Completed in {analysis_time:.2f}s - Investment plan generated")
+            return result
+        except Exception as e:
+            logger.error(f"📈 INVESTMENT RECOMMENDATION AGENT FAILED: {str(e)}")
             raise

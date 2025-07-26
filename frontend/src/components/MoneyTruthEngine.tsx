@@ -202,7 +202,7 @@ export default function MoneyTruthEngine({ financialData }: Props) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {agents.map((agent) => (
             <div
               key={agent.id}
@@ -301,6 +301,7 @@ export default function MoneyTruthEngine({ financialData }: Props) {
           onClose={() => setShowTripChatbot(false)}
         />
       )}
+
     </div>
   );
 }

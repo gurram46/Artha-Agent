@@ -1,0 +1,143 @@
+/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/api_server.py:91: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/api_server.py:149: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [230806]
+INFO:     Waiting for application startup.
+🚀 Initializing Production-Grade Financial AI System...
+📊 Loading Financial Data Intelligence Agent...
+🚀 Initializing Production-Grade Financial AI System...
+📊 Loading Financial Data Intelligence Agent...
+INFO:agents.base_agent:Initialized Financial Data Intelligence Analyst with personality: excited data detective, enthusiastic about numbers, loves revealing insights
+INFO:agents.analyst_agent.analyst:🤖 Pure AI Financial Intelligence Analyst initialized - Gemini powered with Fi MCP data
+🎯 Loading Strategic Research Agent...
+INFO:agents.base_agent:Initialized Universal Financial Strategist & Planner with personality: strategic mastermind, opportunity hunter, gets excited about perfect plans
+INFO:agents.research_agent.enhanced_strategist:🧠 ENHANCED AI Financial Strategic Research Agent initialized - Maximum Quality Mode
+🛡️ Loading Comprehensive Risk Agent...
+INFO:agents.base_agent:Initialized Comprehensive Risk & Protection Advisor with personality: protective guardian, urgent about safety, passionate about financial security
+INFO:agents.risk_agent.risk_guardian:🛡️ Pure AI Financial Risk Intelligence Agent initialized - Gemini powered risk assessment
+🔍 Health Check: 3/3 agents operational
+✅ Production System Ready - All 3 AI Agents Online!
+INFO:agents.base_agent:Initialized Financial Data Intelligence Analyst with personality: excited data detective, enthusiastic about numbers, loves revealing insights
+INFO:agents.base_agent:Initialized Universal Financial Strategist & Planner with personality: strategic mastermind, opportunity hunter, gets excited about perfect plans
+INFO:agents.research_agent.enhanced_strategist:🧠 ENHANCED AI Financial Strategic Research Agent initialized - Maximum Quality Mode
+INFO:agents.base_agent:Initialized Comprehensive Risk & Protection Advisor with personality: protective guardian, urgent about safety, passionate about financial security
+INFO:agents.base_agent:Initialized Financial Data Intelligence Analyst with personality: excited data detective, enthusiastic about numbers, loves revealing insights
+INFO:agents.quick_agent.quick_response:⚡ Quick Response Financial Advisor initialized - Speed optimized with Google Search grounding
+INFO:core.local_llm_client:🤖 Local LLM Client initialized - Server: http://localhost:1234
+ERROR:core.local_llm_client:❌ Failed to connect to local LLM: Cannot connect to host localhost:1234 ssl:default [Connection refused]
+WARNING:core.local_llm_client:⚠️ Could not connect to local LLM server
+ERROR:core.local_llm_client:❌ Failed to connect to local LLM: Cannot connect to host localhost:1234 ssl:default [Connection refused]
+INFO:core.money_truth_engine:MoneyTruthEngine initialized with 4 core AI agents
+INFO:__main__:💡 MoneyTruthEngine initialized with 3 core AI agents
+INFO:root:🚀 Enhanced Artha AI Backend initialized successfully
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+INFO:core.fi_mcp.production_client:🚀 Fetching comprehensive real-time financial data from Fi Money...
+INFO:core.fi_mcp.production_client:📊 Fetching real-time net worth from Fi Money...
+INFO:core.fi_mcp.production_client:🏦 Fetching real-time credit report from Fi Money...
+INFO:core.fi_mcp.production_client:💰 Fetching real-time EPF details from Fi Money...
+INFO:core.fi_mcp.production_client:📈 Fetching real-time MF transactions from Fi Money...
+INFO:core.fi_mcp.production_client:🏧 Fetching real-time bank transactions from Fi Money...
+WARNING:core.fi_mcp.production_client:Failed to fetch net_worth: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch credit_report: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch epf_details: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch mf_transactions: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch bank_transactions: Not authenticated. Call authenticate_with_passcode() first.
+ERROR:core.fi_mcp.production_client:❌ Failed to fetch comprehensive financial data: 'NoneType' object has no attribute 'session_id'
+ERROR:root:Investment recommendations failed: 'NoneType' object has no attribute 'session_id'
+🎯 Loading Strategic Research Agent...
+🛡️ Loading Comprehensive Risk Agent...
+🤖 Connecting to Local LLM Server...
+⚠️ Local LLM Server not available - feature will be disabled
+📈 Loading Stock Analysis Agent...
+📈 Stock Analysis Agent initialized successfully
+🔍 Loading Money Truth Engine with specialized agents...
+🔍 Health Check: 4/4 agents operational
+✅ Production System Ready - All AI Agents Online!
+INFO:     127.0.0.1:44276 - "POST /api/investment-recommendations HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:34760 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41156 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41156 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41156 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41156 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41156 - "OPTIONS /api/fi-auth/initiate HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:Fi Money MCP Initial Response: 200
+INFO:core.fi_mcp.production_client:🌐 Fi Money web authentication required
+INFO:core.fi_mcp.production_client:🔗 Login URL: https://fi.money/wealth-mcp-login?token=mcp-session-69663c06-92fc-4e38-bb20-1e4d26a791dc%7C1753571266.2U7poOphzgzZIuBOjuKQ9sipmy9ZlbFjqTwbzZ_mMJU%3D
+INFO:     127.0.0.1:41156 - "POST /api/fi-auth/initiate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:✅ Fi Money web authentication completed!
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44350 - "OPTIONS /financial-data HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:✅ Fi Money web authentication completed!
+INFO:core.fi_mcp.production_client:🚀 Fetching comprehensive real-time financial data from Fi Money...
+INFO:core.fi_mcp.production_client:📊 Fetching real-time net worth from Fi Money...
+INFO:core.fi_mcp.production_client:🏦 Fetching real-time credit report from Fi Money...
+INFO:core.fi_mcp.production_client:💰 Fetching real-time EPF details from Fi Money...
+INFO:core.fi_mcp.production_client:📈 Fetching real-time MF transactions from Fi Money...
+INFO:core.fi_mcp.production_client:🏧 Fetching real-time bank transactions from Fi Money...
+INFO:core.fi_mcp.production_client:✅ Successfully fetched real-time Fi Money data:
+INFO:core.fi_mcp.production_client:   💰 Total Net Worth: ₹-92,449.00
+INFO:core.fi_mcp.production_client:   📊 Assets: 1 categories
+INFO:core.fi_mcp.production_client:   📉 Liabilities: 2 categories
+INFO:core.fi_mcp.production_client:   📈 MF Transactions: 0
+INFO:core.fi_mcp.production_client:   🏧 Bank Transactions: 0
+INFO:     127.0.0.1:44350 - "GET /financial-data HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:✅ Fi Money web authentication completed!
+INFO:     127.0.0.1:44350 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:✅ Fi Money web authentication completed!
+INFO:     127.0.0.1:42156 - "GET /api/fi-auth/status HTTP/1.1" 200 OK
+INFO:core.fi_mcp.production_client:🚀 Fetching comprehensive real-time financial data from Fi Money...
+INFO:core.fi_mcp.production_client:📊 Fetching real-time net worth from Fi Money...
+INFO:core.fi_mcp.production_client:🏦 Fetching real-time credit report from Fi Money...
+INFO:core.fi_mcp.production_client:💰 Fetching real-time EPF details from Fi Money...
+INFO:core.fi_mcp.production_client:📈 Fetching real-time MF transactions from Fi Money...
+INFO:core.fi_mcp.production_client:🏧 Fetching real-time bank transactions from Fi Money...
+INFO:core.fi_mcp.production_client:✅ Successfully fetched real-time Fi Money data:
+INFO:core.fi_mcp.production_client:   💰 Total Net Worth: ₹-92,449.00
+INFO:core.fi_mcp.production_client:   📊 Assets: 1 categories
+INFO:core.fi_mcp.production_client:   📉 Liabilities: 2 categories
+INFO:core.fi_mcp.production_client:   📈 MF Transactions: 0
+INFO:core.fi_mcp.production_client:   🏧 Bank Transactions: 0
+INFO:core.money_truth_engine:📈 INVESTMENT RECOMMENDATION AGENT: Starting investment analysis...
+INFO:agents.money_truth_agents.base_money_agent:🔍 Investment Recommendation Agent: Starting analysis...
+INFO:agents.money_truth_agents.base_money_agent:📊 Input data keys: ['net_worth', 'credit_report', 'epf_details', 'mf_transactions', 'bank_transactions']
+INFO:agents.money_truth_agents.investment_recommendation_agent:🚀 Starting investment analysis with real Fi Money MCP data...
+INFO:agents.money_truth_agents.investment_agent.agent:🚀 Starting investment analysis with real Fi Money MCP data
+INFO:core.fi_mcp.production_client:🚀 Fetching comprehensive real-time financial data from Fi Money...
+INFO:core.fi_mcp.production_client:📊 Fetching real-time net worth from Fi Money...
+INFO:core.fi_mcp.production_client:🏦 Fetching real-time credit report from Fi Money...
+INFO:core.fi_mcp.production_client:💰 Fetching real-time EPF details from Fi Money...
+INFO:core.fi_mcp.production_client:📈 Fetching real-time MF transactions from Fi Money...
+INFO:core.fi_mcp.production_client:🏧 Fetching real-time bank transactions from Fi Money...
+INFO:core.fi_mcp.production_client:✅ Successfully fetched real-time Fi Money data:
+INFO:core.fi_mcp.production_client:   💰 Total Net Worth: ₹-92,449.00
+INFO:core.fi_mcp.production_client:   📊 Assets: 1 categories
+INFO:core.fi_mcp.production_client:   📉 Liabilities: 2 categories
+INFO:core.fi_mcp.production_client:   📈 MF Transactions: 0
+INFO:core.fi_mcp.production_client:   🏧 Bank Transactions: 0
+INFO:agents.money_truth_agents.investment_agent.agent:📊 Fi Money data retrieved: Net Worth ₹-92,449.00
+INFO:agents.money_truth_agents.investment_agent.agent:🔍 Running data analyst...
+ERROR:agents.money_truth_agents.investment_agent.agent:❌ Investment coordination failed: cannot import name 'data_analyst_agent' from 'agents.money_truth_agents.investment_agent.sub_agents.data_analyst.agent' (/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/agents/money_truth_agents/investment_agent/sub_agents/data_analyst/agent.py)
+ERROR:agents.money_truth_agents.investment_recommendation_agent:❌ Investment recommendation analysis failed: cannot import name 'data_analyst_agent' from 'agents.money_truth_agents.investment_agent.sub_agents.data_analyst.agent' (/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/agents/money_truth_agents/investment_agent/sub_agents/data_analyst/agent.py)
+ERROR:agents.money_truth_agents.base_money_agent:❌ Investment Recommendation Agent: Analysis failed after 0.08s - Investment analysis failed: cannot import name 'data_analyst_agent' from 'agents.money_truth_agents.investment_agent.sub_agents.data_analyst.agent' (/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/agents/money_truth_agents/investment_agent/sub_agents/data_analyst/agent.py)
+ERROR:core.money_truth_engine:📈 INVESTMENT RECOMMENDATION AGENT FAILED: Investment analysis failed: cannot import name 'data_analyst_agent' from 'agents.money_truth_agents.investment_agent.sub_agents.data_analyst.agent' (/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/agents/money_truth_agents/investment_agent/sub_agents/data_analyst/agent.py)
+ERROR:root:Investment recommendations failed: Investment analysis failed: cannot import name 'data_analyst_agent' from 'agents.money_truth_agents.investment_agent.sub_agents.data_analyst.agent' (/home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/agents/money_truth_agents/investment_agent/sub_agents/data_analyst/agent.py)
+INFO:     127.0.0.1:55178 - "POST /api/investment-recommendations HTTP/1.1" 500 Internal Server Error

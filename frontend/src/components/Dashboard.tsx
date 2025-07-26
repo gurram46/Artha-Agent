@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, RadialBarChart, RadialBar, ComposedChart, Scatter, ScatterChart } from 'recharts';
 import StocksList from './StocksList';
 import UserRiskProfile from './UserRiskProfile';
+import InvestmentRecommendationCard from './InvestmentRecommendationCard';
 
 interface Props {
   financialData: any;
@@ -408,6 +409,9 @@ export default function Dashboard({ financialData }: Props) {
 
       {/* User Investment Profile */}
       <UserRiskProfile onProfileUpdate={handleProfileUpdate} />
+
+      {/* AI Investment Recommendations */}
+      <InvestmentRecommendationCard financialData={financialData} />
 
       {/* Stock Market Overview */}
       <StocksList />

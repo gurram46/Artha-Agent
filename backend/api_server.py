@@ -1563,6 +1563,82 @@ async def trip_planning_chat(request: TripChatRequest):
         logging.error(f"Trip planning chat failed: {e}")
         raise HTTPException(status_code=500, detail=f"Trip planning chat failed: {str(e)}")
 
+@app.post("/api/investment-recommendations")
+async def get_investment_recommendations():
+    """Get comprehensive investment recommendations using Money Truth Engine"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        
+        # Convert to MCP data format
+        mcp_data = {
+            "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mf_transactions": financial_data.mf_transactions if hasattr(financial_data, 'mf_transactions') else [],
+            "bank_transactions": financial_data.bank_transactions if hasattr(financial_data, 'bank_transactions') else []
+        }
+        
+        # Use Money Truth Engine's investment recommendation agent
+        investment_analysis = await money_truth_engine.get_investment_recommendations(mcp_data)
+        
+        return {
+            "status": "success",
+            "investment_recommendations": investment_analysis
+        }
+        
+    except Exception as e:
+        logging.error(f"Investment recommendations failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Investment analysis failed: {str(e)}")
+
+class InvestmentChatRequest(BaseModel):
+    query: str
+    conversation_history: list = []
+    mode: str = "research"
+
+@app.post("/api/investment-recommendations/chat")
+async def investment_recommendations_chat(request: InvestmentChatRequest):
+    """Interactive chat with investment recommendation agent"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        # Get real Fi Money MCP data
+        financial_data = await get_user_financial_data()
+        logger.info("✅ Using real Fi Money MCP data for investment recommendations")
+        
+        # Convert to MCP data format
+        mcp_data = {
+            "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mf_transactions": financial_data.mf_transactions if hasattr(financial_data, 'mf_transactions') else [],
+            "bank_transactions": financial_data.bank_transactions if hasattr(financial_data, 'bank_transactions') else []
+        }
+        
+        # Get chat response from investment recommendation agent
+        response = await money_truth_engine.investment_recommendation_agent.get_chat_response(
+            query=request.query,
+            mcp_data=mcp_data,
+            conversation_history=request.conversation_history
+        )
+        
+        return {
+            "status": "success",
+            "response": response,
+            "conversation_history": request.conversation_history + [
+                {"type": "user", "content": request.query, "timestamp": datetime.now().isoformat()},
+                {"type": "assistant", "content": response, "timestamp": datetime.now().isoformat()}
+            ]
+        }
+        
+    except Exception as e:
+        logging.error(f"Investment recommendations chat failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Investment chat failed: {str(e)}")
+
 # Stock Analysis Streaming API endpoint
 @app.post("/api/stock/analysis-stream")  
 async def stock_analysis_stream(request: StockAnalysisRequest):

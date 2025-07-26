@@ -1,3 +1,9 @@
+INFO:google.adk.models.registry:Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+INFO:google.adk.models.registry:Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+INFO:google.adk.models.registry:Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+INFO:google.adk.models.registry:Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+INFO:google.adk.models.registry:Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+INFO:google.adk.models.registry:Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
 /home/viswanthsai/Downloads/Artha-Ai/Artha-Agent/backend/api_server.py:91: DeprecationWarning: 
         on_event is deprecated, use lifespan event handlers instead.
 
@@ -12,7 +18,7 @@
         [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
         
   @app.on_event("shutdown")
-INFO:     Started server process [230577]
+INFO:     Started server process [235906]
 INFO:     Waiting for application startup.
 🚀 Initializing Production-Grade Financial AI System...
 📊 Loading Financial Data Intelligence Agent...
@@ -43,3 +49,26 @@ INFO:__main__:💡 MoneyTruthEngine initialized with 3 core AI agents
 INFO:root:🚀 Enhanced Artha AI Backend initialized successfully
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+INFO:core.fi_mcp.production_client:🚀 Fetching comprehensive real-time financial data from Fi Money...
+INFO:core.fi_mcp.production_client:📊 Fetching real-time net worth from Fi Money...
+INFO:core.fi_mcp.production_client:🏦 Fetching real-time credit report from Fi Money...
+INFO:core.fi_mcp.production_client:💰 Fetching real-time EPF details from Fi Money...
+INFO:core.fi_mcp.production_client:📈 Fetching real-time MF transactions from Fi Money...
+INFO:core.fi_mcp.production_client:🏧 Fetching real-time bank transactions from Fi Money...
+WARNING:core.fi_mcp.production_client:Failed to fetch net_worth: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch credit_report: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch epf_details: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch mf_transactions: Not authenticated. Call authenticate_with_passcode() first.
+WARNING:core.fi_mcp.production_client:Failed to fetch bank_transactions: Not authenticated. Call authenticate_with_passcode() first.
+ERROR:core.fi_mcp.production_client:❌ Failed to fetch comprehensive financial data: 'NoneType' object has no attribute 'session_id'
+ERROR:root:Investment recommendations failed: 'NoneType' object has no attribute 'session_id'
+🎯 Loading Strategic Research Agent...
+🛡️ Loading Comprehensive Risk Agent...
+🤖 Connecting to Local LLM Server...
+⚠️ Local LLM Server not available - feature will be disabled
+📈 Loading Stock Analysis Agent...
+📈 Stock Analysis Agent initialized successfully
+🔍 Loading Money Truth Engine with specialized agents...
+🔍 Health Check: 4/4 agents operational
+✅ Production System Ready - All AI Agents Online!
+INFO:     127.0.0.1:43952 - "POST /api/investment-recommendations HTTP/1.1" 500 Internal Server Error
