@@ -29,11 +29,11 @@ export const StatCard = ({
   const getTrendClasses = (type: 'positive' | 'negative' | 'neutral') => {
     switch (type) {
       case 'positive':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        return 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border-[rgba(0,184,153,0.2)]';
       case 'negative':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-[rgba(220,53,69,0.1)] text-red-400 border-[rgba(220,53,69,0.2)]';
       default:
-        return 'bg-slate-100 text-slate-800 border-slate-200';
+        return 'bg-[rgba(70,68,68,0.3)] text-gray-300 border-[rgba(70,68,68,0.5)]';
     }
   };
 
@@ -64,14 +64,14 @@ export const StatCard = ({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           {icon && (
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+            <div className="w-10 h-10 bg-[rgba(0,184,153,0.1)] rounded-lg flex items-center justify-center text-[rgb(0,184,153)] group-hover:bg-[rgba(0,184,153,0.2)] transition-colors">
               {icon}
             </div>
           )}
           <div>
-            <p className="text-sm font-medium text-slate-600">{title}</p>
+            <p className="text-sm font-medium text-gray-300">{title}</p>
             {subtitle && (
-              <p className="text-xs text-slate-500">{subtitle}</p>
+              <p className="text-xs text-gray-400">{subtitle}</p>
             )}
           </div>
         </div>
@@ -88,7 +88,7 @@ export const StatCard = ({
       </div>
       
       <div className="space-y-1">
-        <p className="text-2xl font-bold text-slate-900 group-hover:text-blue-900 transition-colors">
+        <p className="text-2xl font-bold text-white group-hover:text-[rgb(0,184,153)] transition-colors">
           {value}
         </p>
       </div>

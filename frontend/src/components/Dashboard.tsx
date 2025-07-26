@@ -19,27 +19,27 @@ interface MetricCardProps {
 }
 
 const MetricCard = ({ title, value, change, changeType, subtitle, icon }: MetricCardProps) => (
-  <div className="metric-card p-6 group">
+  <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
     <div className="flex items-center justify-between mb-4">
       <div>
-        <p className="text-sm font-semibold text-gray-700 mb-1">{title}</p>
-        <p className="text-xs text-gray-500 font-medium">{subtitle}</p>
+        <p className="text-sm font-semibold text-gray-300 mb-1">{title}</p>
+        <p className="text-xs text-gray-400 font-medium">{subtitle}</p>
       </div>
-      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+      <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
         </svg>
       </div>
     </div>
     <div className="space-y-3">
-      <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{value}</h3>
+      <h3 className="text-3xl font-bold text-white tracking-tight">{value}</h3>
       {change && changeType && (
         <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
           changeType === 'positive' 
-            ? 'bg-green-100 text-green-700' 
+            ? 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]' 
             : changeType === 'negative'
-            ? 'bg-red-100 text-red-700'
-            : 'bg-gray-100 text-gray-700'
+            ? 'bg-[rgba(220,53,69,0.1)] text-red-400 border border-[rgba(220,53,69,0.2)]'
+            : 'bg-[rgba(70,68,68,0.3)] text-gray-300 border border-[rgba(70,68,68,0.5)]'
         }`}>
           {changeType === 'positive' && (
             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -59,15 +59,15 @@ const MetricCard = ({ title, value, change, changeType, subtitle, icon }: Metric
 );
 
 const AssetAllocationChart = memo(({ data }: { data: any[] }) => {
-  const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'];
+  const COLORS = ['rgb(0, 184, 153)', 'rgb(0, 164, 133)', 'rgb(59, 130, 246)', 'rgb(139, 92, 246)', 'rgb(245, 158, 11)'];
   
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
       return (
-        <div className="clean-card p-3">
-          <p className="font-semibold text-black">{item.name}</p>
-          <p className="text-sm font-medium text-gray-700">₹{(item.value / 100000).toFixed(1)}L ({item.percentage.toFixed(1)}%)</p>
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-3 shadow-xl">
+          <p className="font-semibold text-white">{item.name}</p>
+          <p className="text-sm font-medium text-gray-300">₹{(item.value / 100000).toFixed(1)}L ({item.percentage.toFixed(1)}%)</p>
         </div>
       );
     }
@@ -75,10 +75,10 @@ const AssetAllocationChart = memo(({ data }: { data: any[] }) => {
   };
 
   return (
-    <div className="clean-card p-6">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-black mb-1">Asset Allocation</h3>
-        <p className="text-sm font-medium text-gray-700">Portfolio distribution by asset class</p>
+        <h3 className="text-lg font-semibold text-white mb-1">Asset Allocation</h3>
+        <p className="text-sm font-medium text-gray-300">Portfolio distribution by asset class</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -105,17 +105,17 @@ const AssetAllocationChart = memo(({ data }: { data: any[] }) => {
         
         <div className="space-y-3">
           {data.map((item, index) => (
-            <div key={`allocation-item-${item.name || index}`} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+            <div key={`allocation-item-${item.name || index}`} className="flex items-center justify-between p-3 hover:bg-[rgba(0,184,153,0.05)] rounded-lg transition-colors">
               <div className="flex items-center space-x-3">
                 <div 
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
-                <span className="font-semibold text-black">{item.name}</span>
+                <span className="font-semibold text-white">{item.name}</span>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-black">{item.percentage.toFixed(1)}%</p>
-                <p className="text-sm font-medium text-gray-700">₹{(item.value / 100000).toFixed(1)}L</p>
+                <p className="font-semibold text-white">{item.percentage.toFixed(1)}%</p>
+                <p className="text-sm font-medium text-gray-300">₹{(item.value / 100000).toFixed(1)}L</p>
               </div>
             </div>
           ))}
@@ -135,42 +135,43 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
   }));
 
   return (
-    <div className="clean-card p-6">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-black">Fund Performance</h3>
-          <p className="text-sm font-medium text-gray-700">XIRR vs Investment Amount</p>
+          <h3 className="text-lg font-semibold text-white">Fund Performance</h3>
+          <p className="text-sm font-medium text-gray-300">XIRR vs Investment Amount</p>
         </div>
       </div>
       
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={performanceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
             <XAxis 
               dataKey="name" 
-              stroke="#64748b" 
+              stroke="#9ca3af" 
               fontSize={12}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis stroke="#64748b" fontSize={12} />
+            <YAxis stroke="#9ca3af" fontSize={12} />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '12px'
+                backgroundColor: 'rgb(24, 25, 27)', 
+                border: '1px solid rgba(0, 184, 153, 0.2)',
+                borderRadius: '12px',
+                fontSize: '12px',
+                color: 'white'
               }}
               formatter={(value: any, name: string) => [
                 name === 'returns' ? `${value.toFixed(1)}%` : `₹${value.toFixed(1)}L`,
                 name === 'returns' ? 'XIRR' : name === 'invested' ? 'Invested' : 'Current Value'
               ]}
             />
-            <Bar dataKey="invested" fill="#94a3b8" name="invested" />
-            <Bar dataKey="current" fill="#475569" name="current" />
-            <Line type="monotone" dataKey="returns" stroke="#334155" strokeWidth={3} name="returns" />
+            <Bar dataKey="invested" fill="rgba(0, 184, 153, 0.3)" name="invested" />
+            <Bar dataKey="current" fill="rgb(0, 184, 153)" name="current" />
+            <Line type="monotone" dataKey="returns" stroke="rgb(0, 164, 133)" strokeWidth={3} name="returns" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -191,31 +192,31 @@ const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
   }));
 
   return (
-    <div className="clean-card p-6">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-black">Risk vs Return Analysis</h3>
-          <p className="text-sm font-medium text-gray-700">Portfolio risk-return mapping</p>
+          <h3 className="text-lg font-semibold text-white">Risk vs Return Analysis</h3>
+          <p className="text-sm font-medium text-gray-300">Portfolio risk-return mapping</p>
         </div>
       </div>
       
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
             <XAxis 
               type="number" 
               dataKey="x" 
               name="Returns" 
               unit="%" 
-              stroke="#64748b"
+              stroke="#9ca3af"
               fontSize={12}
             />
             <YAxis 
               type="number" 
               dataKey="y" 
               name="Risk" 
-              stroke="#64748b"
+              stroke="#9ca3af"
               fontSize={12}
               domain={[0, 6]}
               tickFormatter={(value) => {
@@ -226,10 +227,11 @@ const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
             <Tooltip 
               cursor={{ strokeDasharray: '3 3' }}
               contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '12px'
+                backgroundColor: 'rgb(24, 25, 27)', 
+                border: '1px solid rgba(0, 184, 153, 0.2)',
+                borderRadius: '12px',
+                fontSize: '12px',
+                color: 'white'
               }}
               formatter={(value: any, name: string) => [
                 name === 'x' ? `${value.toFixed(1)}%` : 
@@ -240,7 +242,7 @@ const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
               ]}
               labelFormatter={(label, payload) => payload[0]?.payload?.name || ''}
             />
-            <Scatter data={scatterData} fill="#334155" />
+            <Scatter data={scatterData} fill="rgb(0, 184, 153)" />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
@@ -274,32 +276,33 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
   }));
 
   return (
-    <div className="clean-card p-6">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-black">Category Breakdown</h3>
-          <p className="text-sm font-medium text-gray-700">Mutual fund allocation by category</p>
+          <h3 className="text-lg font-semibold text-white">Category Breakdown</h3>
+          <p className="text-sm font-medium text-gray-300">Mutual fund allocation by category</p>
         </div>
       </div>
       
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis type="number" stroke="#64748b" fontSize={12} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+            <XAxis type="number" stroke="#9ca3af" fontSize={12} />
             <YAxis 
               type="category" 
               dataKey="name" 
-              stroke="#64748b" 
+              stroke="#9ca3af" 
               fontSize={10}
               width={100}
             />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '12px'
+                backgroundColor: 'rgb(24, 25, 27)', 
+                border: '1px solid rgba(0, 184, 153, 0.2)',
+                borderRadius: '12px',
+                fontSize: '12px',
+                color: 'white'
               }}
               formatter={(value: any, name: string) => [
                 name === 'value' ? `₹${value.toFixed(1)}L` : 
@@ -308,7 +311,7 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
                 name === 'avgXIRR' ? 'Average XIRR' : 'Fund Count'
               ]}
             />
-            <Bar dataKey="value" fill="#475569" />
+            <Bar dataKey="value" fill="rgb(0, 184, 153)" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -333,20 +336,20 @@ export default function Dashboard({ financialData }: Props) {
 
   if (!financialData) {
     return (
-      <div className="clean-card p-8 text-center">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-center shadow-xl">
         <div className="space-y-4">
-          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 bg-[rgba(220,53,69,0.1)] border border-[rgba(220,53,69,0.3)] rounded-lg flex items-center justify-center mx-auto">
+            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-black">No Data Available</h3>
-            <p className="font-medium text-gray-700 mt-1">Unable to load financial data</p>
+            <h3 className="text-lg font-semibold text-white">No Data Available</h3>
+            <p className="font-medium text-gray-300 mt-1">Unable to load financial data</p>
           </div>
           <button 
             onClick={() => window.location.reload()} 
-            className="btn-primary"
+            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg"
           >
             Retry
           </button>
@@ -426,14 +429,14 @@ export default function Dashboard({ financialData }: Props) {
 
       {/* Detailed Holdings Table */}
       {schemes.length > 0 && (
-        <div className="clean-card overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl overflow-hidden shadow-xl">
+          <div className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)]">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-black">Mutual Fund Holdings</h3>
-                <p className="text-sm font-medium text-gray-700">Detailed breakdown of {schemes.length} schemes</p>
+                <h3 className="text-lg font-semibold text-white">Mutual Fund Holdings</h3>
+                <p className="text-sm font-medium text-gray-300">Detailed breakdown of {schemes.length} schemes</p>
               </div>
-              <div className="text-right text-sm font-medium text-gray-700">
+              <div className="text-right text-sm font-medium text-gray-300">
                 <p>Total: {summary.mutual_funds_formatted}</p>
                 <p>Avg XIRR: {performanceMetrics.avg_xirr ? performanceMetrics.avg_xirr.toFixed(1) : '0'}%</p>
               </div>
@@ -442,50 +445,50 @@ export default function Dashboard({ financialData }: Props) {
           
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-[rgba(0,184,153,0.05)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fund Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Current Value</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Invested</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Returns</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">XIRR</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Units</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Fund Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Current Value</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Invested</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Returns</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">XIRR</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Units</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[rgb(24,25,27)] divide-y divide-[rgba(0,184,153,0.1)]">
                 {schemes.map((scheme, index) => (
-                  <tr key={scheme.isin || index} className="hover:bg-gray-50">
+                  <tr key={scheme.isin || index} className="hover:bg-[rgba(0,184,153,0.05)]">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-semibold text-black max-w-xs truncate">
+                        <div className="text-sm font-semibold text-white max-w-xs truncate">
                           {scheme.name}
                         </div>
-                        <div className="text-sm font-medium text-gray-700">{scheme.amc}</div>
+                        <div className="text-sm font-medium text-gray-300">{scheme.amc}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-black">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]">
                         {scheme.category?.replace(/_/g, ' ') || 'Other'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-black font-semibold">
+                    <td className="px-6 py-4 text-sm text-white font-semibold">
                       ₹{formatNumber(scheme.currentValue)}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-black">
+                    <td className="px-6 py-4 text-sm font-medium text-white">
                       ₹{formatNumber(scheme.investedValue)}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={scheme.absoluteReturns >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                      <span className={scheme.absoluteReturns >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}>
                         {scheme.absoluteReturns >= 0 ? '+' : ''}₹{formatNumber(Math.abs(scheme.absoluteReturns))}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={scheme.xirr >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                      <span className={scheme.xirr >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}>
                         {scheme.xirr >= 0 ? '+' : ''}{scheme.xirr.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-black">
+                    <td className="px-6 py-4 text-sm font-medium text-white">
                       {scheme.units.toFixed(2)}
                     </td>
                   </tr>
@@ -498,12 +501,12 @@ export default function Dashboard({ financialData }: Props) {
 
       {/* Bank Accounts */}
       {bankAccounts.length > 0 && (
-        <div className="clean-card overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl overflow-hidden shadow-xl">
+          <div className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)]">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-black">Bank Accounts</h3>
-                <p className="text-sm font-medium text-gray-700">{bankAccounts.length} connected accounts</p>
+                <h3 className="text-lg font-semibold text-white">Bank Accounts</h3>
+                <p className="text-sm font-medium text-gray-300">{bankAccounts.length} connected accounts</p>
               </div>
             </div>
           </div>
@@ -511,17 +514,17 @@ export default function Dashboard({ financialData }: Props) {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {bankAccounts.map((account, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-xl">
+                <div key={index} className="p-4 border border-[rgba(0,184,153,0.2)] rounded-xl bg-[rgba(0,184,153,0.05)] hover:bg-[rgba(0,184,153,0.1)] transition-colors">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-black">{account.bank}</h4>
-                    <span className="text-xs bg-gray-100 font-medium text-gray-700 px-2 py-1 rounded">
+                    <h4 className="font-semibold text-white">{account.bank}</h4>
+                    <span className="text-xs bg-[rgba(0,184,153,0.1)] font-medium text-[rgb(0,184,153)] px-2 py-1 rounded border border-[rgba(0,184,153,0.2)]">
                       {account.accountType?.replace(/_/g, ' ') || 'Account'}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">{account.accountNumber}</p>
-                  <p className="text-lg font-semibold text-black">₹{formatNumber(account.balance)}</p>
+                  <p className="text-sm font-medium text-gray-300 mb-2">{account.accountNumber}</p>
+                  <p className="text-lg font-semibold text-white">₹{formatNumber(account.balance)}</p>
                   {account.balanceDate && (
-                    <p className="text-xs font-medium text-gray-600 mt-1">
+                    <p className="text-xs font-medium text-gray-400 mt-1">
                       Updated: {new Date(account.balanceDate).toLocaleDateString()}
                     </p>
                   )}

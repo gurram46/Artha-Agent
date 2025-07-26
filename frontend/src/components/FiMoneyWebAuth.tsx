@@ -234,15 +234,15 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   if (authState === 'success' && isAuthenticated) {
     return (
-      <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+      <Card className="p-6 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.3)] bg-black">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className={`w-3 h-3 ${isDemoMode ? 'bg-yellow-500' : 'bg-green-500'} rounded-full animate-pulse`}></div>
+            <div className={`w-3 h-3 ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} rounded-full animate-pulse`}></div>
             <div>
-              <h3 className="text-lg font-semibold text-green-800">
+              <h3 className="text-lg font-semibold text-white">
                 {isDemoMode ? '🎭 Demo Mode Active' : '🌐 Connected to Fi Money'}
               </h3>
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-gray-300">
                 {isDemoMode ? 'Using sample financial data' : 'Real-time financial data active'}
                 {!isDemoMode && sessionInfo?.expiresInMinutes && (
                   <span className="ml-2">
@@ -256,7 +256,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
             onClick={handleLogout}
             variant="secondary"
             size="sm"
-            className="text-gray-600 hover:text-gray-800"
+            className="text-gray-300 hover:text-white"
           >
             Disconnect
           </UnifiedButton>
@@ -267,13 +267,13 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   if (authState === 'waiting' || authState === 'polling') {
     return (
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      <Card className="p-6 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.2)] bg-black">
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            <h3 className="text-lg font-semibold text-white mb-2">
               🌐 Authenticating with Fi Money
             </h3>
-            <p className="text-sm text-blue-600 mb-4">
+            <p className="text-sm text-gray-300 mb-4">
               {authState === 'waiting' 
                 ? 'Please complete authentication in the Fi Money window'
                 : `Checking authentication status... (${pollingCount}/${maxPollingCount})`
@@ -281,12 +281,12 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
             </p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-3"></div>
-              <span className="text-sm font-medium text-blue-800">Authentication in progress</span>
+              <div className="w-4 h-4 border-2 border-[rgb(0,184,153)] border-t-transparent rounded-full animate-spin mr-3"></div>
+              <span className="text-sm font-medium text-white">Authentication in progress</span>
             </div>
-            <ol className="text-xs text-blue-700 space-y-1">
+            <ol className="text-xs text-gray-300 space-y-1">
               <li>1. ✅ Fi Money authentication window opened</li>
               <li>2. 🔄 Complete authentication in Fi Money app</li>
               <li>3. ⏳ System will automatically detect completion</li>
@@ -294,8 +294,8 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
           </div>
 
           {authState === 'waiting' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-xs text-yellow-800">
+            <div className="bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] rounded-lg p-3">
+              <p className="text-xs text-yellow-400">
                 📱 <strong>Steps:</strong> Complete authentication in the Fi Money window that opened. 
                 This system will automatically detect when you're authenticated.
               </p>
@@ -326,17 +326,17 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   if (authState === 'error') {
     return (
-      <Card className="p-6 bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+      <Card className="p-6 bg-gradient-to-r from-[rgba(239,68,68,0.1)] to-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] bg-black">
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">
+            <h3 className="text-lg font-semibold text-white mb-2">
               ❌ Authentication Error
             </h3>
           </div>
 
           {authError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{authError}</p>
+            <div className="p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-lg">
+              <p className="text-sm text-red-400">{authError}</p>
             </div>
           )}
 
@@ -356,24 +356,24 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   // Initial state
   return (
-    <Card className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200">
+    <Card className="p-6 bg-black border border-[rgba(0,184,153,0.2)]">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-full flex items-center justify-center">
           <span className="text-2xl">🌐</span>
         </div>
         
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          <h3 className="text-lg font-semibold text-white mb-2">
             Connect to Fi Money
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-300 mb-4">
             Secure web-based authentication with your Fi Money account
           </p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-          <h4 className="font-medium text-blue-800 mb-2">What you'll get:</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
+        <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4 text-left">
+          <h4 className="font-medium text-white mb-2">What you'll get:</h4>
+          <ul className="text-sm text-gray-300 space-y-1">
             <li>• Real-time net worth and asset allocation</li>
             <li>• Live mutual fund and stock holdings</li>
             <li>• Current bank balances and transactions</li>
@@ -382,9 +382,9 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
           </ul>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
-          <h4 className="font-medium text-green-800 mb-2">How it works:</h4>
-          <ol className="text-sm text-green-700 space-y-1">
+        <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4 text-left">
+          <h4 className="font-medium text-white mb-2">How it works:</h4>
+          <ol className="text-sm text-gray-300 space-y-1">
             <li>1. Click "Connect to Fi Money" below</li>
             <li>2. Fi Money authentication window will open</li>
             <li>3. Complete authentication in Fi Money app</li>
@@ -406,10 +406,10 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-[rgba(0,184,153,0.2)]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">OR</span>
+              <span className="px-2 bg-black text-gray-400">OR</span>
             </div>
           </div>
 
@@ -417,13 +417,13 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
             onClick={startDemoMode}
             variant="secondary"
             size="lg"
-            className="w-full border-2 border-dashed border-gray-300 hover:border-gray-400"
+            className="w-full border-2 border-dashed border-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.5)]"
           >
             🎭 Try Demo Mode
           </UnifiedButton>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-400">
           Demo mode uses sample data • No authentication required • Perfect for exploring
         </p>
       </div>

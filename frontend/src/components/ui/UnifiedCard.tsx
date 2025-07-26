@@ -48,7 +48,7 @@ export const UnifiedCard = ({
 
 export const CardHeader = ({ children, className = '' }: CardHeaderProps) => {
   return (
-    <div className={cn('pb-4 border-b border-slate-100', className)}>
+    <div className={cn('pb-4 border-b border-[rgba(0,184,153,0.2)]', className)}>
       {children}
     </div>
   );

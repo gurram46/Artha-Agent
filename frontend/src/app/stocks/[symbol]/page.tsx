@@ -157,15 +157,15 @@ export default function StockDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[rgb(0,26,30)] flex items-center justify-center">
         <div className="text-center space-y-8 max-w-md">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-slate-300 rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+            <div className="w-20 h-20 border-4 border-[rgba(0,184,153,0.2)] border-t-[rgb(0,184,153)] rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-[rgba(0,184,153,0.3)] rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
           </div>
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-slate-900">Loading Stock Data</h2>
-            <p className="text-slate-600 text-lg">Fetching real-time information for {symbol}...</p>
+            <h2 className="text-2xl font-bold text-white">Loading Stock Data</h2>
+            <p className="text-gray-300 text-lg">Fetching real-time information for {symbol}...</p>
           </div>
         </div>
       </div>
@@ -174,11 +174,11 @@ export default function StockDetailPage() {
 
   if (error || !stockData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      <div className="min-h-screen bg-[rgb(0,26,30)]">
         <div className="container mx-auto px-4 pt-8">
           <button
             onClick={handleBack}
-            className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-all duration-200 bg-white px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
+            className="mb-6 flex items-center text-[rgb(0,184,153)] hover:text-white transition-all duration-200 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -186,17 +186,17 @@ export default function StockDetailPage() {
             Back to Dashboard
           </button>
           
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xl">
-            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-center shadow-xl">
+            <div className="w-16 h-16 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Stock Not Found</h3>
-            <p className="text-red-600 mb-4">{error || 'Unable to load stock details'}</p>
+            <h3 className="text-lg font-semibold text-white mb-2">Stock Not Found</h3>
+            <p className="text-red-400 mb-4">{error || 'Unable to load stock details'}</p>
             <button
               onClick={loadStockData}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-[rgb(0,184,153)] text-white rounded-lg hover:bg-[rgb(0,164,133)] transition-colors"
             >
               Try Again
             </button>
@@ -207,13 +207,13 @@ export default function StockDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-[rgb(0,26,30)]">
       <div className="container mx-auto px-4 pt-8 pb-8">
         {/* Enhanced Header */}
         <div className="mb-8">
           <button
             onClick={handleBack}
-            className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-all duration-200 bg-white px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
+            className="mb-6 flex items-center text-[rgb(0,184,153)] hover:text-white transition-all duration-200 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -222,32 +222,34 @@ export default function StockDetailPage() {
           </button>
           
           {/* Hero Stock Info */}
-          <div className="bg-gradient-to-r from-blue-600 via-slate-700 to-slate-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-black/20"></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          <div className="bg-gradient-to-r from-[rgb(24,25,27)] to-black border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-[rgba(0,184,153,0.05)] to-transparent"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[rgba(0,184,153,0.05)] rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[rgba(0,184,153,0.03)] rounded-full translate-y-24 -translate-x-24"></div>
             <div className="relative z-10">
               <div className="flex items-start justify-between flex-wrap gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                    <div className="px-3 py-1 bg-[rgba(0,184,153,0.2)] border border-[rgba(0,184,153,0.3)] rounded-full text-sm font-medium backdrop-blur-sm">
                       📈 {stockData.sector}
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm ${
-                      stockData.change >= 0 ? 'bg-emerald-500/30' : 'bg-red-500/30'
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border ${
+                      stockData.change >= 0 
+                        ? 'bg-[rgba(0,184,153,0.2)] border-[rgba(0,184,153,0.3)]' 
+                        : 'bg-[rgba(239,68,68,0.2)] border-[rgba(239,68,68,0.3)]'
                     }`}>
                       {stockData.change >= 0 ? '📈 Rising' : '📉 Falling'}
                     </div>
                   </div>
                   <div>
                     <h1 className="text-4xl font-bold leading-tight">{stockData.name}</h1>
-                    <p className="text-xl text-blue-200 mt-2">{stockData.symbol}</p>
+                    <p className="text-xl text-gray-300 mt-2">{stockData.symbol}</p>
                   </div>
                 </div>
                 <div className="text-right space-y-2">
                   <div className="text-4xl font-bold">{formatPrice(stockData.currentPrice)}</div>
                   <div className={`text-xl font-semibold flex items-center justify-end space-x-2 ${
-                    stockData.change >= 0 ? 'text-emerald-200' : 'text-red-200'
+                    stockData.change >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'
                   }`}>
                     <span>{stockData.change >= 0 ? '↗' : '↘'}</span>
                     <span>
@@ -256,8 +258,8 @@ export default function StockDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-end space-x-2">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-blue-200">Live data</span>
+                    <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-300">Live data</span>
                   </div>
                 </div>
               </div>
@@ -273,29 +275,29 @@ export default function StockDetailPage() {
             { label: 'Day Range', value: `${formatPrice(stockData.dayLow)} - ${formatPrice(stockData.dayHigh)}`, icon: '📈' },
             { label: 'Volume', value: formatVolume(stockData.volume), icon: '📦' }
           ].map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div key={index} className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-6 shadow-lg hover:shadow-xl hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-2xl">{stat.icon}</span>
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <div className="w-8 h-8 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg flex items-center justify-center">
+                  <div className="w-3 h-3 bg-[rgb(0,184,153)] rounded-full"></div>
                 </div>
               </div>
-              <p className="text-sm text-slate-600 mb-1">{stat.label}</p>
-              <p className="text-lg font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+              <p className="text-lg font-bold text-white">{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Enhanced Chart Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 shadow-xl">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 mb-8 shadow-xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
               <span>📊</span>
               <span>Price Chart</span>
             </h2>
-            <div className="flex items-center space-x-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-200">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-semibold text-emerald-700">Real-time</span>
+            <div className="flex items-center space-x-2 px-4 py-2 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl">
+              <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
+              <span className="text-sm font-semibold text-[rgb(0,184,153)]">Real-time</span>
             </div>
           </div>
           <StockChart symbol={symbol} embedded={true} />
@@ -315,8 +317,8 @@ export default function StockDetailPage() {
 
         {/* Enhanced Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
               <span>📊</span>
               <span>Market Data</span>
             </h3>
@@ -328,19 +330,19 @@ export default function StockDetailPage() {
                 { label: '52 Week High', value: formatPrice(stockData.week52High || 0), icon: '⬆️' },
                 { label: '52 Week Low', value: formatPrice(stockData.week52Low || 0), icon: '⬇️' }
               ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                <div key={index} className="flex items-center justify-between p-3 bg-[rgba(0,184,153,0.05)] border border-[rgba(0,184,153,0.1)] rounded-lg hover:bg-[rgba(0,184,153,0.1)] hover:border-[rgba(0,184,153,0.2)] transition-colors">
                   <div className="flex items-center space-x-3">
                     <span className="text-lg">{item.icon}</span>
-                    <span className="text-slate-600">{item.label}</span>
+                    <span className="text-gray-300">{item.label}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{item.value}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
               <span>🏢</span>
               <span>Company Information</span>
             </h3>
@@ -352,12 +354,12 @@ export default function StockDetailPage() {
                 { label: 'Exchange', value: 'NSE', icon: '🏦' },
                 { label: 'Currency', value: 'INR', icon: '₹' }
               ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                <div key={index} className="flex items-center justify-between p-3 bg-[rgba(0,184,153,0.05)] border border-[rgba(0,184,153,0.1)] rounded-lg hover:bg-[rgba(0,184,153,0.1)] hover:border-[rgba(0,184,153,0.2)] transition-colors">
                   <div className="flex items-center space-x-3">
                     <span className="text-lg">{item.icon}</span>
-                    <span className="text-slate-600">{item.label}</span>
+                    <span className="text-gray-300">{item.label}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{item.value}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
                 </div>
               ))}
             </div>

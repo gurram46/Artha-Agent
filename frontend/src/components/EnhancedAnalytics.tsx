@@ -200,7 +200,7 @@ const EnhancedAnalytics = () => {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl hover:shadow-2xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-1">Net Worth</p>
@@ -221,7 +221,7 @@ const EnhancedAnalytics = () => {
           </div>
         </UnifiedCard>
 
-        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl hover:shadow-2xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-1">Portfolio Returns</p>
@@ -242,14 +242,14 @@ const EnhancedAnalytics = () => {
                 ? 'bg-green-100 text-green-700' 
                 : analyticsData.avgXIRR < 0
                 ? 'bg-red-100 text-red-700'
-                : 'bg-gray-100 text-gray-700'
+                : 'bg-[rgba(156,163,175,0.1)] text-gray-400'
             }`}>
               {analyticsData.avgXIRR > 0 ? 'Positive' : analyticsData.avgXIRR < 0 ? 'Negative' : 'Neutral'}
             </div>
           </div>
         </UnifiedCard>
 
-        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl hover:shadow-2xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-1">Credit Health</p>
@@ -277,7 +277,7 @@ const EnhancedAnalytics = () => {
       </div>
 
       {/* Asset Allocation Chart */}
-      <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+      <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Asset Allocation</h3>
           <p className="text-sm text-gray-600">Portfolio distribution by asset class</p>
@@ -314,7 +314,7 @@ const EnhancedAnalytics = () => {
 
       {/* Performance Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+        <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Investment Performance</h3>
           </div>
@@ -352,7 +352,7 @@ const EnhancedAnalytics = () => {
           </div>
         </UnifiedCard>
 
-        <UnifiedCard className="p-6 bg-white border border-gray-200 shadow-sm">
+        <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Top & Bottom Performers</h3>
           </div>

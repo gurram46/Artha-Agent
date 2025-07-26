@@ -59,6 +59,11 @@ class QueryRequest(BaseModel):
     query: str
     mode: str = "research"  # "quick" or "research"
 
+class TripChatRequest(BaseModel):
+    query: str
+    conversation_history: list = []
+    mode: str = "research"
+
 class QueryResponse(BaseModel):
     response: str
     processing_time: float
@@ -123,7 +128,7 @@ async def startup_event():
         # Initialize MoneyTruthEngine
         print("🔍 Loading Money Truth Engine with specialized agents...")
         money_truth_engine = MoneyTruthEngine(gemini_client)
-        logger.info("💡 MoneyTruthEngine initialized with 7 specialized AI agents")
+        logger.info("💡 MoneyTruthEngine initialized with 3 core AI agents")
         
         # Health check
         agent_count = sum([
@@ -950,71 +955,6 @@ Provide a clear, personalized answer (max 300 words) with specific recommendatio
 
 # Individual streaming endpoints for each card analysis
 
-@app.get("/api/stream/hidden-truths")
-async def stream_hidden_truths():
-    """Stream AI-driven hidden money truths with typing effect"""
-    if not money_truth_engine:
-        print("❌ MoneyTruthEngine not initialized for hidden-truths request")
-        raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
-    
-    async def generate():
-        try:
-            print("🚨 API REQUEST: Hidden Truths analysis started")
-            
-            # Send initial status
-            yield f"data: {json.dumps({'type': 'status', 'message': '🔍 Analyzing your financial data...'})}\n\n"
-            
-            # Get financial data
-            print("📊 Fetching user financial data...")
-            financial_data = await get_user_financial_data()
-            
-            mcp_data = {
-                "data": {
-                    "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
-                    "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
-                    "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {}
-                }
-            }
-            
-            print(f"💾 MCP data prepared - size: {len(str(mcp_data))} characters")
-            
-            yield f"data: {json.dumps({'type': 'status', 'message': '🤖 AI analyzing patterns...'})}\n\n"
-            
-            # Run analysis
-            print("🔍 Starting MoneyTruthEngine.analyze_hidden_truths...")
-            analysis_start = datetime.now()
-            
-            insights = await money_truth_engine.analyze_hidden_truths(mcp_data)
-            
-            analysis_time = (datetime.now() - analysis_start).total_seconds()
-            print(f"⚡ Hidden Truths analysis completed in {analysis_time:.2f}s")
-            print(f"📝 Analysis result type: {type(insights)}")
-            print(f"📊 Result keys: {list(insights.keys()) if isinstance(insights, dict) else 'Not a dict'}")
-            
-            yield f"data: {json.dumps({'type': 'status', 'message': '📊 Generating insights...'})}\n\n"
-            
-            # Stream the response character by character for typing effect
-            response_text = insights.get('ai_insights', 'Analysis complete')
-            
-            # Format as beautiful markdown
-            formatted_response = format_insights_markdown(response_text)
-            
-            # Stream each character with typing effect
-            current_text = ""
-            for char in formatted_response:
-                current_text += char
-                yield f"data: {json.dumps({'type': 'content', 'content': current_text})}\n\n"
-                await asyncio.sleep(0.03)  # 30ms delay for typing effect
-            
-            # Send completion
-            yield f"data: {json.dumps({'type': 'complete', 'content': formatted_response})}\n\n"
-            
-        except Exception as e:
-            logging.error(f"Streaming failed: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-    
-    return StreamingResponse(generate(), media_type="text/plain")
-
 def format_insights_markdown(text: str) -> str:
     """Format AI insights as beautiful markdown with bullet points"""
     if not text or len(text.strip()) < 10:
@@ -1044,7 +984,7 @@ def format_insights_markdown(text: str) -> str:
     
     return '\n\n'.join(formatted_lines)
 
-@app.get("/api/stream/future-projection")
+# @app.get("/api/stream/future-projection")  # DISABLED - Removed unused agent
 async def stream_future_projection():
     """Stream AI-driven future wealth projection with typing effect"""
     if not money_truth_engine:
@@ -1094,7 +1034,7 @@ async def stream_future_projection():
     
     return StreamingResponse(generate(), media_type="text/plain")
 
-@app.get("/api/stream/goal-reality")
+# @app.get("/api/stream/goal-reality")  # DISABLED - Removed unused agent
 async def stream_goal_reality():
     """Stream AI-driven goal reality check with typing effect"""
     if not money_truth_engine:
@@ -1144,7 +1084,7 @@ async def stream_goal_reality():
     
     return StreamingResponse(generate(), media_type="text/plain")
 
-@app.get("/api/stream/money-personality")
+# @app.get("/api/stream/money-personality")  # DISABLED - Removed unused agent
 async def stream_money_personality():
     """Stream AI-driven money personality analysis with typing effect"""
     if not money_truth_engine:
@@ -1195,7 +1135,7 @@ async def stream_money_personality():
     return StreamingResponse(generate(), media_type="text/plain")
 
 # Fallback endpoints for when streaming fails
-@app.post("/api/hidden-truths")
+# @app.post("/api/hidden-truths")  # DISABLED - Removed unused agent
 async def get_hidden_truths_fallback():
     """Fallback endpoint for hidden truths when streaming fails"""
     if not money_truth_engine:
@@ -1222,7 +1162,7 @@ async def get_hidden_truths_fallback():
         logging.error(f"Hidden truths analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@app.post("/api/future-projection")
+# @app.post("/api/future-projection")  # DISABLED - Removed unused agent
 async def get_future_projection_fallback():
     """Fallback endpoint for future projection when streaming fails"""
     if not money_truth_engine:
@@ -1249,7 +1189,7 @@ async def get_future_projection_fallback():
         logging.error(f"Future projection analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@app.post("/api/goal-reality")
+# @app.post("/api/goal-reality")  # DISABLED - Removed unused agent
 async def get_goal_reality_fallback():
     """Fallback endpoint for goal reality when streaming fails"""
     if not money_truth_engine:
@@ -1276,7 +1216,7 @@ async def get_goal_reality_fallback():
         logging.error(f"Goal reality analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@app.post("/api/money-personality")
+# @app.post("/api/money-personality")  # DISABLED - Removed unused agent
 async def get_money_personality_fallback():
     """Fallback endpoint for money personality when streaming fails"""
     if not money_truth_engine:
@@ -1335,20 +1275,24 @@ async def get_real_time_insights(query_request: QueryRequest):
 
 @app.post("/api/portfolio-health")
 async def get_portfolio_health():
-    """Get AI-driven portfolio health analysis"""
-    if not enhanced_analyst:
-        raise HTTPException(status_code=500, detail="Enhanced Analyst not initialized")
+    """Get AI-driven portfolio health analysis using Money Truth Engine"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
         # Get user's financial data
         financial_data = await get_user_financial_data()
-        portfolio_data = {
+        
+        # Convert to MCP data format
+        mcp_data = {
             "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
-            "timestamp": "current"
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
         }
         
-        # Get portfolio health analysis
-        health_analysis = await enhanced_analyst.analyze_portfolio_health(portfolio_data)
+        # Use Money Truth Engine's portfolio health agent
+        health_analysis = await money_truth_engine.portfolio_health_check(mcp_data)
         
         return {
             "status": "success",
@@ -1359,7 +1303,7 @@ async def get_portfolio_health():
         logging.error(f"Portfolio health analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Health analysis failed: {str(e)}")
 
-@app.post("/api/money-leaks")
+# @app.post("/api/money-leaks")  # DISABLED - Removed unused agent
 async def detect_money_leaks():
     """Detect money leaks using AI analysis"""
     if not enhanced_analyst:
@@ -1390,20 +1334,24 @@ async def detect_money_leaks():
 
 @app.post("/api/risk-assessment")
 async def get_risk_assessment():
-    """Get comprehensive risk assessment"""
-    if not enhanced_risk_advisor:
-        raise HTTPException(status_code=500, detail="Enhanced Risk Advisor not initialized")
+    """Get comprehensive risk assessment using Money Truth Engine"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
         # Get user's financial data
         financial_data = await get_user_financial_data()
-        portfolio_data = {
+        
+        # Convert to MCP data format
+        mcp_data = {
             "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
             "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
         }
         
-        # Get risk assessment
-        risk_assessment = await enhanced_risk_advisor.assess_portfolio_risks(portfolio_data)
+        # Use Money Truth Engine's risk assessment agent
+        risk_assessment = await money_truth_engine.assess_financial_risks(mcp_data)
         
         return {
             "status": "success",
@@ -1413,6 +1361,90 @@ async def get_risk_assessment():
     except Exception as e:
         logging.error(f"Risk assessment failed: {e}")
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {str(e)}")
+
+@app.post("/api/trip-planning")
+async def get_trip_planning():
+    """Get AI-driven trip planning analysis using Money Truth Engine"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        
+        # Convert to MCP data format
+        mcp_data = {
+            "accounts": financial_data.account_details if hasattr(financial_data, 'account_details') else [],
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
+        }
+        
+        # Use Money Truth Engine's trip planning agent
+        trip_planning = await money_truth_engine.plan_smart_trip(mcp_data)
+        
+        return {
+            "status": "success",
+            "trip_planning": trip_planning
+        }
+        
+    except Exception as e:
+        logging.error(f"Trip planning analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Trip planning analysis failed: {str(e)}")
+
+@app.post("/api/trip-planning/chat")
+async def trip_planning_chat(request: TripChatRequest):
+    """Interactive chat with trip planning agent with conversation memory"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        
+        # Convert to MCP data format
+        mcp_data = {
+            "accounts": financial_data.account_details if hasattr(financial_data, 'account_details') else [],
+            "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
+            "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
+            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
+        }
+        
+        # If this is the first message, initialize the chatbot
+        if request.query.lower() in ['start', 'begin', 'hello', 'hi'] or not request.conversation_history:
+            trip_planning_data = await money_truth_engine.plan_smart_trip(mcp_data)
+            return {
+                "status": "success",
+                "response": trip_planning_data.get("welcome_message", "Welcome to Smart Trip Planner! 🧳"),
+                "chatbot_mode": True,
+                "financial_context": trip_planning_data.get("financial_context", {})
+            }
+        
+        # For subsequent messages, use the chat response method with conversation history
+        trip_agent = money_truth_engine.trip_planning_agent
+        
+        # Extract financial context (in a real implementation, this would be stored in session)
+        # For now, we'll recalculate it
+        trip_planning_data = await money_truth_engine.plan_smart_trip(mcp_data)
+        financial_context = trip_planning_data.get("financial_context", {})
+        
+        # Get chat response with conversation history
+        chat_response = await trip_agent.chat_response(
+            request.query, 
+            financial_context, 
+            request.conversation_history
+        )
+        
+        return {
+            "status": "success",
+            "response": chat_response,
+            "chatbot_mode": True,
+            "financial_context": financial_context
+        }
+        
+    except Exception as e:
+        logging.error(f"Trip planning chat failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Trip planning chat failed: {str(e)}")
 
 # Stock Analysis Streaming API endpoint
 @app.post("/api/stock/analysis-stream")  

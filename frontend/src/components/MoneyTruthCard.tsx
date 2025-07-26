@@ -9,7 +9,7 @@ interface MoneyTruthCardProps {
   insights: any;
   isLoading: boolean;
   onRefresh: () => void;
-  type: 'hidden_truths' | 'future_projection' | 'goal_reality' | 'personality' | 'portfolio_health' | 'money_leaks' | 'risk_assessment';
+  type: 'hidden_truths' | 'future_projection' | 'goal_reality' | 'personality' | 'portfolio_health' | 'money_leaks' | 'risk_assessment' | 'trip_planning';
 }
 
 export default function MoneyTruthCard({ 
@@ -23,56 +23,12 @@ export default function MoneyTruthCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getCardStyle = () => {
-    switch (type) {
-      case 'hidden_truths':
-        return {
-          border: 'border-red-200',
-          bg: 'bg-gradient-to-br from-red-50 to-orange-50',
-          header: 'bg-red-50 border-red-100'
-        };
-      case 'future_projection':
-        return {
-          border: 'border-purple-200',
-          bg: 'bg-gradient-to-br from-purple-50 to-indigo-50',
-          header: 'bg-purple-50 border-purple-100'
-        };
-      case 'goal_reality':
-        return {
-          border: 'border-green-200',
-          bg: 'bg-gradient-to-br from-green-50 to-emerald-50',
-          header: 'bg-green-50 border-green-100'
-        };
-      case 'personality':
-        return {
-          border: 'border-blue-200',
-          bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
-          header: 'bg-blue-50 border-blue-100'
-        };
-      case 'portfolio_health':
-        return {
-          border: 'border-emerald-200',
-          bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
-          header: 'bg-emerald-50 border-emerald-100'
-        };
-      case 'money_leaks':
-        return {
-          border: 'border-yellow-200',
-          bg: 'bg-gradient-to-br from-yellow-50 to-amber-50',
-          header: 'bg-yellow-50 border-yellow-100'
-        };
-      case 'risk_assessment':
-        return {
-          border: 'border-red-200',
-          bg: 'bg-gradient-to-br from-red-50 to-pink-50',
-          header: 'bg-red-50 border-red-100'
-        };
-      default:
-        return {
-          border: 'border-gray-200',
-          bg: 'bg-white',
-          header: 'bg-gray-50 border-gray-100'
-        };
-    }
+    // Fi Money unified dark design for all card types
+    return {
+      border: 'border-[rgba(0,184,153,0.2)]',
+      bg: 'bg-[rgb(24,25,27)]',
+      header: 'bg-[rgba(0,184,153,0.05)] border-[rgba(0,184,153,0.2)]'
+    };
   };
 
   const cardStyle = getCardStyle();
@@ -85,7 +41,8 @@ export default function MoneyTruthCard({
       personality: 'Evaluating money behavior patterns...',
       portfolio_health: 'Diagnosing investment health...',
       money_leaks: 'Detecting money drains and leaks...',
-      risk_assessment: 'Analyzing financial risks and threats...'
+      risk_assessment: 'Analyzing financial risks and threats...',
+      trip_planning: 'Planning budget-smart travel options...'
     };
 
     return (
@@ -138,30 +95,30 @@ export default function MoneyTruthCard({
     if (!text) return null;
     
     return (
-      <div className="prose prose-sm max-w-none">
+      <div className="prose prose-invert max-w-none">
         <ReactMarkdown
           components={{
-            h1: ({children}) => <h1 className="text-2xl font-bold text-gray-900 mb-4">{children}</h1>,
-            h2: ({children}) => <h2 className="text-xl font-bold text-gray-900 mb-3">{children}</h2>,
-            h3: ({children}) => <h3 className="text-lg font-bold text-gray-900 mb-3">{children}</h3>,
-            p: ({children}) => <p className="text-gray-700 leading-relaxed mb-3">{children}</p>,
-            ul: ({children}) => <ul className="space-y-2 mb-4">{children}</ul>,
+            h1: ({children}) => <h1 className="text-3xl font-black text-white mb-6">{children}</h1>,
+            h2: ({children}) => <h2 className="text-2xl font-bold text-white mb-4">{children}</h2>,
+            h3: ({children}) => <h3 className="text-xl font-semibold text-white mb-4">{children}</h3>,
+            p: ({children}) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
+            ul: ({children}) => <ul className="space-y-3 mb-6">{children}</ul>,
             li: ({children}) => (
-              <li className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-100">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div className="text-gray-800 leading-relaxed">{children}</div>
+              <li className="flex items-start space-x-3 p-4 bg-[rgba(0,184,153,0.05)] rounded-xl border border-[rgba(0,184,153,0.1)]">
+                <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full mt-2 flex-shrink-0"></div>
+                <div className="text-gray-300 leading-relaxed">{children}</div>
               </li>
             ),
             strong: ({children}) => (
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 mb-3 inline-block w-full">
-                <span className="font-bold text-gray-900">{children}</span>
+              <div className="p-4 bg-[rgba(0,184,153,0.1)] rounded-xl border border-[rgba(0,184,153,0.2)] mb-4 inline-block w-full">
+                <span className="font-bold text-white">{children}</span>
               </div>
             ),
             blockquote: ({children}) => (
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200 mb-3">
+              <div className="p-4 bg-[rgba(0,184,153,0.1)] rounded-xl border border-[rgba(0,184,153,0.2)] mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-green-600 font-bold">💡 Insight:</span>
-                  <div className="text-green-800 font-medium">{children}</div>
+                  <span className="text-[rgb(0,184,153)] font-bold">💡 Insight:</span>
+                  <div className="text-gray-300 font-medium">{children}</div>
                 </div>
               </div>
             )
@@ -180,17 +137,17 @@ export default function MoneyTruthCard({
 
     if (!insights) {
       return (
-        <div className="text-center py-8">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-6">
+            <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
             </svg>
           </div>
-          <p className="text-gray-600 text-lg font-medium mb-2">Ready to reveal the truth?</p>
-          <p className="text-gray-500 text-sm mb-4">Click to uncover hidden insights about your money</p>
+          <p className="text-white text-xl font-bold mb-3">Ready to reveal the truth?</p>
+          <p className="text-gray-400 text-sm mb-6">Click to uncover hidden insights about your money</p>
           <button 
             onClick={onRefresh}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg transform hover:scale-105"
           >
             🔍 Discover Money Truths
           </button>
@@ -198,135 +155,110 @@ export default function MoneyTruthCard({
       );
     }
 
-    // Handle insights - always extract readable content
-    const parsedInsights = {
-      ai_insights: typeof insights === 'string' ? insights :
-                   insights?.ai_insights ||
-                   insights?.ai_projection ||
-                   insights?.goal_analysis ||
-                   insights?.personality_analysis ||
-                   insights?.content ||
-                   JSON.stringify(insights, null, 2)
+    // Simple, unified content extraction - extract readable text from any format
+    const extractContent = (data: any): string => {
+      if (typeof data === 'string') {
+        return data;
+      }
+      
+      if (typeof data === 'object' && data !== null) {
+        // Try to find any text content in the object
+        const textFields = [
+          data.ai_insights,
+          data.ai_projection, 
+          data.goal_analysis,
+          data.personality_analysis,
+          data.technical_analysis,
+          data.portfolio_risk_assessment,
+          data.content,
+          data.overall_diagnosis,
+          data.analysis,
+          data.insights
+        ];
+        
+        for (const field of textFields) {
+          if (typeof field === 'string' && field.trim().length > 0) {
+            return field;
+          }
+        }
+        
+        // If no text fields found, try to extract from structured portfolio/risk data
+        if (data.health_score !== undefined || data.critical_issues || data.prescription) {
+          // For portfolio health, build a readable summary
+          let summary = '';
+          if (data.overall_diagnosis) summary += `${data.overall_diagnosis}\n\n`;
+          if (data.health_score !== undefined) summary += `**Health Score: ${data.health_score}/100**\n\n`;
+          if (data.critical_issues && data.critical_issues.length > 0) {
+            summary += '**Critical Issues:**\n';
+            data.critical_issues.forEach((issue: any, i: number) => {
+              summary += `${i + 1}. ${issue.problem} (${issue.severity})\n   Treatment: ${issue.treatment}\n\n`;
+            });
+          }
+          if (data.prescription && data.prescription.length > 0) {
+            summary += '**Prescription:**\n';
+            data.prescription.forEach((item: string, i: number) => {
+              summary += `${i + 1}. ${item}\n`;
+            });
+          }
+          return summary;
+        }
+      }
+      
+      return '';
     };
+
+    const content = extractContent(insights);
+
+    // If no content extracted, show a message
+    if (!content) {
+      return (
+        <div className="text-center py-10">
+          <div className="text-gray-400 mb-6 text-lg">
+            📊 Analysis completed but no readable content available
+          </div>
+          <button 
+            onClick={onRefresh}
+            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg"
+          >
+            🔄 Retry Analysis
+          </button>
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-6">
-        {/* Main insight content with beautiful markdown rendering */}
+        {/* Simple markdown rendering of extracted content */}
         <div className="max-w-none">
-          {parsedInsights.ai_insights && (
-            <div className="space-y-4">
-              {renderMarkdownContent(parsedInsights.ai_insights)}
-            </div>
-          )}
-
-          {/* Type-specific content rendering */}
-          {type === 'hidden_truths' && renderHiddenTruthsContent(parsedInsights)}
-          {type === 'future_projection' && renderFutureProjectionContent(parsedInsights)}
-          {type === 'goal_reality' && renderGoalRealityContent(parsedInsights)}
-          {type === 'personality' && renderPersonalityContent(parsedInsights)}
+          {renderMarkdownContent(content)}
         </div>
-
-        {/* Status indicators - only show when analysis is complete */}
-        {parsedInsights.ai_insights && typeof parsedInsights.ai_insights === 'string' && parsedInsights.ai_insights.length > 50 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-red-600">🚨</div>
-              <div className="text-xs text-gray-600 mt-1">High Impact</div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-orange-600">💡</div>
-              <div className="text-xs text-gray-600 mt-1">Eye Opening</div>
-            </div>
-            <div className="text-center p-3 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-green-600">✅</div>
-              <div className="text-xs text-gray-600 mt-1">Actionable</div>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
 
-  const renderHiddenTruthsContent = (insights: any) => {
-    return (
-      <div className="space-y-4">
-        {insights.bleeding_investments && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="font-semibold text-red-800 mb-2">🩸 Bleeding Investments</h4>
-            <p className="text-red-700 text-sm">{insights.bleeding_investments}</p>
-          </div>
-        )}
-        {insights.dead_money && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="font-semibold text-yellow-800 mb-2">💀 Dead Money</h4>
-            <p className="text-yellow-700 text-sm">{insights.dead_money}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderFutureProjectionContent = (insights: any) => {
-    return (
-      <div className="space-y-4">
-        {insights.ai_projection && (
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="font-semibold text-purple-800 mb-2">🔮 AI Projection</h4>
-            <p className="text-purple-700 text-sm">{insights.ai_projection}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderGoalRealityContent = (insights: any) => {
-    return (
-      <div className="space-y-4">
-        {insights.goal_analysis && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h4 className="font-semibold text-green-800 mb-2">🎯 Goal Analysis</h4>
-            <p className="text-green-700 text-sm">{insights.goal_analysis}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderPersonalityContent = (insights: any) => {
-    return (
-      <div className="space-y-4">
-        {insights.personality_analysis && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">🧠 Personality Analysis</h4>
-            <p className="text-blue-700 text-sm">{insights.personality_analysis}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
-    <div className={`rounded-xl shadow-lg border ${cardStyle.border} ${cardStyle.bg}`}>
-      <div className={`px-6 py-4 border-b ${cardStyle.header}`}>
+    <div className={`rounded-3xl shadow-2xl border ${cardStyle.border} ${cardStyle.bg}`}>
+      <div className={`px-8 py-6 border-b ${cardStyle.header}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-            <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+            <h2 className="text-2xl font-black text-white">{title}</h2>
+            <p className="text-sm text-gray-300 mt-2">{subtitle}</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${
                 isLoading ? 'bg-yellow-500 animate-pulse' : 
-                insights ? 'bg-green-500' : 'bg-gray-400'
+                insights ? 'bg-[rgb(0,184,153)]' : 'bg-gray-500'
               }`}></div>
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-sm text-gray-400 font-medium">
                 {isLoading ? 'Analyzing' : insights ? 'Complete' : 'Ready'}
               </span>
             </div>
             <button
               onClick={onRefresh}
               disabled={isLoading}
-              className="p-2 text-gray-600 hover:text-gray-800 rounded-lg hover:bg-white/50 disabled:opacity-50 transition-colors"
+              className="p-3 text-gray-400 hover:text-[rgb(0,184,153)] rounded-xl hover:bg-[rgba(0,184,153,0.1)] disabled:opacity-50 transition-all duration-300"
             >
               <svg className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -336,7 +268,7 @@ export default function MoneyTruthCard({
         </div>
       </div>
       
-      <div className="p-6">
+      <div className="p-8">
         {renderInsightContent()}
       </div>
     </div>

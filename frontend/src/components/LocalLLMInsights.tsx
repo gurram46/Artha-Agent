@@ -30,18 +30,18 @@ interface MetricCardProps {
 }
 
 const MetricCard = ({ title, value, subtitle, icon, color }: MetricCardProps) => (
-  <div className="clean-card p-6 group">
+  <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
     <div className="flex items-center justify-between mb-4">
       <div>
-        <p className="text-sm font-semibold text-gray-700 mb-1">{title}</p>
-        <p className="text-xs text-gray-500 font-medium">{subtitle}</p>
+        <p className="text-sm font-semibold text-gray-300 mb-1">{title}</p>
+        <p className="text-xs text-gray-400 font-medium">{subtitle}</p>
       </div>
       <div className={`w-12 h-12 ${color} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
         {icon}
       </div>
     </div>
     <div className="space-y-3">
-      <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{value}</h3>
+      <h3 className="text-3xl font-bold text-white tracking-tight">{value}</h3>
     </div>
   </div>
 );
@@ -159,13 +159,13 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
   if (!isAuthenticated) {
     return (
       <div className={`space-y-6 ${className}`}>
-        <div className="clean-card p-6">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <Brain className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Local LLM Insights</h1>
+              <h1 className="text-2xl font-bold text-white">Local LLM Insights</h1>
               <p className="text-gray-600 font-medium mt-1">
                 Connect your data source to start analyzing with local AI
               </p>
@@ -179,7 +179,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
         />
         
         {error && (
-          <div className="clean-card p-4 bg-red-50 border border-red-200">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(220,53,69,0.05)] border border-[rgba(220,53,69,0.3)]">
             <div className="flex items-center gap-2">
               <WifiOff className="w-5 h-5 text-red-600" />
               <p className="text-sm font-medium text-red-700">{error}</p>
@@ -193,14 +193,14 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
   return (
     <div className={`space-y-8 ${className}`}>
       {/* Header Section */}
-      <div className="clean-card p-6">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <Brain className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Local LLM Insights</h1>
+              <h1 className="text-2xl font-bold text-white">Local LLM Insights</h1>
               <p className="text-gray-600 font-medium mt-1">
                 Process your financial data locally with complete privacy
               </p>
@@ -280,7 +280,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
 
       {/* Error Display */}
       {error && (
-        <div className="clean-card p-4 bg-red-50 border border-red-200">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(220,53,69,0.05)] border border-[rgba(220,53,69,0.3)]">
           <div className="flex items-center gap-2">
             <WifiOff className="w-5 h-5 text-red-600" />
             <p className="text-sm font-medium text-red-700">{error}</p>
@@ -290,14 +290,14 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
 
       {/* Local LLM Insights Display */}
       {localLLMInsights && (
-        <div className="clean-card p-6">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">AI Analysis</h3>
+                <h3 className="text-lg font-semibold text-white">AI Analysis</h3>
                 <p className="text-sm font-medium text-gray-700">Generated locally by Gemma 3N E2B</p>
               </div>
             </div>
@@ -307,15 +307,15 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
             </div>
           </div>
           <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="prose prose-gray max-w-none text-gray-900 leading-relaxed">
+            <div className="prose prose-gray max-w-none text-white leading-relaxed">
               <ReactMarkdown 
                 components={{
-                  h2: ({node, ...props}) => <h2 className="text-xl font-bold text-gray-900 mt-6 mb-3 border-b border-gray-200 pb-2" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-xl font-bold text-white mt-6 mb-3 border-b border-gray-200 pb-2" {...props} />,
                   h3: ({node, ...props}) => <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2" {...props} />,
                   p: ({node, ...props}) => <p className="text-gray-700 mb-3 leading-relaxed" {...props} />,
                   ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 mb-3 text-gray-700" {...props} />,
                   li: ({node, ...props}) => <li className="text-gray-700" {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
                   code: ({node, ...props}) => <code className="bg-gray-200 px-1 py-0.5 rounded text-sm font-mono" {...props} />
                 }}
               >
@@ -369,16 +369,16 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Assets Breakdown */}
             {Object.keys(compressedData.assets).length > 0 && (
-              <div className="clean-card p-6">
+              <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Asset Allocation</h3>
+                  <h3 className="text-lg font-semibold text-white">Asset Allocation</h3>
                   <span className="text-sm text-gray-500">Breakdown by type</span>
                 </div>
                 <div className="space-y-3">
                   {Object.entries(compressedData.assets).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <span className="font-medium text-gray-700">{key}</span>
-                      <span className="font-semibold text-gray-900">₹{value}</span>
+                      <span className="font-semibold text-white">₹{value}</span>
                     </div>
                   ))}
                 </div>
@@ -387,15 +387,15 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
 
             {/* Top Investments */}
             {compressedData.investments.length > 0 && (
-              <div className="clean-card p-6">
+              <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Top Holdings</h3>
+                  <h3 className="text-lg font-semibold text-white">Top Holdings</h3>
                   <span className="text-sm text-gray-500">{compressedData.investments.length} investments</span>
                 </div>
                 <div className="space-y-3">
                   {compressedData.investments.map((inv, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                      <span className="font-medium text-gray-900">₹{inv.v}</span>
+                      <span className="font-medium text-white">₹{inv.v}</span>
                       {inv.r && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                           {inv.r}
@@ -409,9 +409,9 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
           </div>
 
           {/* Metadata and Controls */}
-          <div className="clean-card p-6">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Compression Analytics</h3>
+              <h3 className="text-lg font-semibold text-white">Compression Analytics</h3>
               {metadata && (
                 <div className="flex gap-4 text-sm text-gray-600">
                   <span>~{metadata.estimated_tokens} tokens</span>
@@ -452,7 +452,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
 
       {/* LLM Status */}
       {!isLoading && !isLLMAvailable && (
-        <div className="clean-card p-4 bg-yellow-50 border border-yellow-200">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(255,193,7,0.05)] border border-[rgba(255,193,7,0.3)]">
           <div className="flex items-center gap-3">
             <WifiOff className="w-5 h-5 text-yellow-600" />
             <div>
@@ -466,7 +466,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
       )}
 
       {/* Info Note */}
-      <div className="clean-card p-4 bg-blue-50 border border-blue-200">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(0,184,153,0.05)] border border-[rgba(0,184,153,0.3)]">
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
           <div>

@@ -5,6 +5,7 @@ Risk Assessment Agent - AI-powered financial risk analysis and protection gaps
 import json
 from typing import Dict, Any
 import logging
+from datetime import datetime
 from .base_money_agent import BaseMoneyAgent
 
 logger = logging.getLogger(__name__)
@@ -38,205 +39,67 @@ class RiskAssessmentAgent(BaseMoneyAgent):
             investment_concentration_risk = len(mutual_funds) < 3
             emergency_fund_months = (emergency_fund / 50000) if emergency_fund > 0 else 0  # Rough estimate
             
-            system_prompt = f"""
-            You are the RISK ASSESSMENT GUARDIAN - a financial security expert who identifies threats to wealth.
+            system_prompt = """
+            You are a Risk Assessment Guardian 🛡️ - identify threats to wealth in simple, clear language.
             
-            Your mission: Comprehensive risk analysis and protection gap identification.
+            WRITING STYLE:
+            - Use Indian Rupees (₹) NEVER dollars ($)
+            - Be direct about risks and solutions
+            - Use protection emojis: ⚠️ 🛡️ 🚨 🔒 ⚡
+            - Include specific numbers and potential losses
+            - Give clear protection steps
             
-            Risk Analysis Framework:
-            1. Immediate Financial Threats (debt, cash flow)
-            2. Investment Risk Exposure (concentration, volatility)
-            3. Protection Gaps (insurance, emergency funds)
-            4. Market and Economic Risks
-            5. Life Event Risk Preparedness
-            
-            RISK STYLE:
-            - Use security and protection terminology
-            - Use ⚠️, 🛡️, 🚨 emojis
-            - Quantify risk levels and potential impacts
-            - Provide specific protection strategies
-            - Prioritize by urgency and impact
+            FORMAT: Write in markdown with clear sections and bullet points.
             """
             
             prompt = f"""
-            COMPREHENSIVE RISK ASSESSMENT
-            Net Worth: ₹{net_worth:,.2f}
-            Total Debt: ₹{total_debt:,.2f}
-            Emergency Fund: ₹{emergency_fund:,.2f} (~{emergency_fund_months:.1f} months)
-            Investment Concentration: {len(mutual_funds)} funds
+            ## 🛡️ FINANCIAL RISK ASSESSMENT
             
-            RISK INDICATORS:
-            - Debt Ratio: {debt_to_income_proxy:.1%}
-            - Investment Diversity: {'Low' if investment_concentration_risk else 'Adequate'}
+            **Current Financial Position:**
+            - Net Worth: ₹{net_worth:,.0f}
+            - Total Debt: ₹{total_debt:,.0f}
+            - Emergency Fund: ₹{emergency_fund:,.0f} (~{emergency_fund_months:.1f} months)
+            - Investment Funds: {len(mutual_funds)}
+            
+            **Risk Indicators:**
+            - Debt Load: {debt_to_income_proxy:.1%} of net worth
             - Emergency Coverage: {emergency_fund_months:.1f} months
+            - Investment Diversity: {'⚠️ Low' if investment_concentration_risk else '✅ Adequate'}
             
+            **Financial Data:**
             {financial_data}
             
-            Conduct a comprehensive risk assessment. What threats could destroy this person's wealth? What protection gaps exist?
+            Provide a clear risk assessment with:
+            1. **Risk Level** (High/Medium/Low)
+            2. **Biggest Threats** (what could go wrong)
+            3. **Protection Plan** (how to reduce risks)
+            4. **Emergency Readiness** (are they prepared)
             
-            Format as JSON:
-            {{
-                "overall_risk_level": "High/Medium/Low",
-                "risk_score": 75,
-                "critical_risks": [
-                    {{
-                        "risk_type": "Specific financial threat",
-                        "severity": "Critical/High/Medium/Low",
-                        "potential_impact": "₹XX,XXX loss potential",
-                        "probability": "High/Medium/Low",
-                        "time_horizon": "Immediate/6 months/1 year",
-                        "mitigation_strategy": "Specific protection action"
-                    }}
-                ],
-                "protection_gaps": [
-                    {{
-                        "gap_type": "Missing protection area",
-                        "exposure_amount": "₹XX,XXX at risk",
-                        "urgency": "Critical/High/Medium",
-                        "solution": "Specific protection product/strategy",
-                        "estimated_cost": "₹X,XXX annually"
-                    }}
-                ],
-                "risk_mitigation_plan": [
-                    "Immediate action item 1",
-                    "Short-term protection step 2",
-                    "Long-term security measure 3"
-                ],
-                "emergency_preparedness": {{
-                    "current_months_covered": 3.5,
-                    "recommended_months": 6,
-                    "gap_amount": "₹XX,XXX needed"
-                }},
-                "insurance_assessment": {{
-                    "life_insurance_need": "₹XX lakhs",
-                    "health_coverage_adequacy": "Adequate/Insufficient",
-                    "asset_protection_gaps": ["Specific gap"]
-                }},
-                "stress_test_results": {{
-                    "market_crash_impact": "₹XX,XXX loss",
-                    "job_loss_survival": "X months",
-                    "medical_emergency_impact": "₹XX,XXX exposure"
-                }},
-                "confidence_level": 0.80
-            }}
+            Keep it simple, actionable, and use ₹ for all amounts.
             """
             
             ai_response = await self.call_ai(prompt, system_prompt)
             
-            # Try to parse JSON response
-            try:
-                result = json.loads(ai_response)
-                
-                # Add analysis metadata
-                result.update({
-                    "agent_name": self.name,
-                    "analysis_type": "risk_assessment",
-                    "timestamp": "2025-01-23T19:33:28+05:30",
-                    "risk_metrics": {
-                        "debt_to_networth_ratio": f"{debt_to_income_proxy:.1%}",
-                        "emergency_fund_months": f"{emergency_fund_months:.1f}",
-                        "investment_diversity_score": len(mutual_funds),
-                        "total_exposure": total_debt + total_investments
-                    }
-                })
-                
-                return result
-                
-            except json.JSONDecodeError:
-                # Fallback if JSON parsing fails
-                logger.warning("Failed to parse JSON from Risk Assessment AI response")
-                
-                # Calculate basic risk level
-                risk_factors = 0
-                if debt_to_income_proxy > 0.3: risk_factors += 1
-                if emergency_fund_months < 3: risk_factors += 1
-                if investment_concentration_risk: risk_factors += 1
-                
-                risk_level = "High" if risk_factors >= 2 else "Medium" if risk_factors == 1 else "Low"
-                
-                return {
-                    "overall_risk_level": risk_level,
-                    "risk_score": max(0, 100 - (risk_factors * 25)),
-                    "critical_risks": [{
-                        "risk_type": "Financial vulnerability detected",
-                        "severity": "Medium",
-                        "potential_impact": f"₹{total_debt:,.0f}",
-                        "probability": "Medium",
-                        "time_horizon": "6 months",
-                        "mitigation_strategy": "Comprehensive risk analysis available"
-                    }],
-                    "protection_gaps": [{
-                        "gap_type": "Emergency fund adequacy",
-                        "exposure_amount": f"₹{max(0, 300000 - emergency_fund):,.0f}",
-                        "urgency": "High" if emergency_fund_months < 3 else "Medium",
-                        "solution": "Build emergency fund to 6 months expenses",
-                        "estimated_cost": "₹10,000 monthly"
-                    }],
-                    "risk_mitigation_plan": [
-                        ai_response[:200] + "..." if len(ai_response) > 200 else ai_response,
-                        "Build adequate emergency fund",
-                        "Review insurance coverage"
-                    ],
-                    "emergency_preparedness": {
-                        "current_months_covered": emergency_fund_months,
-                        "recommended_months": 6,
-                        "gap_amount": f"₹{max(0, 300000 - emergency_fund):,.0f}"
-                    },
-                    "insurance_assessment": {
-                        "life_insurance_need": f"₹{net_worth * 0.1 / 100000:.0f} lakhs",
-                        "health_coverage_adequacy": "Assessment needed",
-                        "asset_protection_gaps": ["Detailed analysis required"]
-                    },
-                    "stress_test_results": {
-                        "market_crash_impact": f"₹{total_investments * 0.3:,.0f}",
-                        "job_loss_survival": f"{emergency_fund_months:.1f} months",
-                        "medical_emergency_impact": "₹5,00,000 potential"
-                    },
-                    "confidence_level": 0.75,
-                    "agent_name": self.name,
-                    "analysis_type": "risk_assessment",
-                    "timestamp": "2025-01-23T19:33:28+05:30"
+            # Return simple response with analysis content
+            return {
+                "analysis": ai_response,
+                "agent_name": self.name,
+                "analysis_type": "risk_assessment",
+                "timestamp": datetime.now().isoformat(),
+                "risk_metrics": {
+                    "debt_to_networth_ratio": f"{debt_to_income_proxy:.1%}",
+                    "emergency_fund_months": f"{emergency_fund_months:.1f}",
+                    "investment_diversity_score": len(mutual_funds),
+                    "total_exposure": total_debt + total_investments
                 }
+            }
                 
         except Exception as e:
             logger.error(f"Risk Assessment analysis failed: {e}")
             return {
-                "overall_risk_level": "Unknown",
-                "risk_score": 0,
-                "critical_risks": [{
-                    "risk_type": "Analysis unavailable",
-                    "severity": "Critical",
-                    "potential_impact": f"Assessment failed: {str(e)}",
-                    "probability": "Unknown",
-                    "time_horizon": "Unknown",
-                    "mitigation_strategy": "Retry analysis"
-                }],
-                "protection_gaps": [{
-                    "gap_type": "System unavailable",
-                    "exposure_amount": "Cannot calculate",
-                    "urgency": "Critical",
-                    "solution": "Please try again later",
-                    "estimated_cost": "Unknown"
-                }],
-                "risk_mitigation_plan": ["Retry risk assessment when system is available"],
-                "emergency_preparedness": {
-                    "current_months_covered": 0,
-                    "recommended_months": 6,
-                    "gap_amount": "Cannot calculate"
-                },
-                "insurance_assessment": {
-                    "life_insurance_need": "Assessment needed",
-                    "health_coverage_adequacy": "Cannot assess",
-                    "asset_protection_gaps": ["Analysis unavailable"]
-                },
-                "stress_test_results": {
-                    "market_crash_impact": "Cannot calculate",
-                    "job_loss_survival": "Cannot assess",
-                    "medical_emergency_impact": "Assessment needed"
-                },
-                "confidence_level": 0.0,
+                "analysis": f"🛡️ **Risk Assessment Failed**\n\nSorry, unable to complete your risk assessment at this time.\n\n**Error:** {str(e)}\n\n**Next Steps:**\n- Please try again in a few moments\n- Ensure your financial data is properly connected\n- Contact support if the issue persists",
                 "error": str(e),
                 "agent_name": self.name,
                 "analysis_type": "risk_assessment",
-                "timestamp": "2025-01-23T19:33:28+05:30"
+                "timestamp": datetime.now().isoformat()
             }

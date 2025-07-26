@@ -29,13 +29,13 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
     <div className="my-4">
       {/* Real-time Agent Progress Header */}
       <div 
-        className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/80 to-purple-50/80 border border-blue-200/50 rounded-2xl cursor-pointer hover:from-blue-100/80 hover:to-purple-100/80 transition-all duration-300"
+        className="flex items-center justify-between p-4 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl cursor-pointer hover:from-[rgba(0,184,153,0.15)] hover:to-[rgba(0,164,133,0.15)] transition-all duration-300"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              isComplete ? 'bg-green-500' : 'bg-blue-500'
+              isComplete ? 'bg-[rgb(0,184,153)]' : 'bg-[rgb(0,164,133)]'
             } shadow-lg`}>
               {isComplete ? (
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,20 +54,20 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
             )}
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 text-base">
+            <h4 className="font-semibold text-white text-base">
               {isComplete ? '✅ AI Analysis Complete' : '🧠 AI Agents Working...'}
             </h4>
-            <p className="text-xs text-blue-600 font-medium">
+            <p className="text-xs text-[rgb(0,184,153)] font-medium">
               {activeAgents.length} {activeAgents.length === 1 ? 'agent' : 'agents'} {isComplete ? 'completed' : 'analyzing'}
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <div className="text-xs bg-white/60 px-3 py-1 rounded-full font-semibold text-blue-700">
+          <div className="text-xs bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] px-3 py-1 rounded-full font-semibold text-[rgb(0,184,153)]">
             {isComplete ? 'View Analysis' : 'In Progress'}
           </div>
           <svg
-            className={`w-5 h-5 text-gray-500 transform transition-transform duration-300 ${
+            className={`w-5 h-5 text-gray-300 transform transition-transform duration-300 ${
               isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -106,19 +106,19 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
                       </svg>
                     </div>
                     <div>
-                      <h5 className="font-semibold text-gray-900 text-base">{agent.name}</h5>
-                      <p className="text-xs text-green-600 font-semibold flex items-center">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                      <h5 className="font-semibold text-white text-base">{agent.name}</h5>
+                      <p className="text-xs text-[rgb(0,184,153)] font-semibold flex items-center">
+                        <div className="w-1.5 h-1.5 bg-[rgb(0,184,153)] rounded-full mr-2 animate-pulse"></div>
                         Analysis complete
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                    <div className="text-xs bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] text-[rgb(0,184,153)] px-2 py-0.5 rounded-full font-semibold">
                       ✅ Done
                     </div>
                     <svg
-                      className={`w-5 h-5 text-gray-400 transform transition-transform ${
+                      className={`w-5 h-5 text-gray-300 transform transition-transform ${
                         expandedAgent === agent.id ? 'rotate-180' : ''
                       }`}
                       fill="none"
@@ -133,18 +133,18 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
                 {/* Real Agent Analysis Content */}
                 {expandedAgent === agent.id && (
                   <div className="px-4 pb-4">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 shadow-sm">
+                    <div className="bg-[rgba(30,32,34,0.8)] backdrop-blur-sm rounded-2xl p-4 border border-[rgba(0,184,153,0.2)] shadow-sm">
                       <ReactMarkdown
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2 text-gray-900" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-sm font-semibold mb-2 text-gray-800" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1 text-gray-700" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-2 leading-relaxed text-sm text-gray-700" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2 text-white" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-sm font-semibold mb-2 text-gray-200" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1 text-gray-300" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-2 leading-relaxed text-sm text-gray-300" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
                           ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm" {...props} />,
-                          li: ({node, ...props}) => <li className="leading-relaxed text-sm text-gray-700" {...props} />,
-                          code: ({node, ...props}) => <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs" {...props} />
+                          li: ({node, ...props}) => <li className="leading-relaxed text-sm text-gray-300" {...props} />,
+                          code: ({node, ...props}) => <code className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] px-1.5 py-0.5 rounded font-mono text-xs text-[rgb(0,184,153)]" {...props} />
                         }}
                       >
                         {agent.content}
@@ -564,29 +564,29 @@ export default function ChatInterface() {
     <ErrorBoundary>
       <div className="max-w-6xl mx-auto">
         {/* Modern Premium Chat Interface */}
-        <div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl overflow-hidden shadow-2xl">
-          {/* Premium Header with Glass Effect */}
-          <div className="border-b border-gray-200/30 px-6 py-4 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-xl">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl overflow-hidden shadow-2xl">
+          {/* Premium Header with Dark Glass Effect */}
+          <div className="border-b border-[rgba(0,184,153,0.2)] px-6 py-4 bg-gradient-to-r from-[rgba(0,26,30,0.95)] to-[rgba(24,25,27,0.95)] backdrop-blur-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">Artha AI</h2>
-                  <p className="text-sm text-gray-500 font-medium">Financial Intelligence Assistant</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Artha AI</h2>
+                  <p className="text-sm text-gray-300 font-medium">Financial Intelligence Assistant</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="flex bg-gray-100/80 rounded-2xl p-1 backdrop-blur-sm">
+                <div className="flex bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-1 backdrop-blur-sm">
                   <button
                     onClick={() => setAgentMode('quick')}
                     className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
                       agentMode === 'quick' 
-                        ? 'bg-white text-blue-600 shadow-md transform scale-105' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                        ? 'bg-[rgb(0,184,153)] text-white shadow-md transform scale-105' 
+                        : 'text-gray-300 hover:text-white hover:bg-[rgba(0,184,153,0.2)]'
                     }`}
                   >
                     ⚡ Quick
@@ -595,8 +595,8 @@ export default function ChatInterface() {
                     onClick={() => setAgentMode('research')}
                     className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
                       agentMode === 'research' 
-                        ? 'bg-white text-blue-600 shadow-md transform scale-105' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                        ? 'bg-[rgb(0,184,153)] text-white shadow-md transform scale-105' 
+                        : 'text-gray-300 hover:text-white hover:bg-[rgba(0,184,153,0.2)]'
                     }`}
                   >
                     🔬 Research
@@ -607,14 +607,14 @@ export default function ChatInterface() {
           </div>
 
           {/* Premium Message Area with Modern Bubbles */}
-          <div className="h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-white/40 to-gray-50/40 backdrop-blur-sm">
+          <div className="h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-[rgba(0,26,30,0.5)] to-[rgba(24,25,27,0.5)] backdrop-blur-sm">
             {messages.map((message) => (
               <div key={message.id} className="mb-4">
                 <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] group ${
                     message.type === 'user' 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg' 
-                      : 'bg-white/90 text-gray-900 border border-gray-200/50 shadow-md backdrop-blur-sm'
+                      ? 'bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white shadow-lg' 
+                      : 'bg-[rgb(24,25,27)] text-white border border-[rgba(0,184,153,0.2)] shadow-md backdrop-blur-sm'
                   } rounded-3xl px-5 py-3 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}>
                     {message.processing ? (
                       <div className="flex items-center space-x-2">
@@ -635,7 +635,7 @@ export default function ChatInterface() {
                         
                         {/* Main Response Content */}
                         {message.content ? (
-                          <div className={message.type === 'assistant' && message.agentDetails ? 'mt-4 pt-4 border-t border-gray-200/50' : ''}>
+                          <div className={message.type === 'assistant' && message.agentDetails ? 'mt-4 pt-4 border-t border-[rgba(0,184,153,0.2)]' : ''}>
                             <ReactMarkdown 
                               components={{
                                 h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2 text-current" {...props} />,
@@ -646,7 +646,7 @@ export default function ChatInterface() {
                                 ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-0.5 text-sm" {...props} />,
                                 ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-0.5 text-sm" {...props} />,
                                 li: ({node, ...props}) => <li className="leading-relaxed text-sm" {...props} />,
-                                code: ({node, ...props}) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                                code: ({node, ...props}) => <code className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
                               }}
                             >
                               {message.content}
@@ -654,31 +654,31 @@ export default function ChatInterface() {
                           </div>
                         ) : (
                           message.streaming && (!message.agentDetails || Object.keys(message.agentDetails).length === 0) ? (
-                            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200/50">
+                            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] rounded-2xl border border-[rgba(0,184,153,0.2)]">
                               <div className="relative">
-                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                                <div className="w-8 h-8 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center shadow-lg">
                                   <div className="flex space-x-0.5">
                                     <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
                                     <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                                     <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                   </div>
                                 </div>
-                                <div className="absolute -inset-1 bg-blue-400 rounded-full animate-ping opacity-30"></div>
+                                <div className="absolute -inset-1 bg-[rgb(0,184,153)] rounded-full animate-ping opacity-30"></div>
                               </div>
                               <div>
-                                <span className="text-sm font-bold text-gray-900">🧠 Artha AI is initializing...</span>
-                                <p className="text-xs text-blue-600 font-medium">Connecting to financial agents</p>
+                                <span className="text-sm font-bold text-white">🧠 Artha AI is initializing...</span>
+                                <p className="text-xs text-[rgb(0,184,153)] font-medium">Connecting to financial agents</p>
                               </div>
                             </div>
                           ) : ''
                         )}
-                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-200/30">
-                          <div className="text-xs text-gray-500 font-medium">
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-[rgba(0,184,153,0.1)]">
+                          <div className="text-xs text-gray-400 font-medium">
                             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                           {message.mode && (
                             <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                              message.mode === 'quick' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+                              message.mode === 'quick' ? 'bg-[rgba(245,158,11,0.1)] text-yellow-400 border border-[rgba(245,158,11,0.2)]' : 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]'
                             }`}>
                               <span>{message.mode === 'quick' ? '⚡' : '🔬'}</span>
                               <span>{message.mode === 'quick' ? 'Quick' : 'Research'}</span>
@@ -694,8 +694,8 @@ export default function ChatInterface() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Premium Input Area with Glass Effect */}
-          <div className="border-t border-gray-200/30 px-6 py-5 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-xl">
+          {/* Premium Input Area with Dark Glass Effect */}
+          <div className="border-t border-[rgba(0,184,153,0.2)] px-6 py-5 bg-gradient-to-r from-[rgba(0,26,30,0.95)] to-[rgba(24,25,27,0.95)] backdrop-blur-xl">
             <div className="flex items-end space-x-4">
               <div className="flex-1 relative">
                 <input
@@ -704,12 +704,12 @@ export default function ChatInterface() {
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about your portfolio, investments, or financial goals..."
-                  className="w-full px-6 py-4 bg-white/80 border border-gray-200/50 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md"
+                  className="w-full px-6 py-4 bg-[rgba(30,32,34,0.8)] border border-[rgba(0,184,153,0.2)] rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md"
                   disabled={isLoading}
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[rgba(0,184,153,0.1)] to-[rgba(0,184,153,0.2)] border border-[rgba(0,184,153,0.2)] rounded-xl flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
                   </div>
@@ -720,8 +720,8 @@ export default function ChatInterface() {
                 disabled={!currentMessage.trim() || isLoading}
                 className={`p-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform ${
                   !currentMessage.trim() || isLoading
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 active:scale-95'
+                    ? 'bg-[rgba(156,163,175,0.2)] text-gray-500 cursor-not-allowed border border-[rgba(156,163,175,0.2)]'
+                    : 'bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] hover:scale-105 active:scale-95'
                 }`}
               >
                 {isLoading ? (
@@ -740,7 +740,7 @@ export default function ChatInterface() {
                 <button
                   key={index}
                   onClick={() => handleExampleQuery(query.text)}
-                  className="group flex items-center space-x-2 px-4 py-2 bg-white/60 border border-gray-200/50 text-gray-700 rounded-2xl hover:bg-white/80 hover:border-blue-300/50 hover:text-blue-700 transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-md"
+                  className="group flex items-center space-x-2 px-4 py-2 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] text-gray-300 rounded-2xl hover:bg-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.4)] hover:text-white transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-md"
                 >
                   <span className="text-sm">{query.icon}</span>
                   <span className="text-sm font-medium">{query.text}</span>
@@ -752,11 +752,11 @@ export default function ChatInterface() {
         
         {/* Modern Quick Start Tips */}
         <div className="mt-6 text-center">
-          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 rounded-2xl">
-            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl">
+            <svg className="w-4 h-4 text-[rgb(0,184,153)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-blue-700 font-medium">
+            <p className="text-sm text-[rgb(0,184,153)] font-medium">
               Powered by advanced AI agents with real-time market data & portfolio analysis
             </p>
           </div>

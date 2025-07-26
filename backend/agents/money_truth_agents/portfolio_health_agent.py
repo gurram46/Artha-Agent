@@ -5,6 +5,7 @@ Portfolio Health Agent - Comprehensive investment health diagnosis
 import json
 from typing import Dict, Any
 import logging
+from datetime import datetime
 from .base_money_agent import BaseMoneyAgent
 
 logger = logging.getLogger(__name__)
@@ -48,130 +49,68 @@ class PortfolioHealthAgent(BaseMoneyAgent):
                         worst_performance = performance
                         worst_fund = fund
             
-            system_prompt = f"""
-            You are the PORTFOLIO HEALTH DOCTOR - a medical expert for investments who diagnoses financial health.
+            system_prompt = """
+            You are a Portfolio Health Doctor 🏥 - diagnose financial health in simple, clear language.
             
-            Your mission: Provide a comprehensive health diagnosis of the investment portfolio.
+            WRITING STYLE:
+            - Use Indian Rupees (₹) NEVER dollars ($)
+            - Be direct and actionable
+            - Use medical emojis: 🏥 💊 🩺 ⚡ 🚨
+            - Include specific numbers and percentages
+            - Give clear treatment steps
             
-            Analysis Framework:
-            1. Overall Health Score (0-100)
-            2. Critical Issues requiring immediate attention
-            3. Healthy aspects to maintain
-            4. Treatment recommendations for sick investments
-            5. Preventive measures for portfolio protection
-            
-            DIAGNOSTIC STYLE:
-            - Use medical terminology: "diagnosis", "symptoms", "treatment"
-            - Use 🏥, 💊, 🩺 emojis
-            - Be specific with numbers and percentages
-            - Provide clear action items
-            - Rate urgency levels
+            FORMAT: Write in markdown with clear sections and bullet points.
             """
             
             prompt = f"""
-            PORTFOLIO HEALTH EXAMINATION
-            Total Investment: ₹{total_invested:,.2f}
-            Current Value: ₹{total_current:,.2f}
-            Overall Gain/Loss: ₹{total_gain_loss:,.2f}
+            ## 🏥 PORTFOLIO HEALTH CHECKUP
             
-            Best Performer: {best_fund.get('name', 'N/A') if best_fund else 'N/A'} ({best_performance:.1f}%)
-            Worst Performer: {worst_fund.get('name', 'N/A') if worst_fund else 'N/A'} ({worst_performance:.1f}%)
+            **Financial Vitals:**
+            - Total Investment: ₹{total_invested:,.0f}
+            - Current Value: ₹{total_current:,.0f}
+            - Gain/Loss: ₹{total_gain_loss:,.0f}
+            - Performance: {((total_gain_loss/total_invested*100) if total_invested > 0 else 0):.1f}%
             
+            **Fund Performance:**
+            - Best Fund: {best_fund.get('name', 'No funds') if best_fund else 'No funds'} ({best_performance:.1f}%)
+            - Worst Fund: {worst_fund.get('name', 'No funds') if worst_fund else 'No funds'} ({worst_performance:.1f}%)
+            - Total Funds: {len(mutual_funds)}
+            
+            **Patient Data:**
             {financial_data}
             
-            Diagnose this portfolio's health. What's sick? What's healthy? What needs immediate treatment?
+            Provide a clear portfolio health diagnosis with:
+            1. **Health Score** (X/100)
+            2. **Main Issues** (what's wrong)
+            3. **Treatment Plan** (what to do)
+            4. **Prognosis** (expected outcome)
             
-            Format as JSON:
-            {{
-                "health_score": 75,
-                "overall_diagnosis": "Brief medical-style diagnosis",
-                "critical_issues": [
-                    {{
-                        "problem": "Specific issue detected",
-                        "severity": "High/Medium/Low",
-                        "financial_impact": "₹X loss or risk",
-                        "treatment": "Specific action needed"
-                    }}
-                ],
-                "healthy_aspects": [
-                    "What's working well in the portfolio"
-                ],
-                "prescription": [
-                    "Immediate action item 1",
-                    "Immediate action item 2"
-                ],
-                "risk_level": "High/Medium/Low",
-                "prognosis": "Expected outcome if treated",
-                "confidence_level": 0.85
-            }}
+            Keep it simple, actionable, and use ₹ for all amounts.
             """
             
             ai_response = await self.call_ai(prompt, system_prompt)
             
-            # Try to parse JSON response
-            try:
-                result = json.loads(ai_response)
-                
-                # Add analysis metadata
-                result.update({
-                    "agent_name": self.name,
-                    "analysis_type": "portfolio_health",
-                    "timestamp": "2025-01-23T19:33:28+05:30",
-                    "portfolio_metrics": {
-                        "total_invested": total_invested,
-                        "current_value": total_current,
-                        "total_gain_loss": total_gain_loss,
-                        "return_percentage": f"{(total_gain_loss/total_invested*100):.1f}%" if total_invested > 0 else "0%",
-                        "funds_analyzed": len(mutual_funds)
-                    }
-                })
-                
-                return result
-                
-            except json.JSONDecodeError:
-                # Fallback if JSON parsing fails
-                logger.warning("Failed to parse JSON from Portfolio Health AI response")
-                
-                # Generate basic health score based on performance
-                health_score = max(0, min(100, 50 + (total_gain_loss / total_invested * 100) if total_invested > 0 else 50))
-                
-                return {
-                    "health_score": int(health_score),
-                    "overall_diagnosis": "Portfolio analysis completed",
-                    "critical_issues": [{
-                        "problem": "Detailed analysis in progress",
-                        "severity": "Medium",
-                        "financial_impact": f"₹{abs(total_gain_loss):,.2f}",
-                        "treatment": "Review full AI analysis"
-                    }],
-                    "healthy_aspects": ["Investment discipline maintained"],
-                    "prescription": [ai_response[:200] + "..." if len(ai_response) > 200 else ai_response],
-                    "risk_level": "Medium",
-                    "prognosis": "Positive with proper management",
-                    "confidence_level": 0.75,
-                    "agent_name": self.name,
-                    "analysis_type": "portfolio_health",
-                    "timestamp": "2025-01-23T19:33:28+05:30"
+            # Return simple response with analysis content
+            return {
+                "analysis": ai_response,
+                "agent_name": self.name,
+                "analysis_type": "portfolio_health",
+                "timestamp": datetime.now().isoformat(),
+                "portfolio_metrics": {
+                    "total_invested": total_invested,
+                    "current_value": total_current,
+                    "total_gain_loss": total_gain_loss,
+                    "return_percentage": f"{(total_gain_loss/total_invested*100):.1f}%" if total_invested > 0 else "0%",
+                    "funds_analyzed": len(mutual_funds)
                 }
+            }
                 
         except Exception as e:
             logger.error(f"Portfolio Health analysis failed: {e}")
             return {
-                "health_score": 0,
-                "overall_diagnosis": f"Analysis failed: {str(e)}",
-                "critical_issues": [{
-                    "problem": "Unable to complete health check",
-                    "severity": "High",
-                    "financial_impact": "Unknown",
-                    "treatment": "Please try again later"
-                }],
-                "healthy_aspects": [],
-                "prescription": ["Retry analysis when system is available"],
-                "risk_level": "Unknown",
-                "prognosis": "Analysis needed",
-                "confidence_level": 0.0,
+                "analysis": f"🏥 **Portfolio Health Analysis Failed**\n\nSorry, unable to complete your portfolio health checkup at this time.\n\n**Error:** {str(e)}\n\n**Next Steps:**\n- Please try again in a few moments\n- Ensure your financial data is properly connected\n- Contact support if the issue persists",
                 "error": str(e),
                 "agent_name": self.name,
                 "analysis_type": "portfolio_health",
-                "timestamp": "2025-01-23T19:33:28+05:30"
+                "timestamp": datetime.now().isoformat()
             }

@@ -140,10 +140,10 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
   const currentRisk = getCurrentRiskOption();
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-[rgb(24,25,27)] rounded-2xl border border-[rgba(0,184,153,0.2)] shadow-xl overflow-hidden">
       {/* Header */}
       <div 
-        className="px-6 py-4 border-b border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"
+        className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)] cursor-pointer hover:bg-[rgba(0,184,153,0.05)] transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
               <span className="text-2xl">{currentRisk?.icon}</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Investment Profile</h3>
+              <h3 className="text-lg font-semibold text-white">Investment Profile</h3>
               <p className="text-sm text-slate-600">
                 {currentRisk?.label} • {horizonOptions.find(h => h.id === profile.investmentHorizon)?.duration} • 
                 {goalOptions.find(g => g.id === profile.investmentGoal)?.label}
@@ -198,7 +198,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
             <div className="p-6 space-y-8">
               {/* Risk Tolerance */}
               <div>
-                <h4 className="text-lg font-semibold text-slate-900 mb-4">Risk Tolerance</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Risk Tolerance</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {riskOptions.map((option) => (
                     <motion.div
@@ -216,7 +216,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                     >
                       <div className="text-center">
                         <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.riskTolerance === option.id ? option.textColor : 'text-slate-900'}`}>
+                        <h5 className={`font-semibold mb-1 ${profile.riskTolerance === option.id ? option.textColor : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-sm text-slate-600">{option.description}</p>
@@ -238,7 +238,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
 
               {/* Investment Horizon */}
               <div>
-                <h4 className="text-lg font-semibold text-slate-900 mb-4">Investment Horizon</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Investment Horizon</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {horizonOptions.map((option) => (
                     <motion.div
@@ -256,7 +256,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                     >
                       <div className="text-center">
                         <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.investmentHorizon === option.id ? 'text-blue-700' : 'text-slate-900'}`}>
+                        <h5 className={`font-semibold mb-1 ${profile.investmentHorizon === option.id ? 'text-blue-400' : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-sm text-slate-600">{option.duration}</p>
@@ -278,7 +278,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
 
               {/* Investment Goal */}
               <div>
-                <h4 className="text-lg font-semibold text-slate-900 mb-4">Investment Goal</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Investment Goal</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {goalOptions.map((option) => (
                     <motion.div
@@ -296,7 +296,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                     >
                       <div className="text-center">
                         <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.investmentGoal === option.id ? 'text-blue-700' : 'text-slate-900'}`}>
+                        <h5 className={`font-semibold mb-1 ${profile.investmentGoal === option.id ? 'text-blue-400' : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-sm text-slate-600">{option.description}</p>
@@ -318,7 +318,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
 
               {/* Monthly Investment */}
               <div>
-                <h4 className="text-lg font-semibold text-slate-900 mb-4">Monthly Investment Budget</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Monthly Investment Budget</h4>
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <span className="text-sm font-medium text-slate-700 min-w-0">₹1,000</span>
@@ -330,7 +330,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                         step="1000"
                         value={profile.monthlyInvestment}
                         onChange={(e) => updateProfile({ monthlyInvestment: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                        className="w-full h-2 bg-[rgba(0,184,153,0.2)] rounded-lg appearance-none cursor-pointer slider"
                       />
                     </div>
                     <span className="text-sm font-medium text-slate-700 min-w-0">₹1,00,000</span>
@@ -355,7 +355,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                     px-6 py-3 rounded-lg font-medium transition-all duration-200
                     ${hasChanges 
                       ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg' 
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-[rgba(70,68,68,0.3)] text-gray-500 cursor-not-allowed'
                     }
                   `}
                 >

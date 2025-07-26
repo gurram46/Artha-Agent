@@ -165,45 +165,45 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
     <div className="space-y-6">
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-600 font-medium">Total Portfolio Value</p>
+              <p className="text-sm text-gray-300 font-medium">Total Portfolio Value</p>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">₹{(overviewData.totalCurrent / 100000).toFixed(1)}L</p>
+            <p className="text-2xl font-semibold text-white">₹{(overviewData.totalCurrent / 100000).toFixed(1)}L</p>
             <div className="mt-2 flex items-center">
               <span className={`text-sm font-medium ${overviewData.totalReturns >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {overviewData.totalReturns >= 0 ? '+' : ''}₹{Math.abs(overviewData.totalReturns / 1000).toFixed(0)}K
               </span>
-              <span className="text-gray-500 text-sm ml-2">
+              <span className="text-gray-400 text-sm ml-2">
                 ({overviewData.totalReturns >= 0 ? '+' : ''}{((overviewData.totalReturns / overviewData.totalInvested) * 100).toFixed(1)}%)
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-600 font-medium">Average XIRR</p>
+              <p className="text-sm text-gray-300 font-medium">Average XIRR</p>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">{overviewData.avgXIRR.toFixed(1)}%</p>
+            <p className="text-2xl font-semibold text-white">{overviewData.avgXIRR.toFixed(1)}%</p>
             <div className="mt-2">
-              <span className="text-sm text-gray-500">Across {overviewData.fundCount} funds</span>
+              <span className="text-sm text-gray-400">Across {overviewData.fundCount} funds</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-600 font-medium">Credit Score</p>
+              <p className="text-sm text-gray-300 font-medium">Credit Score</p>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -221,11 +221,11 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
       </div>
 
       {/* Asset Allocation */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="border-b border-gray-200">
+      <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
+        <CardHeader className="border-b border-[rgba(0,184,153,0.2)]">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-900">Asset Allocation</CardTitle>
-            <span className="text-sm text-gray-500">Total: ₹{(overviewData.totalAssets / 100000).toFixed(1)}L</span>
+            <CardTitle className="text-lg font-semibold text-white">Asset Allocation</CardTitle>
+            <span className="text-sm text-gray-300">Total: ₹{(overviewData.totalAssets / 100000).toFixed(1)}L</span>
           </div>
         </CardHeader>
         <CardContent className="p-6">
@@ -240,14 +240,14 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
                       asset.type.includes('SECURITIES') ? 'bg-purple-600' :
                       'bg-orange-600'
                     }`}></div>
-                    <span className="text-sm font-medium text-gray-700">{asset.type}</span>
+                    <span className="text-sm font-medium text-gray-300">{asset.type}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-semibold text-gray-900">{asset.formatted}</span>
-                    <span className="text-xs text-gray-500 ml-2">{asset.percentage.toFixed(1)}%</span>
+                    <span className="text-sm font-semibold text-white">{asset.formatted}</span>
+                    <span className="text-xs text-gray-400 ml-2">{asset.percentage.toFixed(1)}%</span>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-[rgba(0,184,153,0.1)] rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-500 ${
                       asset.type.includes('MUTUAL FUND') ? 'bg-blue-600' :
@@ -266,35 +266,35 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Performing Funds */}
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardHeader className="border-b border-gray-200">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
+          <CardHeader className="border-b border-[rgba(0,184,153,0.2)]">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900">Top Performers</CardTitle>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+              <CardTitle className="text-lg font-semibold text-white">Top Performers</CardTitle>
+              <span className="text-xs bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] px-2 py-1 rounded-full font-medium border border-[rgba(0,184,153,0.2)]">
                 By XIRR
               </span>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-[rgba(0,184,153,0.1)]">
               {overviewData.topPerformers.map((fund, index) => (
-                <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                <div key={index} className="p-4 hover:bg-[rgba(0,184,153,0.05)] transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 pr-4">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                      <p className="text-sm font-medium text-white line-clamp-1">
                         {fund.schemeDetail?.nameData?.longName}
                       </p>
                       <div className="flex items-center space-x-3 mt-2">
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        <span className="text-xs bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] px-2 py-1 rounded border border-[rgba(0,184,153,0.2)]">
                           {fund.schemeDetail?.assetClass}
                         </span>
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        <span className="text-xs bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] px-2 py-1 rounded border border-[rgba(0,184,153,0.2)]">
                           {fund.schemeDetail?.fundhouseDefinedRiskLevel?.replace(/_/g, ' ')}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-white">
                         ₹{(fund.enrichedAnalytics.analytics.schemeDetails.currentValue.units / 100000).toFixed(1)}L
                       </p>
                       <p className="text-sm font-medium text-green-600 mt-1">
@@ -309,10 +309,10 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         </Card>
 
         {/* Credit Summary */}
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardHeader className="border-b border-gray-200">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
+          <CardHeader className="border-b border-[rgba(0,184,153,0.2)]">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900">Credit Overview</CardTitle>
+              <CardTitle className="text-lg font-semibold text-white">Credit Overview</CardTitle>
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                 parseInt(overviewData.creditScore || '0') >= 750 ? 'bg-green-100 text-green-700' :
                 parseInt(overviewData.creditScore || '0') >= 650 ? 'bg-yellow-100 text-yellow-700' :
@@ -326,21 +326,21 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Total Outstanding</span>
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className="text-sm text-gray-300">Total Outstanding</span>
+                  <span className="text-sm font-semibold text-white">
                     ₹{parseInt(overviewData.totalOutstanding?.outstandingBalanceAll || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500">Secured</p>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="bg-[rgba(0,184,153,0.05)] rounded-lg p-3 border border-[rgba(0,184,153,0.1)]">
+                    <p className="text-xs text-gray-400">Secured</p>
+                    <p className="text-sm font-medium text-white">
                       ₹{parseInt(overviewData.totalOutstanding?.outstandingBalanceSecured || 0).toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500">Unsecured</p>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="bg-[rgba(0,184,153,0.05)] rounded-lg p-3 border border-[rgba(0,184,153,0.1)]">
+                    <p className="text-xs text-gray-400">Unsecured</p>
+                    <p className="text-sm font-medium text-white">
                       ₹{parseInt(overviewData.totalOutstanding?.outstandingBalanceUnSecured || 0).toLocaleString()}
                     </p>
                   </div>
@@ -348,13 +348,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
               </div>
 
               {overviewData.epfBalance && (
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-[rgba(0,184,153,0.2)]">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-600">EPF Balance</p>
-                      <p className="text-xs text-gray-500 mt-1">Retirement Fund</p>
+                      <p className="text-sm text-gray-300">EPF Balance</p>
+                      <p className="text-xs text-gray-400 mt-1">Retirement Fund</p>
                     </div>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-lg font-semibold text-white">
                       ₹{parseInt(overviewData.epfBalance).toLocaleString()}
                     </p>
                   </div>
@@ -367,13 +367,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
 
       {/* Underperforming Funds Alert */}
       {overviewData.underPerformers.length > 0 && (
-        <Card className="bg-red-50 border border-red-200">
-          <CardHeader className="border-b border-red-200">
+        <Card className="bg-[rgb(24,25,27)] border border-[rgba(220,53,69,0.3)] shadow-xl">
+          <CardHeader className="border-b border-[rgba(220,53,69,0.3)]">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-red-900">
+              <CardTitle className="text-lg font-semibold text-red-400">
                 Funds Needing Attention
               </CardTitle>
-              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-[rgba(220,53,69,0.1)] text-red-400 px-2 py-1 rounded-full font-medium border border-[rgba(220,53,69,0.2)]">
                 {overviewData.underPerformers.length} funds with negative returns
               </span>
             </div>
@@ -381,20 +381,20 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
           <CardContent className="p-6">
             <div className="space-y-3">
               {overviewData.underPerformers.slice(0, 3).map((fund, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-100">
+                <div key={index} className="flex items-center justify-between p-3 bg-[rgba(220,53,69,0.05)] rounded-lg border border-[rgba(220,53,69,0.2)]">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                    <p className="text-sm font-medium text-white line-clamp-1">
                       {fund.schemeDetail?.nameData?.longName}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       {fund.schemeDetail?.assetClass} • Current: ₹{(fund.enrichedAnalytics.analytics.schemeDetails.currentValue.units / 1000).toFixed(0)}K
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-red-600">
+                    <p className="text-sm font-medium text-red-400">
                       {fund.enrichedAnalytics.analytics.schemeDetails.XIRR.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-500">XIRR</p>
+                    <p className="text-xs text-gray-400">XIRR</p>
                   </div>
                 </div>
               ))}
