@@ -21,11 +21,16 @@ class TripPlanningAgent(BaseMoneyAgent):
     
     def _create_welcome_message(self, available_for_travel: float, recommended_budget: float) -> str:
         """Create welcome message without f-string backslashes"""
-        status_msg = "✅ Ready to travel!"
-        if available_for_travel <= 20000:
-            status_msg = "🚨 Let's build savings first"
-        elif available_for_travel <= 50000:
-            status_msg = "⚠️ Budget trip recommended"
+        if available_for_travel <= 0:
+            status_msg = "🚨 Focus on savings first - very limited travel budget"
+        elif available_for_travel <= 1000:
+            status_msg = "⚠️ Limited budget - consider local day trips"
+        elif available_for_travel <= 5000:
+            status_msg = "💡 Budget travel options - local weekend getaways recommended"
+        elif available_for_travel <= 15000:
+            status_msg = "🎯 Moderate budget - good for short trips and budget vacations"
+        else:
+            status_msg = "✅ Ready for travel adventures!"
         
         return f"""🧳 **Welcome to Smart Trip Planner!**
 
@@ -59,15 +64,32 @@ I'll create a personalized itinerary that fits your budget perfectly! ✈️"""
             total_investments = sum(fund.get('current_value', 0) for fund in mutual_funds)
             total_debt = sum(loan.get('outstanding_amount', 0) for loan in loans)
             
-            # Travel budget calculation (conservative approach)
-            emergency_fund_reserve = liquid_funds * 0.3  # Keep 30% as emergency
-            available_for_travel = liquid_funds - emergency_fund_reserve
+            # Debug logging
+            logger.info(f"🔍 Trip Planning Agent - Liquid funds calculated: ₹{liquid_funds}")
+            logger.info(f"🔍 Trip Planning Agent - Accounts data: {accounts}")
+            logger.info(f"🔍 Trip Planning Agent - MCP accounts count: {len(accounts)}")
             
-            # Safe travel budget (5-10% of liquid funds or max ₹2L)
-            recommended_budget = min(
-                max(available_for_travel * 0.1, 25000),  # Minimum ₹25K
-                200000  # Maximum ₹2L for safety
-            )
+            # Realistic travel budget calculation based on actual liquid funds
+            # Keep some emergency reserve but be practical about it
+            if liquid_funds <= 1000:
+                emergency_reserve = liquid_funds * 0.9  # Keep 90% for emergency if very low
+                available_for_travel = liquid_funds * 0.1
+                recommended_budget = 0
+            elif liquid_funds <= 5000:
+                emergency_reserve = 1000  # Keep ₹1K emergency if funds are low
+                available_for_travel = liquid_funds - emergency_reserve
+                recommended_budget = max(0, available_for_travel * 0.3)  # 30% of available for budget trips
+            elif liquid_funds <= 15000:
+                emergency_reserve = 2000  # Keep ₹2K emergency for moderate funds
+                available_for_travel = liquid_funds - emergency_reserve
+                recommended_budget = max(0, available_for_travel * 0.5)  # 50% of available
+            else:
+                emergency_reserve = 5000  # Keep ₹5K emergency for higher funds
+                available_for_travel = liquid_funds - emergency_reserve
+                recommended_budget = min(
+                    max(available_for_travel * 0.7, 5000),  # 70% of available or min ₹5K
+                    50000  # Maximum ₹50K for conservative planning
+                )
             
             # Financial health indicators
             debt_to_asset_ratio = total_debt / (net_worth + 1) if net_worth > 0 else 1
@@ -84,10 +106,10 @@ I'll create a personalized itinerary that fits your budget perfectly! ✈️"""
                     "liquid_funds": liquid_funds,
                     "available_for_travel": available_for_travel,
                     "recommended_budget": recommended_budget,
-                    "emergency_reserve": emergency_fund_reserve,
+                    "emergency_reserve": emergency_reserve,
                     "debt_ratio": debt_to_asset_ratio,
                     "liquidity_ratio": liquidity_ratio,
-                    "financial_readiness": "ready" if available_for_travel > 50000 else "moderate" if available_for_travel > 20000 else "build_savings",
+                    "financial_readiness": "ready" if available_for_travel > 15000 else "moderate" if available_for_travel > 1000 else "limited",
                     "formatted_data": financial_data
                 },
                 "welcome_message": self._create_welcome_message(available_for_travel, recommended_budget)
@@ -101,7 +123,7 @@ I'll create a personalized itinerary that fits your budget perfectly! ✈️"""
                 "agent_name": self.name,
                 "analysis_type": "trip_planning_chat",
                 "timestamp": datetime.now().isoformat(),
-                "welcome_message": f"🧳 **Trip Planning Assistant**\n\nSorry, I'm having trouble accessing your financial data right now.\n\n**Error:** {str(e)}\n\nBut I can still help you plan a trip! Tell me where you would like to go and your rough budget, and I will create an amazing itinerary for you! ✈️"
+                "welcome_message": f"🧳 **Trip Planning Assistant**\n\nI'm having trouble accessing your financial data right now.\n\n**Error:** {str(e)}\n\nPlease ensure you're authenticated with Fi Money to get personalized budget recommendations. Without your financial data, I cannot provide accurate travel budget advice."
             }
     
     async def chat_response(self, user_message: str, financial_context: Dict[str, Any], conversation_history: list = None) -> str:

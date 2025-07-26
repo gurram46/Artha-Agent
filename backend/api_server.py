@@ -1369,16 +1369,67 @@ async def get_trip_planning():
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get user's financial data
+        # Always use real Fi Money MCP data - NO DEMO DATA
         financial_data = await get_user_financial_data()
+        logger.info("✅ Using real Fi Money MCP data for trip planning")
         
-        # Convert to MCP data format
+        # Extract REAL liquid funds using SAME logic as frontend mcpDataService
+        accounts = []
+        total_liquid = 0
+        asset_breakdown = {}
+        
+        # Use net_worth structure like frontend does
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth_data = financial_data.net_worth.get('netWorthResponse', {})
+            asset_values = net_worth_data.get('assetValues', [])
+            
+            # Build asset breakdown like frontend does
+            for asset in asset_values:
+                value = float(asset.get('currentValue', {}).get('units', 0))
+                net_worth_attribute = asset.get('netWorthAttribute', '')
+                
+                # Map asset types like frontend does
+                asset_type_map = {
+                    'ASSET_TYPE_MUTUAL_FUNDS': 'Mutual Funds',
+                    'ASSET_TYPE_SAVINGS_ACCOUNTS': 'Savings Accounts',
+                    'ASSET_TYPE_FIXED_DEPOSIT': 'Fixed Deposits',
+                    'ASSET_TYPE_EPF': 'EPF',
+                    'ASSET_TYPE_SECURITIES': 'Securities'
+                }
+                
+                display_name = asset_type_map.get(net_worth_attribute, net_worth_attribute)
+                asset_breakdown[display_name] = asset_breakdown.get(display_name, 0) + value
+            
+            # Extract liquid funds exactly like frontend does
+            savings_accounts = asset_breakdown.get('Savings Accounts', 0)
+            fixed_deposits = asset_breakdown.get('Fixed Deposits', 0)
+            total_liquid = savings_accounts + fixed_deposits
+            
+            # Create accounts structure for trip planner
+            if savings_accounts > 0:
+                accounts.append({
+                    'balance': savings_accounts,
+                    'type': 'SAVINGS_ACCOUNTS',
+                    'name': 'Savings Accounts'
+                })
+            
+            if fixed_deposits > 0:
+                accounts.append({
+                    'balance': fixed_deposits,
+                    'type': 'FIXED_DEPOSITS',
+                    'name': 'Fixed Deposits'
+                })
+        
+        # Create MCP data with REAL values only - NO FALLBACKS
         mcp_data = {
-            "accounts": financial_data.account_details if hasattr(financial_data, 'account_details') else [],
+            "accounts": accounts,
             "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
             "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
-            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
+            "mutual_funds": [],
+            "loans": []
         }
+        
+        logger.info(f"✅ Final calculated liquid funds: ₹{total_liquid}")
         
         # Use Money Truth Engine's trip planning agent
         trip_planning = await money_truth_engine.plan_smart_trip(mcp_data)
@@ -1399,16 +1450,82 @@ async def trip_planning_chat(request: TripChatRequest):
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get user's financial data
+        # Always use real Fi Money MCP data - NO DEMO DATA
         financial_data = await get_user_financial_data()
+        logger.info("✅ Using real Fi Money MCP data for trip planning")
         
-        # Convert to MCP data format
+        # Debug log the financial data structure
+        logger.info(f"🔍 Financial data type: {type(financial_data)}")
+        logger.info(f"🔍 Has net_worth: {hasattr(financial_data, 'net_worth')}")
+        logger.info(f"🔍 Has raw_data: {hasattr(financial_data, 'raw_data')}")
+        
+        # Extract REAL liquid funds using SAME logic as frontend mcpDataService
+        accounts = []
+        total_liquid = 0
+        asset_breakdown = {}
+        
+        # Use net_worth structure like frontend does
+        if hasattr(financial_data, 'net_worth') and financial_data.net_worth:
+            net_worth_data = financial_data.net_worth.get('netWorthResponse', {})
+            asset_values = net_worth_data.get('assetValues', [])
+            
+            logger.info(f"🔍 Processing {len(asset_values)} assets from net worth data")
+            
+            # Build asset breakdown like frontend does
+            for asset in asset_values:
+                value = float(asset.get('currentValue', {}).get('units', 0))
+                net_worth_attribute = asset.get('netWorthAttribute', '')
+                
+                # Map asset types like frontend does
+                asset_type_map = {
+                    'ASSET_TYPE_MUTUAL_FUNDS': 'Mutual Funds',
+                    'ASSET_TYPE_SAVINGS_ACCOUNTS': 'Savings Accounts',
+                    'ASSET_TYPE_FIXED_DEPOSIT': 'Fixed Deposits',
+                    'ASSET_TYPE_EPF': 'EPF',
+                    'ASSET_TYPE_SECURITIES': 'Securities'
+                }
+                
+                display_name = asset_type_map.get(net_worth_attribute, net_worth_attribute)
+                asset_breakdown[display_name] = asset_breakdown.get(display_name, 0) + value
+                
+                logger.info(f"🔍 Asset: {display_name} = ₹{value} (net_worth_attribute: {net_worth_attribute})")
+            
+            # Extract liquid funds exactly like frontend does
+            savings_accounts = asset_breakdown.get('Savings Accounts', 0)
+            fixed_deposits = asset_breakdown.get('Fixed Deposits', 0)
+            total_liquid = savings_accounts + fixed_deposits
+            
+            logger.info(f"🔍 Savings Accounts: ₹{savings_accounts}")
+            logger.info(f"🔍 Fixed Deposits: ₹{fixed_deposits}")
+            logger.info(f"🔍 Total Liquid Funds: ₹{total_liquid}")
+            
+            # Create accounts structure for trip planner
+            if savings_accounts > 0:
+                accounts.append({
+                    'balance': savings_accounts,
+                    'type': 'SAVINGS_ACCOUNTS',
+                    'name': 'Savings Accounts'
+                })
+            
+            if fixed_deposits > 0:
+                accounts.append({
+                    'balance': fixed_deposits,
+                    'type': 'FIXED_DEPOSITS',
+                    'name': 'Fixed Deposits'
+                })
+        
+        # Create MCP data with REAL values only
         mcp_data = {
-            "accounts": financial_data.account_details if hasattr(financial_data, 'account_details') else [],
+            "accounts": accounts,
             "credit_report": financial_data.credit_report if hasattr(financial_data, 'credit_report') else {},
             "epf_details": financial_data.epf_details if hasattr(financial_data, 'epf_details') else {},
-            "mutual_funds": financial_data.net_worth.get('netWorthResponse', {}).get('assetValues', []) if hasattr(financial_data, 'net_worth') else []
+            "mutual_funds": [],
+            "loans": []
         }
+        
+        logger.info(f"✅ Final calculated liquid funds: ₹{total_liquid}")
+        logger.info(f"✅ Total accounts found: {len(accounts)}")
+        logger.info(f"✅ Asset breakdown: {asset_breakdown}")
         
         # If this is the first message, initialize the chatbot
         if request.query.lower() in ['start', 'begin', 'hello', 'hi'] or not request.conversation_history:
