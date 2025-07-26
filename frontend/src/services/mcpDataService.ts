@@ -77,10 +77,18 @@ class MCPDataService {
   private cachedData: BackendFinancialData | null = null;
   private lastFetch: number = 0;
   private cacheDuration: number = 30000; // 30 seconds cache
+  private isDemoMode: boolean = false;
 
   private constructor() {
     // Default to localhost backend, can be configured via environment
     this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8003';
+  }
+
+  setDemoMode(enabled: boolean): void {
+    this.isDemoMode = enabled;
+    // Clear cache when switching modes
+    this.cachedData = null;
+    this.lastFetch = 0;
   }
 
   static getInstance(): MCPDataService {
@@ -101,7 +109,9 @@ class MCPDataService {
     authRequired?: boolean;
   }> {
     try {
-      console.log('🔄 Fetching real-time financial data from Fi Money MCP...');
+      console.log(this.isDemoMode 
+        ? '🎭 Fetching demo financial data...'
+        : '🔄 Fetching real-time financial data from Fi Money MCP...');
 
       // Check cache first
       const now = Date.now();
@@ -113,8 +123,12 @@ class MCPDataService {
         };
       }
 
-      // Fetch from Fi Money MCP via backend (NO FALLBACKS)
-      const response = await fetch(`${this.backendUrl}/financial-data`, {
+      // Fetch from Fi Money MCP via backend (with demo mode support)
+      const url = this.isDemoMode 
+        ? `${this.backendUrl}/financial-data?demo=true`
+        : `${this.backendUrl}/financial-data`;
+        
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -146,8 +160,10 @@ class MCPDataService {
       this.cachedData = backendData;
       this.lastFetch = now;
 
-      console.log('✅ Successfully fetched real-time data from Fi Money MCP');
-      console.log(`📊 Data source: ${backendData.summary?.data_source || 'Fi Money MCP'}`);
+      console.log(this.isDemoMode 
+        ? '✅ Successfully loaded demo data'
+        : '✅ Successfully fetched real-time data from Fi Money MCP');
+      console.log(`📊 Data source: ${this.isDemoMode ? 'Demo Data' : backendData.summary?.data_source || 'Fi Money MCP'}`);
 
       return {
         success: true,

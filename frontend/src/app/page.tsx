@@ -8,6 +8,7 @@ import MoneyTruthEngine from '@/components/MoneyTruthEngine';
 import HydrationProvider from '@/components/HydrationProvider';
 import EnhancedFinancialStats from '@/components/EnhancedFinancialStats';
 import EnhancedAnalytics from '@/components/EnhancedAnalytics';
+import LocalLLMInsights from '@/components/LocalLLMInsights';
 import UnifiedCard from '@/components/ui/UnifiedCard';
 import UnifiedButton from '@/components/ui/UnifiedButton';
 import FiMoneyWebAuth from '@/components/FiMoneyWebAuth';
@@ -173,7 +174,8 @@ export default function Home() {
     { id: 'portfolio', label: 'Portfolio', icon: 'M4 7v10c0 2.21 3.79 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.79 4 8 4s8-1.79 8-4M4 7c0-2.21 3.79-4 8-4s8 1.79 8 4' },
     { id: 'analytics', label: 'Analytics', icon: 'M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
     { id: 'advisory', label: 'AI Chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
-    { id: 'insights', label: 'Insights', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
+    { id: 'insights', label: 'Insights', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    { id: 'local-ai', label: 'Local AI', icon: 'M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18' }
   ];
 
   return (
@@ -303,6 +305,7 @@ export default function Home() {
             {activeTab === 'analytics' && <EnhancedAnalytics />}
             {activeTab === 'advisory' && <ChatInterface />}
             {activeTab === 'insights' && <MoneyTruthEngine financialData={financialData} />}
+            {activeTab === 'local-ai' && <LocalLLMInsights />}
           </div>
         </main>
       </div>

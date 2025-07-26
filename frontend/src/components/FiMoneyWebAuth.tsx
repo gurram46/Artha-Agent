@@ -11,13 +11,14 @@ interface FiMoneyWebAuthProps {
 }
 
 const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthError }) => {
-  const [authState, setAuthState] = useState<'initial' | 'initiating' | 'waiting' | 'polling' | 'success' | 'error'>('initial');
+  const [authState, setAuthState] = useState<'initial' | 'initiating' | 'waiting' | 'polling' | 'success' | 'error' | 'demo'>('initial');
   const [loginUrl, setLoginUrl] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [authError, setAuthError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [pollingCount, setPollingCount] = useState(0);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const maxPollingCount = 60; // 5 minutes of polling (5s intervals)
   
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
@@ -175,7 +176,10 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
   const handleLogout = async () => {
     try {
       await mcpService.logout();
+      mcpService.setDemoMode(false);
+      sessionStorage.removeItem('demoMode');
       setIsAuthenticated(false);
+      setIsDemoMode(false);
       setSessionInfo(null);
       setAuthState('initial');
       setLoginUrl('');
@@ -194,8 +198,38 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
     setLoginUrl('');
     setSessionId('');
     setPollingCount(0);
+    setIsDemoMode(false);
     stopPolling();
     closeAuthWindow();
+  };
+
+  const startDemoMode = async () => {
+    setAuthState('demo');
+    setIsDemoMode(true);
+    setAuthError('');
+    
+    try {
+      // Enable demo mode in the data service
+      mcpService.setDemoMode(true);
+      
+      // Store demo mode in session storage
+      sessionStorage.setItem('demoMode', 'true');
+      
+      // Mark as authenticated in demo mode
+      setIsAuthenticated(true);
+      setSessionInfo({ 
+        authenticated: true, 
+        isDemo: true,
+        message: 'Using demo data'
+      });
+      
+      setAuthState('success');
+      onAuthSuccess();
+    } catch (error) {
+      setAuthError('Failed to start demo mode');
+      setAuthState('error');
+      onAuthError('Failed to start demo mode');
+    }
   };
 
   if (authState === 'success' && isAuthenticated) {
@@ -203,14 +237,14 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
       <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <div className={`w-3 h-3 ${isDemoMode ? 'bg-yellow-500' : 'bg-green-500'} rounded-full animate-pulse`}></div>
             <div>
               <h3 className="text-lg font-semibold text-green-800">
-                🌐 Connected to Fi Money
+                {isDemoMode ? '🎭 Demo Mode Active' : '🌐 Connected to Fi Money'}
               </h3>
               <p className="text-sm text-green-600">
-                Real-time financial data active
-                {sessionInfo?.expiresInMinutes && (
+                {isDemoMode ? 'Using sample financial data' : 'Real-time financial data active'}
+                {!isDemoMode && sessionInfo?.expiresInMinutes && (
                   <span className="ml-2">
                     • Session expires in {Math.round(sessionInfo.expiresInMinutes)} minutes
                   </span>
@@ -359,18 +393,38 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
           </ol>
         </div>
 
-        <UnifiedButton
-          onClick={startAuthentication}
-          variant="primary"
-          size="lg"
-          className="w-full"
-          isLoading={authState === 'initiating'}
-        >
-          {authState === 'initiating' ? 'Connecting...' : '🌐 Connect to Fi Money'}
-        </UnifiedButton>
+        <div className="space-y-3">
+          <UnifiedButton
+            onClick={startAuthentication}
+            variant="primary"
+            size="lg"
+            className="w-full"
+            isLoading={authState === 'initiating'}
+          >
+            {authState === 'initiating' ? 'Connecting...' : '🌐 Connect to Fi Money'}
+          </UnifiedButton>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 text-gray-500">OR</span>
+            </div>
+          </div>
+
+          <UnifiedButton
+            onClick={startDemoMode}
+            variant="secondary"
+            size="lg"
+            className="w-full border-2 border-dashed border-gray-300 hover:border-gray-400"
+          >
+            🎭 Try Demo Mode
+          </UnifiedButton>
+        </div>
 
         <p className="text-xs text-gray-500">
-          Secure web authentication • No credentials stored • Session-based access
+          Demo mode uses sample data • No authentication required • Perfect for exploring
         </p>
       </div>
     </Card>

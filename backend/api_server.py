@@ -25,6 +25,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from main import ArthaAIChatbot
 from core.fi_mcp.production_client import get_user_financial_data, initiate_fi_authentication, check_authentication_status, logout_user
 from core.money_truth_engine import MoneyTruthEngine
+from core.local_llm_processor import compress_for_local_llm, prepare_local_llm_request
+from core.local_llm_client import get_local_llm_client, cleanup_local_llm_client
 from agents.enhanced_analyst import EnhancedAnalystAgent
 from agents.research_agent.enhanced_strategist import EnhancedResearchAgent
 from agents.enhanced_risk_advisor import EnhancedRiskAdvisorAgent
@@ -76,6 +78,11 @@ class FiAuthRequest(BaseModel):
     phone_number: str
     passcode: str
 
+class LocalLLMRequest(BaseModel):
+    query: str = "Give me financial insights"
+    use_compressed: bool = True
+    demo_mode: bool = False
+
 @app.on_event("startup") 
 async def startup_event():
     """Initialize the chatbot and enhanced AI components"""
@@ -97,6 +104,14 @@ async def startup_event():
         
         # Initialize quick response agent
         quick_agent = QuickResponseAgent()
+        
+        # Test local LLM connection
+        print("🤖 Connecting to Local LLM Server...")
+        local_llm = await get_local_llm_client()
+        if await local_llm.test_connection():
+            print("✅ Local LLM Server connected successfully")
+        else:
+            print("⚠️ Local LLM Server not available - feature will be disabled")
         
         # Initialize stock analysis agent
         print("📈 Loading Stock Analysis Agent...")
@@ -125,6 +140,13 @@ async def startup_event():
     except Exception as e:
         logging.error(f"Failed to initialize enhanced backend: {e}")
         print(f"❌ System initialization failed: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup resources on shutdown"""
+    print("🔄 Shutting down services...")
+    await cleanup_local_llm_client()
+    print("✅ Cleanup completed")
 
 @app.get("/")
 async def root():
@@ -196,6 +218,136 @@ async def fi_auth_status():
             "message": str(e)
         }
 
+@app.post("/api/local-llm/prepare")
+async def prepare_for_local_llm(request: LocalLLMRequest):
+    """
+    Prepare compressed financial data for local LLM processing
+    Returns ultra-compressed data that fits within 2048 token context
+    """
+    try:
+        # Get financial data (demo or real)
+        if request.demo_mode:
+            from core.fi_mcp.real_client import RealFiMCPClient, FinancialData
+            client = RealFiMCPClient()
+            financial_data = FinancialData(
+                net_worth=await client.fetch_net_worth(),
+                credit_report=await client.fetch_credit_report(),
+                epf_details=await client.fetch_epf_details()
+            )
+        else:
+            financial_data = await get_user_financial_data()
+        
+        # Prepare compressed data for local LLM
+        result = prepare_local_llm_request(financial_data, request.query)
+        
+        # Try to get insights from local LLM if available
+        local_llm_response = None
+        try:
+            local_llm = await get_local_llm_client()
+            if await local_llm.test_connection():
+                # Generate insights using local LLM
+                insights = await local_llm.generate_financial_insights(
+                    result['compact_text'], 
+                    request.query
+                )
+                local_llm_response = {
+                    "available": True,
+                    "insights": insights
+                }
+                logger.info("✅ Local LLM insights generated successfully")
+            else:
+                local_llm_response = {
+                    "available": False,
+                    "message": "Local LLM server not available"
+                }
+        except Exception as llm_error:
+            logger.error(f"Local LLM error: {llm_error}")
+            local_llm_response = {
+                "available": False,
+                "error": str(llm_error)
+            }
+        
+        return {
+            "status": "success",
+            "compressed_data": result['compressed_data'],
+            "compact_text": result['compact_text'],
+            "prompt": result['prompt'],
+            "metadata": result['metadata'],
+            "local_llm": local_llm_response,
+            "message": f"Data compressed to ~{result['metadata']['estimated_tokens']} tokens"
+        }
+        
+    except Exception as e:
+        logger.error(f"Local LLM preparation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to prepare data: {str(e)}")
+
+@app.get("/api/local-llm/data")
+async def get_compressed_financial_data():
+    """
+    Get compressed financial data in JSON format for local processing
+    """
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        
+        # Compress the data
+        compressed = compress_for_local_llm(financial_data)
+        
+        return {
+            "status": "success",
+            "data": compressed.to_json(),
+            "compact_text": compressed.to_compact_text(),
+            "size_bytes": len(compressed.to_compact_text()),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get compressed data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to compress data: {str(e)}")
+
+@app.post("/api/local-llm/analyze")
+async def analyze_with_local_llm(request: LocalLLMRequest):
+    """
+    Analyze portfolio health using local LLM
+    Returns structured analysis with health score and recommendations
+    """
+    try:
+        # Get user's financial data
+        financial_data = await get_user_financial_data()
+        
+        # Compress the data
+        compressed = compress_for_local_llm(financial_data)
+        
+        # Get local LLM client
+        local_llm = await get_local_llm_client()
+        
+        if not await local_llm.test_connection():
+            return {
+                "status": "error",
+                "message": "Local LLM server not available. Please ensure LM Studio is running on port 1234."
+            }
+        
+        # Analyze portfolio health
+        analysis_result = await local_llm.analyze_portfolio_health(compressed.to_compact_text())
+        
+        if analysis_result["success"]:
+            return {
+                "status": "success",
+                "analysis": analysis_result["analysis"],
+                "compressed_data": compressed.to_json(),
+                "response_time": analysis_result.get("response_time", 0),
+                "model": "gemma-3-4b-it"
+            }
+        else:
+            return {
+                "status": "error",
+                "message": analysis_result.get("error", "Analysis failed")
+            }
+            
+    except Exception as e:
+        logger.error(f"Local LLM analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
 @app.post("/api/fi-auth/logout")
 async def fi_logout():
     """Logout from Fi Money"""
@@ -213,10 +365,35 @@ async def fi_logout():
         }
 
 @app.get("/financial-data")
-async def get_financial_data():
-    """Get user's real-time financial data from Fi Money MCP - NO FALLBACKS"""
+async def get_financial_data(demo: bool = False):
+    """Get user's financial data - real or demo mode"""
     try:
-        # Check authentication first
+        # If demo mode is requested, use sample data
+        if demo:
+            logger.info("📊 Loading demo financial data")
+            from core.fi_mcp.real_client import RealFiMCPClient, FinancialData
+            
+            # Use the sample data from mcp-docs
+            client = RealFiMCPClient()
+            demo_data = FinancialData(
+                net_worth=await client.fetch_net_worth(),
+                credit_report=await client.fetch_credit_report(),
+                epf_details=await client.fetch_epf_details()
+            )
+            
+            return {
+                "status": "success",
+                "data": {
+                    "net_worth": demo_data.net_worth,
+                    "credit_report": demo_data.credit_report,
+                    "epf_details": demo_data.epf_details,
+                    "mf_transactions": await client.fetch_mf_transactions()
+                },
+                "is_demo": True,
+                "message": "Demo data loaded successfully"
+            }
+        
+        # Check authentication first for real data
         auth_status = await check_authentication_status()
         if not auth_status.get('authenticated', False):
             return {
