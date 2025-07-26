@@ -1,0 +1,35 @@
+date,category,merchant,amount,weekday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+19/07/2025,Bank Debit,Canara Bank,10,Saturday
+20/07/2025,Bank Debit,Canara Bank,80,Sunday
+19/07/2025,Bank Debit,Canara Bank,1,Saturday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+19/07/2025,Grocery,Canara Bank,1,Saturday
+22/07/2025,Dining,Canara Bank,24,Tuesday
+22/07/2025,Utilities,Canara Bank,24,Tuesday
+20/07/2025,Entertainment,Canara Bank,80,Sunday
+22/07/2025,Bank Debit,Canara Bank,500,Tuesday
+22/07/2025,Bank Debit,Canara Bank,24,Tuesday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+19/07/2025,Bank Debit,Canara Bank,10,Saturday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+20/07/2025,Grocery,Canara Bank,80,Sunday
+22/07/2025,Dining,Canara Bank,500,Tuesday
+20/07/2025,Utilities,Canara Bank,500,Sunday
+19/07/2025,Entertainment,Canara Bank,20,Saturday
+22/07/2025,Bank Debit,Canara Bank,24,Tuesday
+20/07/2025,Bank Debit,Canara Bank,500,Sunday
+22/07/2025,Bank Debit,Canara Bank,24,Tuesday
+22/07/2025,Bank Debit,Canara Bank,500,Tuesday
+19/07/2025,Bank Debit,Canara Bank,20,Saturday
+20/07/2025,Bank Debit,Canara Bank,500,Sunday
+19/07/2025,Bank Debit,Canara Bank,10,Saturday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+19/07/2025,Bank Debit,Canara Bank,1,Saturday
+22/07/2025,Bank Debit,Canara Bank,24,Tuesday
+21/07/2025,Bank Debit,Canara Bank,24,Monday
+19/07/2025,Bank Debit,Canara Bank,20,Saturday
+18/07/2025,Grocery,Reliance Fresh,650,Friday
+17/07/2025,Dining,Swiggy,340,Thursday
+16/07/2025,Utilities,BESCOM,1200,Wednesday
+15/07/2025,Entertainment,Netflix,199,Tuesday

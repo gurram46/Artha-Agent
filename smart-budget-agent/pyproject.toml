@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "smart-budget-agent"
+version = "0.1.0"
+description = "Smart Budget Agent for processing financial emails"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "*.py"}]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+firebase-admin = "6.2.0"
+python-dotenv = ">=1.1.1,<2.0.0"
+google-auth-oauthlib = ">=1.2.2,<2.0.0"
+google-api-python-client = ">=2.176.0,<3.0.0"
+google-auth-httplib2 = ">=0.2.0,<0.3.0"
+google-cloud-aiplatform = "1.38.1"
+pandas = "*"
+numpy = "*"
+scikit-learn = "*"
+google-cloud-storage = ">=1.32.0,<3.0.0"
+setuptools = "^80.9.0"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
