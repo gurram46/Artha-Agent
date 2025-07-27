@@ -22,6 +22,7 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const mcpService = MCPDataService.getInstance();
 
@@ -32,12 +33,24 @@ export default function Home() {
   const checkAuthenticationAndFetchData = async () => {
     setIsCheckingAuth(true);
     try {
+      // Check if demo mode is enabled first
+      const demoMode = sessionStorage.getItem('demoMode') === 'true';
+      if (demoMode) {
+        console.log('🎭 Demo mode detected');
+        setIsDemoMode(true);
+        mcpService.setDemoMode(true);
+        setIsAuthenticated(true);
+        await fetchFinancialData();
+        return;
+      }
+
       // Check if already authenticated with Fi Money
       const authStatus = await mcpService.checkAuthenticationStatus();
       
       if (authStatus.authenticated) {
         console.log('✅ Already authenticated with Fi Money MCP');
         setIsAuthenticated(true);
+        setIsDemoMode(authStatus.isDemo || false);
         await fetchFinancialData();
       } else {
         console.log('🔐 Fi Money authentication required');
@@ -88,6 +101,11 @@ export default function Home() {
     console.log('✅ Fi Money authentication successful');
     setIsAuthenticated(true);
     setAuthError('');
+    
+    // Check if demo mode was enabled
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    setIsDemoMode(demoMode);
+    
     await fetchFinancialData();
   };
 
@@ -140,7 +158,7 @@ export default function Home() {
           </header>
 
           {/* Fi Money Authentication Content */}
-          <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-black text-white mb-6">
                 Connect to Fi Money for Real-Time Financial Intelligence
@@ -158,7 +176,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="max-w-md mx-auto">
+            <div className="mx-auto">
               <FiMoneyWebAuth
                 onAuthSuccess={handleAuthSuccess}
                 onAuthError={handleAuthError}
@@ -195,7 +213,9 @@ export default function Home() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-black text-white tracking-tight">Artha</h1>
-                    <p className="text-xs text-[rgb(0,184,153)] font-semibold">AI Financial Intelligence</p>
+                    <p className="text-xs text-[rgb(0,184,153)] font-semibold">
+                      {isDemoMode ? '🎭 Demo Mode • AI Financial Intelligence' : 'AI Financial Intelligence'}
+                    </p>
                   </div>
                 </div>
                 
@@ -268,22 +288,47 @@ export default function Home() {
               <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 shadow-2xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">Fi Money Portfolio</h1>
-                    <p className="text-gray-300 text-lg font-medium">Real-time financial intelligence powered by Fi Money MCP</p>
+                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">
+                      {isDemoMode ? 'Demo Account Fi Money Portfolio' : 'Fi Money Portfolio'}
+                    </h1>
+                    <p className="text-gray-300 text-lg font-medium">
+                      {isDemoMode 
+                        ? 'Financial intelligence with sample data for demonstration'
+                        : 'Real-time financial intelligence powered by Fi Money MCP'
+                      }
+                    </p>
                     <div className="flex items-center mt-4 space-x-2">
-                      <div className="w-3 h-3 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
-                      <span className="text-sm text-[rgb(0,184,153)] font-bold">Live Fi Money Data</span>
-                      <span className="text-sm text-gray-400">• No Sample Data • Production Ready</span>
+                      <div className={`w-3 h-3 rounded-full ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} animate-pulse`}></div>
+                      <span className={`text-sm font-bold ${isDemoMode ? 'text-yellow-400' : 'text-[rgb(0,184,153)]'}`}>
+                        {isDemoMode ? 'Demo Data Mode' : 'Live Fi Money Data'}
+                      </span>
+                      <span className="text-sm text-gray-400">
+                        {isDemoMode 
+                          ? '• Sample Data • Development Environment'
+                          : '• No Sample Data • Production Ready'
+                        }
+                      </span>
                     </div>
                   </div>
                   <div className="text-right bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.3)] backdrop-blur-sm rounded-2xl p-6">
                     <p className="text-sm text-gray-300 font-semibold mb-1">Total Net Worth</p>
                     <p className="text-3xl font-black text-white tracking-tight">{financialData?.summary?.total_net_worth_formatted || '₹0'}</p>
                     <div className="flex items-center justify-end mt-3 space-x-2">
-                      <svg className="w-4 h-4 text-[rgb(0,184,153)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-xs text-[rgb(0,184,153)] font-bold">Fi Money MCP</span>
+                      {isDemoMode ? (
+                        <>
+                          <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <span className="text-xs text-yellow-400 font-bold">Demo Account</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 text-[rgb(0,184,153)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-xs text-[rgb(0,184,153)] font-bold">Fi Money MCP</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -291,13 +336,15 @@ export default function Home() {
             </div>
           )}
           
-          {/* Show Fi Money Auth in header for logged in users */}
-          <div className="mb-6">
-            <FiMoneyWebAuth
-              onAuthSuccess={handleAuthSuccess}
-              onAuthError={handleAuthError}
-            />
-          </div>
+          {/* Show Fi Money Auth in header for logged in users - but not in demo mode */}
+          {!isDemoMode && (
+            <div className="mb-6">
+              <FiMoneyWebAuth
+                onAuthSuccess={handleAuthSuccess}
+                onAuthError={handleAuthError}
+              />
+            </div>
+          )}
           
           {/* Premium Content Sections */}
           <div className="space-y-8">
