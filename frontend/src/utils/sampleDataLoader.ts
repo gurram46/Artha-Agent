@@ -1,592 +1,532 @@
-// Sample data loader that transforms the MCP sample responses into our application format
+/**
+ * Comprehensive Sample Data Loader - Provides extensive hardcoded mock financial data
+ * This utility serves comprehensive financial data for demonstration purposes
+ */
 
-export const loadSampleData = () => {
-  // This is the actual sample data from @Artha-Agent/mcp-docs/sample_responses/fetch_net_worth.json
-  const sampleMCPData = {
-    "netWorthResponse": {
-      "assetValues": [
-        {
-          "netWorthAttribute": "ASSET_TYPE_MUTUAL_FUND",
-          "value": {
-            "currencyCode": "INR",
-            "units": "84613"
-          }
-        },
-        {
-          "netWorthAttribute": "ASSET_TYPE_EPF",
-          "value": {
-            "currencyCode": "INR",
-            "units": "211111"
-          }
-        },
-        {
-          "netWorthAttribute": "ASSET_TYPE_INDIAN_SECURITIES",
-          "value": {
-            "currencyCode": "INR",
-            "units": "200642"
-          }
-        },
-        {
-          "netWorthAttribute": "ASSET_TYPE_SAVINGS_ACCOUNTS",
-          "value": {
-            "currencyCode": "INR",
-            "units": "436355"
-          }
-        }
-      ],
-      "liabilityValues": [
-        {
-          "netWorthAttribute": "LIABILITY_TYPE_OTHER_LOAN",
-          "value": {
-            "currencyCode": "INR",
-            "units": "42000"
-          }
-        },
-        {
-          "netWorthAttribute": "LIABILITY_TYPE_HOME_LOAN",
-          "value": {
-            "currencyCode": "INR",
-            "units": "17000"
-          }
-        },
-        {
-          "netWorthAttribute": "LIABILITY_TYPE_VEHICLE_LOAN",
-          "value": {
-            "currencyCode": "INR",
-            "units": "5000"
-          }
-        }
-      ],
-      "totalNetWorthValue": {
-        "currencyCode": "INR",
-        "units": "868721"
-      }
-    },
-    "mfSchemeAnalytics": {
-      "schemeAnalytics": [
-        {
-          "schemeDetail": {
-            "amc": "CANARA_ROBECO",
-            "nameData": {
-              "longName": "Canara Robeco Gilt Fund"
-            },
-            "planType": "DIRECT",
-            "investmentType": "OPEN",
-            "optionType": "GROWTH",
-            "nav": {
-              "currencyCode": "INR",
-              "units": "73",
-              "nanos": 450300000
-            },
-            "assetClass": "DEBT",
-            "isinNumber": "INF760K01FC4",
-            "categoryName": "GOVERNMENT_BOND",
-            "fundhouseDefinedRiskLevel": "MODERATE_RISK"
-          },
-          "enrichedAnalytics": {
-            "analytics": {
-              "schemeDetails": {
-                "currentValue": {
-                  "currencyCode": "INR",
-                  "units": "54141",
-                  "nanos": 968504017
-                },
-                "investedValue": {
-                  "currencyCode": "INR",
-                  "units": "6655",
-                  "nanos": 460000000
-                },
-                "XIRR": 129.91475375746282,
-                "absoluteReturns": {
-                  "currencyCode": "INR",
-                  "units": "47486",
-                  "nanos": 508504017
-                },
-                "unrealisedReturns": {
-                  "currencyCode": "INR",
-                  "units": "47486",
-                  "nanos": 508504017
-                },
-                "navValue": {
-                  "currencyCode": "INR",
-                  "units": "81",
-                  "nanos": 414200000
-                },
-                "units": 665.0187375668689
-              }
-            }
-          }
-        },
-        {
-          "schemeDetail": {
-            "amc": "ICICI_PRUDENTIAL",
-            "nameData": {
-              "longName": "ICICI Prudential Nifty 50 Index Fund"
-            },
-            "planType": "DIRECT",
-            "investmentType": "OPEN",
-            "optionType": "GROWTH",
-            "nav": {
-              "currencyCode": "INR",
-              "units": "232",
-              "nanos": 380500000
-            },
-            "assetClass": "EQUITY",
-            "isinNumber": "INF109K012M7",
-            "categoryName": "INDEX_FUNDS",
-            "fundhouseDefinedRiskLevel": "VERY_HIGH_RISK"
-          },
-          "enrichedAnalytics": {
-            "analytics": {
-              "schemeDetails": {
-                "currentValue": {
-                  "currencyCode": "INR",
-                  "units": "20147",
-                  "nanos": 9681617
-                },
-                "investedValue": {
-                  "currencyCode": "INR",
-                  "units": "20054",
-                  "nanos": 50755620
-                },
-                "XIRR": 23.278395563728317,
-                "absoluteReturns": {
-                  "currencyCode": "INR",
-                  "units": "92",
-                  "nanos": 958925997
-                },
-                "unrealisedReturns": {
-                  "currencyCode": "INR",
-                  "units": "92",
-                  "nanos": 958925997
-                },
-                "navValue": {
-                  "currencyCode": "INR",
-                  "units": "266",
-                  "nanos": 415900000
-                },
-                "units": 75.62239972020237
-              }
-            }
-          }
-        },
-        {
-          "schemeDetail": {
-            "amc": "ICICI_PRUDENTIAL",
-            "nameData": {
-              "longName": "ICICI Prudential Balanced Advantage Fund"
-            },
-            "planType": "DIRECT",
-            "investmentType": "OPEN",
-            "optionType": "GROWTH",
-            "nav": {
-              "currencyCode": "INR",
-              "units": "71",
-              "nanos": 650000000
-            },
-            "assetClass": "HYBRID",
-            "isinNumber": "INF109K012B0",
-            "categoryName": "DYNAMIC_ASSET_ALLOCATION",
-            "fundhouseDefinedRiskLevel": "HIGH_RISK"
-          },
-          "enrichedAnalytics": {
-            "analytics": {
-              "schemeDetails": {
-                "currentValue": {
-                  "currencyCode": "INR",
-                  "units": "1438",
-                  "nanos": 678832201
-                },
-                "investedValue": {
-                  "currencyCode": "INR",
-                  "units": "5272"
-                },
-                "XIRR": -17.430194898264094,
-                "absoluteReturns": {
-                  "currencyCode": "INR",
-                  "units": "-3833",
-                  "nanos": -321167799
-                },
-                "unrealisedReturns": {
-                  "currencyCode": "INR",
-                  "units": "-3833",
-                  "nanos": -321167799
-                },
-                "navValue": {
-                  "currencyCode": "INR",
-                  "units": "12",
-                  "nanos": 231100000
-                },
-                "units": 117.6246480039755
-              }
-            }
-          }
-        },
-        {
-          "schemeDetail": {
-            "amc": "UTI",
-            "nameData": {
-              "longName": "UTI Overnight Fund"
-            },
-            "planType": "DIRECT",
-            "investmentType": "OPEN",
-            "optionType": "GROWTH",
-            "nav": {
-              "currencyCode": "INR",
-              "units": "3279",
-              "nanos": 785700000
-            },
-            "assetClass": "CASH",
-            "isinNumber": "INF789FB1S71",
-            "categoryName": "OVERNIGHT",
-            "fundhouseDefinedRiskLevel": "LOW_RISK"
-          },
-          "enrichedAnalytics": {
-            "analytics": {
-              "schemeDetails": {
-                "currentValue": {
-                  "currencyCode": "INR",
-                  "units": "123",
-                  "nanos": 100000000
-                },
-                "investedValue": {
-                  "currencyCode": "INR",
-                  "units": "29235",
-                  "nanos": 68000000
-                },
-                "XIRR": -82.3806209069403,
-                "absoluteReturns": {
-                  "currencyCode": "INR",
-                  "units": "-29111",
-                  "nanos": -968000000
-                },
-                "unrealisedReturns": {
-                  "currencyCode": "INR",
-                  "units": "-29111",
-                  "nanos": -968000000
-                },
-                "navValue": {
-                  "currencyCode": "INR",
-                  "units": "12",
-                  "nanos": 310000000
-                },
-                "units": 10
-              }
-            }
-          }
-        }
-      ]
-    },
-    "accountDetailsBulkResponse": {
-      "accountDetailsMap": {
-        "144a3179-a516-48c6-9ed9-73e2f2721c05": {
-          "accountDetails": {
-            "fipId": "HDFC-FIP",
-            "maskedAccountNumber": "XXXXXX8697",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS"
-            },
-            "fipMeta": {
-              "name": "HDFC Bank",
-              "displayName": "HDFC",
-              "bank": "HDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "144a3179-a516-48c6-9ed9-73e2f2721c05",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "106775"
-            },
-            "balanceDate": "2025-07-08T12:30:14Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2024-07-07T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        },
-        "241d639b-bc89-4654-9679-f4205b005765": {
-          "accountDetails": {
-            "fipId": "IDFCFirstBank-FIP",
-            "maskedAccountNumber": "XXXXXX8081",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS"
-            },
-            "fipMeta": {
-              "name": "IDFC Bank",
-              "displayName": "IDFC",
-              "bank": "IDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "241d639b-bc89-4654-9679-f4205b005765",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "102735"
-            },
-            "balanceDate": "2025-07-08T12:30:15Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2025-05-27T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        },
-        "298184ef-bb92-40cd-afbf-3481d96bdf9e": {
-          "accountDetails": {
-            "fipId": "HDFC-FIP",
-            "maskedAccountNumber": "XXXXXX3139",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_CURRENT"
-            },
-            "fipMeta": {
-              "name": "HDFC Bank",
-              "displayName": "HDFC",
-              "bank": "HDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "298184ef-bb92-40cd-afbf-3481d96bdf9e",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "102464"
-            },
-            "balanceDate": "2025-07-08T12:30:15Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_CURRENT",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2024-07-07T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        },
-        "322ef727-c9e1-4347-9077-a8914466ef84": {
-          "accountDetails": {
-            "fipId": "HDFC-FIP",
-            "maskedAccountNumber": "XXXXXX6831",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS"
-            },
-            "fipMeta": {
-              "name": "HDFC Bank",
-              "displayName": "HDFC",
-              "bank": "HDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "322ef727-c9e1-4347-9077-a8914466ef84",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "10726"
-            },
-            "balanceDate": "2025-07-08T12:30:15Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2024-07-07T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        },
-        "51ee017b-7eaf-478d-97b2-913e6d4de272": {
-          "accountDetails": {
-            "fipId": "IDFCFirstBank-FIP",
-            "maskedAccountNumber": "XXXXXX6108",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_CURRENT"
-            },
-            "fipMeta": {
-              "name": "IDFC Bank",
-              "displayName": "IDFC",
-              "bank": "IDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "51ee017b-7eaf-478d-97b2-913e6d4de272",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "101669"
-            },
-            "balanceDate": "2025-07-08T12:30:15Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_CURRENT",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2025-05-27T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        },
-        "be5e2d35-6daf-41ba-a161-95805f3b59c7": {
-          "accountDetails": {
-            "fipId": "IDFCFirstBank-FIP",
-            "maskedAccountNumber": "XXXXXX8859",
-            "accInstrumentType": "ACC_INSTRUMENT_TYPE_DEPOSIT",
-            "ifscCode": "EPIFI000012",
-            "accountType": {
-              "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS"
-            },
-            "fipMeta": {
-              "name": "IDFC Bank",
-              "displayName": "IDFC",
-              "bank": "IDFC"
-            }
-          },
-          "depositSummary": {
-            "accountId": "be5e2d35-6daf-41ba-a161-95805f3b59c7",
-            "currentBalance": {
-              "currencyCode": "INR",
-              "units": "8518"
-            },
-            "balanceDate": "2025-07-08T12:30:14Z",
-            "depositAccountType": "DEPOSIT_ACCOUNT_TYPE_SAVINGS",
-            "branch": "Test",
-            "ifscCode": "EPIFI000012",
-            "micrCode": "EPIFI1234",
-            "openingDate": "2025-05-27T00:00:00Z",
-            "depositAccountStatus": "DEPOSIT_ACCOUNT_STATUS_ACTIVE"
-          }
-        }
-      }
-    }
+export interface SampleFinancialData {
+  portfolio: {
+    summary: {
+      total_net_worth: number;
+      total_net_worth_formatted: string;
+      mutual_funds: number;
+      mutual_funds_formatted: string;
+      liquid_funds: number;
+      liquid_funds_formatted: string;
+      epf: number;
+      epf_formatted: string;
+      credit_score: string;
+      total_assets: number;
+      total_liabilities: number;
+    };
+    data: {
+      asset_allocation: Array<{
+        name: string;
+        value: number;
+        percentage: number;
+        category: string;
+      }>;
+      mutual_fund_schemes: Array<{
+        scheme_name: string;
+        current_value: number;
+        invested_amount: number;
+        gains: number;
+        gains_percentage: number;
+        last_nav: number;
+        units: number;
+        category: string;
+      }>;
+      bank_accounts: Array<{
+        account_type: string;
+        balance: number;
+        bank_name: string;
+      }>;
+      performance_metrics: {
+        total_invested: number;
+        total_current: number;
+        total_gains: number;
+        total_gains_percentage: number;
+        avg_xirr: number;
+        best_performer: string;
+        worst_performer: string;
+      };
+    };
+    metadata: {
+      last_updated: string;
+      data_source: string;
+      accuracy: string;
+      total_assets_inr: number;
+      total_liabilities_inr: number;
+      net_worth_inr: number;
+    };
   };
+  bank_transactions: {
+    transactions: Array<{
+      transactionId: string;
+      accountNumber: string;
+      accountType: string;
+      transactionDate: string;
+      amount: {
+        currencyCode: string;
+        units: string;
+      };
+      description: string;
+      category: string;
+      merchantName: string;
+      transactionType: string;
+      status: string;
+    }>;
+    summary: {
+      total_spent_this_month: number;
+      total_transactions: number;
+      most_frequent_category: string;
+    };
+  };
+  mutual_fund_transactions: Array<{
+    transactionId: string;
+    folioNumber: string;
+    schemeName: string;
+    transactionType: string;
+    transactionDate: string;
+    amount: number;
+    units: number;
+    nav: number;
+    status: string;
+  }>;
+  stock_transactions: Array<{
+    transactionId: string;
+    symbol: string;
+    companyName: string;
+    transactionType: string;
+    transactionDate: string;
+    quantity: number;
+    price: number;
+    totalAmount: number;
+    status: string;
+  }>;
+  insights: {
+    spending_insights: Array<{
+      category: string;
+      percentage: number;
+      amount: number;
+      trend: string;
+    }>;
+    investment_insights: Array<{
+      scheme_name: string;
+      performance: string;
+      recommendation: string;
+    }>;
+    portfolio_health: {
+      score: number;
+      status: string;
+      recommendations: string[];
+    };
+  };
+}
 
-  return transformMCPDataToPortfolio(sampleMCPData);
-};
-
-const transformMCPDataToPortfolio = (mcpData: any) => {
-  if (!mcpData) return null;
-  
-  try {
-    const netWorthResponse = mcpData.netWorthResponse;
-    const mfAnalytics = mcpData.mfSchemeAnalytics?.schemeAnalytics || [];
-    const accountDetails = mcpData.accountDetailsBulkResponse?.accountDetailsMap || {};
-    
-    // Calculate totals from real MCP data
-    const totalNetWorth = netWorthResponse?.totalNetWorthValue ? 
-      parseFloat(netWorthResponse.totalNetWorthValue.units) + 
-      (netWorthResponse.totalNetWorthValue.nanos || 0) / 1000000000 : 0;
-    
-    // Extract asset values from real data
-    const assetValues = netWorthResponse?.assetValues || [];
-    const liabilityValues = netWorthResponse?.liabilityValues || [];
-    
-    let liquidFunds = 0;
-    let mutualFundsValue = 0;
-    let epfValue = 0;
-    let stocksValue = 0;
-    let totalLiabilities = 0;
-    
-    assetValues.forEach((asset: any) => {
-      const value = parseFloat(asset.value.units || '0') + (asset.value.nanos || 0) / 1000000000;
-      switch (asset.netWorthAttribute) {
-        case 'ASSET_TYPE_SAVINGS_ACCOUNTS':
-          liquidFunds += value;
-          break;
-        case 'ASSET_TYPE_MUTUAL_FUND':
-          mutualFundsValue += value;
-          break;
-        case 'ASSET_TYPE_EPF':
-          epfValue += value;
-          break;
-        case 'ASSET_TYPE_INDIAN_SECURITIES':
-        case 'ASSET_TYPE_US_SECURITIES':
-          stocksValue += value;
-          break;
-      }
-    });
-
-    liabilityValues.forEach((liability: any) => {
-      const value = parseFloat(liability.value.units || '0') + (liability.value.nanos || 0) / 1000000000;
-      totalLiabilities += value;
-    });
-    
-    // Process mutual fund schemes
-    const mutualFundSchemes = mfAnalytics
-      .filter((scheme: any) => scheme.enrichedAnalytics?.analytics?.schemeDetails)
-      .map((scheme: any) => {
-        const schemeDetail = scheme.schemeDetail;
-        const analytics = scheme.enrichedAnalytics?.analytics?.schemeDetails;
-        
-        return {
-          name: schemeDetail?.nameData?.longName || 'Unknown Fund',
-          amc: schemeDetail?.amc?.replace(/_/g, ' ') || 'Unknown AMC',
-          isin: schemeDetail?.isinNumber,
-          category: schemeDetail?.categoryName,
-          riskLevel: schemeDetail?.fundhouseDefinedRiskLevel,
-          assetClass: schemeDetail?.assetClass,
-          nav: parseFloat(schemeDetail?.nav?.units || '0') + (schemeDetail?.nav?.nanos || 0) / 1000000000,
-          currentValue: analytics ? parseFloat(analytics.currentValue?.units || '0') + (analytics.currentValue?.nanos || 0) / 1000000000 : 0,
-          investedValue: analytics ? parseFloat(analytics.investedValue?.units || '0') + (analytics.investedValue?.nanos || 0) / 1000000000 : 0,
-          xirr: analytics?.XIRR || 0,
-          units: analytics?.units || 0,
-          absoluteReturns: analytics ? parseFloat(analytics.absoluteReturns?.units || '0') + (analytics.absoluteReturns?.nanos || 0) / 1000000000 : 0
-        };
-      });
-    
-    // Process bank accounts
-    const bankAccounts = Object.values(accountDetails)
-      .filter((account: any) => account.depositSummary)
-      .map((account: any) => ({
-        bank: account.accountDetails?.fipMeta?.displayName || 'Unknown Bank',
-        accountNumber: account.accountDetails?.maskedAccountNumber,
-        accountType: account.accountDetails?.accountType?.depositAccountType,
-        ifsc: account.accountDetails?.ifscCode,
-        balance: account.depositSummary ? 
-          parseFloat(account.depositSummary.currentBalance?.units || '0') + 
-          (account.depositSummary.currentBalance?.nanos || 0) / 1000000000 : 0,
-        balanceDate: account.depositSummary?.balanceDate
-      }));
-    
+export class SampleDataLoader {
+  /**
+   * Load comprehensive hardcoded portfolio data
+   */
+  static loadPortfolioData(): SampleFinancialData['portfolio'] {
     return {
       summary: {
-        total_net_worth: Math.round(totalNetWorth),
-        total_net_worth_formatted: formatCurrency(totalNetWorth),
-        liquid_funds: Math.round(liquidFunds),
-        liquid_funds_formatted: formatCurrency(liquidFunds),
-        mutual_funds_value: Math.round(mutualFundsValue),
-        mutual_funds_formatted: formatCurrency(mutualFundsValue),
-        epf_value: Math.round(epfValue),
-        epf_formatted: formatCurrency(epfValue),
-        stocks_value: Math.round(stocksValue),
-        stocks_formatted: formatCurrency(stocksValue),
-        total_liabilities: Math.round(totalLiabilities),
-        total_liabilities_formatted: formatCurrency(totalLiabilities)
+        total_net_worth: 2150000,
+        total_net_worth_formatted: "₹21.50L",
+        mutual_funds: 950000,
+        mutual_funds_formatted: "₹9.50L",
+        liquid_funds: 385000,
+        liquid_funds_formatted: "₹3.85L",
+        epf: 465000,
+        epf_formatted: "₹4.65L",
+        credit_score: "768",
+        total_assets: 2225000,
+        total_liabilities: 75000
       },
       data: {
-        mutual_fund_schemes: mutualFundSchemes,
-        bank_accounts: bankAccounts,
         asset_allocation: [
-          { name: 'Mutual Funds', value: mutualFundsValue, percentage: totalNetWorth > 0 ? (mutualFundsValue / totalNetWorth) * 100 : 0 },
-          { name: 'Stocks', value: stocksValue, percentage: totalNetWorth > 0 ? (stocksValue / totalNetWorth) * 100 : 0 },
-          { name: 'EPF', value: epfValue, percentage: totalNetWorth > 0 ? (epfValue / totalNetWorth) * 100 : 0 },
-          { name: 'Liquid Funds', value: liquidFunds, percentage: totalNetWorth > 0 ? (liquidFunds / totalNetWorth) * 100 : 0 }
-        ].filter(item => item.value > 0),
+          { name: "Mutual Funds", value: 950000, percentage: 42.7, category: "equity" },
+          { name: "EPF", value: 465000, percentage: 20.9, category: "retirement" },
+          { name: "Savings Account", value: 285000, percentage: 12.8, category: "liquid" },
+          { name: "Stocks", value: 220000, percentage: 9.9, category: "equity" },
+          { name: "Fixed Deposits", value: 205000, percentage: 9.2, category: "debt" },
+          { name: "Emergency Fund", value: 100000, percentage: 4.5, category: "liquid" }
+        ],
+        mutual_fund_schemes: [
+          {
+            scheme_name: "ICICI Prudential Bluechip Fund Direct Growth",
+            current_value: 225420,
+            invested_amount: 180000,
+            gains: 45420,
+            gains_percentage: 25.23,
+            last_nav: 68.24,
+            units: 3302.5,
+            category: "Large Cap"
+          },
+          {
+            scheme_name: "Axis Midcap Fund Direct Growth",
+            current_value: 189680,
+            invested_amount: 150000,
+            gains: 39680,
+            gains_percentage: 26.45,
+            last_nav: 74.87,
+            units: 2533.2,
+            category: "Mid Cap"
+          },
+          {
+            scheme_name: "Mirae Asset Large Cap Fund Direct Growth",
+            current_value: 198750,
+            invested_amount: 165000,
+            gains: 33750,
+            gains_percentage: 20.45,
+            last_nav: 82.81,
+            units: 2400.0,
+            category: "Large Cap"
+          },
+          {
+            scheme_name: "Parag Parikh Flexi Cap Fund Direct Growth",
+            current_value: 218420,
+            invested_amount: 200000,
+            gains: 18420,
+            gains_percentage: 9.21,
+            last_nav: 52.18,
+            units: 4186.8,
+            category: "Flexi Cap"
+          },
+          {
+            scheme_name: "HDFC Index Fund Nifty 50 Direct Plan Growth",
+            current_value: 117730,
+            invested_amount: 100000,
+            gains: 17730,
+            gains_percentage: 17.73,
+            last_nav: 156.31,
+            units: 753.4,
+            category: "Index"
+          }
+        ],
+        bank_accounts: [
+          { account_type: "Savings Account", balance: 285000, bank_name: "HDFC Bank" },
+          { account_type: "Salary Account", balance: 125000, bank_name: "SBI Bank" },
+          { account_type: "Fixed Deposit", balance: 205000, bank_name: "ICICI Bank" }
+        ],
         performance_metrics: {
-          total_invested: mutualFundSchemes.reduce((sum: number, scheme: any) => sum + scheme.investedValue, 0),
-          total_current: mutualFundSchemes.reduce((sum: number, scheme: any) => sum + scheme.currentValue, 0),
-          total_returns: mutualFundSchemes.reduce((sum: number, scheme: any) => sum + scheme.absoluteReturns, 0),
-          avg_xirr: mutualFundSchemes.length > 0 ? 
-            mutualFundSchemes.reduce((sum: number, scheme: any) => sum + scheme.xirr, 0) / mutualFundSchemes.length : 0
+          total_invested: 795000,
+          total_current: 950000,
+          total_gains: 155000,
+          total_gains_percentage: 19.50,
+          avg_xirr: 16.8,
+          best_performer: "Axis Midcap Fund Direct Growth",
+          worst_performer: "Parag Parikh Flexi Cap Fund Direct Growth"
         }
+      },
+      metadata: {
+        last_updated: new Date().toISOString(),
+        data_source: "Comprehensive Hardcoded Mock Data v3.0",
+        accuracy: "Full mock dataset for comprehensive testing",
+        total_assets_inr: 2225000,
+        total_liabilities_inr: 75000,
+        net_worth_inr: 2150000
       }
     };
-  } catch (error) {
-    console.error('Error transforming MCP data:', error);
-    return null;
   }
+
+  /**
+   * Load comprehensive hardcoded bank transaction data
+   */
+  static loadBankTransactions(): SampleFinancialData['bank_transactions'] {
+    return {
+      transactions: [
+        {
+          transactionId: "BNK001",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-15T14:30:00Z",
+          amount: { currencyCode: "INR", units: "85000" },
+          description: "SALARY CREDIT - COMPANY ABC",
+          category: "SALARY",
+          merchantName: "ABC Technologies",
+          transactionType: "CREDIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK002",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-14T10:45:00Z",
+          amount: { currencyCode: "INR", units: "15000" },
+          description: "SIP MUTUAL FUND",
+          category: "INVESTMENT",
+          merchantName: "ICICI Prudential AMC",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK003",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-13T18:20:00Z",
+          amount: { currencyCode: "INR", units: "3500" },
+          description: "DMart GROCERY SHOPPING",
+          category: "GROCERY",
+          merchantName: "DMart",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK004",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-12T16:15:00Z",
+          amount: { currencyCode: "INR", units: "2800" },
+          description: "SWIGGY FOOD ORDER",
+          category: "FOOD_DELIVERY",
+          merchantName: "Swiggy",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK005",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-11T09:30:00Z",
+          amount: { currencyCode: "INR", units: "1850" },
+          description: "ELECTRICITY BILL BESCOM",
+          category: "UTILITIES",
+          merchantName: "BESCOM",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK006",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-10T12:45:00Z",
+          amount: { currencyCode: "INR", units: "4200" },
+          description: "PETROL PUMP PAYMENT",
+          category: "FUEL",
+          merchantName: "Indian Oil",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK007",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-09T20:15:00Z",
+          amount: { currencyCode: "INR", units: "12500" },
+          description: "AMAZON SHOPPING",
+          category: "SHOPPING",
+          merchantName: "Amazon",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        },
+        {
+          transactionId: "BNK008",
+          accountNumber: "****8847",
+          accountType: "SAVINGS",
+          transactionDate: "2025-01-08T15:30:00Z",
+          amount: { currencyCode: "INR", units: "950" },
+          description: "UBER RIDE",
+          category: "TRANSPORTATION",
+          merchantName: "Uber",
+          transactionType: "DEBIT",
+          status: "COMPLETED"
+        }
+      ],
+      summary: {
+        total_spent_this_month: 55850,
+        total_transactions: 48,
+        most_frequent_category: "FOOD_DELIVERY"
+      }
+    };
+  }
+
+  /**
+   * Load hardcoded mutual fund transaction data
+   */
+  static loadMutualFundTransactions(): SampleFinancialData['mutual_fund_transactions'] {
+    return [
+      {
+        transactionId: "MF001",
+        folioNumber: "12345678",
+        schemeName: "ICICI Prudential Bluechip Fund Direct Growth",
+        transactionType: "PURCHASE",
+        transactionDate: "2025-01-14T10:30:00Z",
+        amount: 5000,
+        units: 73.24,
+        nav: 68.24,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "MF002",
+        folioNumber: "87654321",
+        schemeName: "Axis Midcap Fund Direct Growth",
+        transactionType: "PURCHASE",
+        transactionDate: "2025-01-14T10:30:00Z",
+        amount: 5000,
+        units: 66.78,
+        nav: 74.87,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "MF003",
+        folioNumber: "11223344",
+        schemeName: "Mirae Asset Large Cap Fund Direct Growth",
+        transactionType: "PURCHASE",
+        transactionDate: "2025-01-14T10:30:00Z",
+        amount: 5000,
+        units: 60.37,
+        nav: 82.81,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "MF004",
+        folioNumber: "55667788",
+        schemeName: "HDFC Index Fund Nifty 50 Direct Plan Growth",
+        transactionDate: "2024-12-14T10:30:00Z",
+        transactionType: "REDEMPTION",
+        amount: 15000,
+        units: 95.94,
+        nav: 156.31,
+        status: "CONFIRMED"
+      }
+    ];
+  }
+
+  /**
+   * Load hardcoded stock transaction data
+   */
+  static loadStockTransactions(): SampleFinancialData['stock_transactions'] {
+    return [
+      {
+        transactionId: "STK001",
+        symbol: "RELIANCE",
+        companyName: "Reliance Industries Limited",
+        transactionType: "BUY",
+        transactionDate: "2025-01-12T09:15:00Z",
+        quantity: 10,
+        price: 2850.50,
+        totalAmount: 28505,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "STK002",
+        symbol: "TCS",
+        companyName: "Tata Consultancy Services",
+        transactionType: "BUY",
+        transactionDate: "2025-01-08T14:20:00Z",
+        quantity: 5,
+        price: 4125.75,
+        totalAmount: 20628.75,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "STK003",
+        symbol: "INFY",
+        companyName: "Infosys Limited",
+        transactionType: "BUY",
+        transactionDate: "2024-12-20T11:45:00Z",
+        quantity: 15,
+        price: 1820.25,
+        totalAmount: 27303.75,
+        status: "CONFIRMED"
+      },
+      {
+        transactionId: "STK004",
+        symbol: "HDFC",
+        companyName: "HDFC Bank Limited",
+        transactionType: "SELL",
+        transactionDate: "2024-12-15T15:30:00Z",
+        quantity: 8,
+        price: 1685.90,
+        totalAmount: 13487.20,
+        status: "CONFIRMED"
+      }
+    ];
+  }
+
+  /**
+   * Load comprehensive hardcoded insights data
+   */
+  static loadInsights(): SampleFinancialData['insights'] {
+    return {
+      spending_insights: [
+        { category: "Investment", percentage: 26.9, amount: 15000, trend: "increasing" },
+        { category: "Shopping", percentage: 22.4, amount: 12500, trend: "stable" },
+        { category: "Grocery", percentage: 15.7, amount: 8750, trend: "decreasing" },
+        { category: "Food Delivery", percentage: 12.6, amount: 7050, trend: "increasing" },
+        { category: "Fuel", percentage: 7.5, amount: 4200, trend: "stable" },
+        { category: "Utilities", percentage: 6.6, amount: 3700, trend: "stable" },
+        { category: "Transportation", percentage: 4.3, amount: 2400, trend: "increasing" },
+        { category: "Entertainment", percentage: 4.0, amount: 2250, trend: "stable" }
+      ],
+      investment_insights: [
+        {
+          scheme_name: "Axis Midcap Fund Direct Growth",
+          performance: "excellent",
+          recommendation: "Continue SIP and consider increasing allocation"
+        },
+        {
+          scheme_name: "ICICI Prudential Bluechip Fund Direct Growth",
+          performance: "very good",
+          recommendation: "Maintain current SIP amount"
+        },
+        {
+          scheme_name: "Mirae Asset Large Cap Fund Direct Growth",
+          performance: "good",
+          recommendation: "Good for stable returns, continue"
+        },
+        {
+          scheme_name: "HDFC Index Fund Nifty 50 Direct Plan Growth",
+          performance: "good",
+          recommendation: "Excellent for diversification, maintain"
+        },
+        {
+          scheme_name: "Parag Parikh Flexi Cap Fund Direct Growth",
+          performance: "average",
+          recommendation: "Monitor closely, consider alternatives"
+        }
+      ],
+      portfolio_health: {
+        score: 78,
+        status: "Good",
+        recommendations: [
+          "Increase emergency fund to 6 months of expenses",
+          "Consider adding international diversification",
+          "Review and rebalance portfolio quarterly",
+          "Optimize tax-saving investments",
+          "Monitor high-performing midcap exposure"
+        ]
+      }
+    };
+  }
+
+  /**
+   * Load comprehensive hardcoded financial data
+   */
+  static loadAllData(): SampleFinancialData {
+    return {
+      portfolio: this.loadPortfolioData(),
+      bank_transactions: this.loadBankTransactions(),
+      mutual_fund_transactions: this.loadMutualFundTransactions(),
+      stock_transactions: this.loadStockTransactions(),
+      insights: this.loadInsights()
+    };
+  }
+}
+
+// Legacy compatibility - keep original function for backward compatibility
+export const loadSampleData = () => {
+  const data = SampleDataLoader.loadAllData();
+  return {
+    summary: data.portfolio.summary,
+    data: {
+      asset_allocation: data.portfolio.data.asset_allocation,
+      mutual_fund_schemes: data.portfolio.data.mutual_fund_schemes,
+      bank_accounts: data.portfolio.data.bank_accounts,
+      performance_metrics: data.portfolio.data.performance_metrics
+    },
+    metadata: data.portfolio.metadata
+  };
 };
 
 const formatCurrency = (amount: number): string => {
