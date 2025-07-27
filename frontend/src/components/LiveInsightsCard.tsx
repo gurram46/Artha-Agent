@@ -26,7 +26,17 @@ export default function LiveInsightsCard() {
 
   const connectWebSocket = () => {
     try {
-      wsRef.current = new WebSocket('ws://localhost:8003/ws/live-insights');
+      // Get backend URL with placeholder protection
+      let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      
+      // Safety check for placeholder URLs and localhost
+      if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+        backendUrl = 'https://artha-agent.onrender.com';
+        console.warn('⚠️ LiveInsightsCard: Detected placeholder/localhost URL, using production fallback:', backendUrl);
+      }
+      
+      const wsUrl = backendUrl.replace('https://', 'wss://').replace('http://', 'ws://');
+      wsRef.current = new WebSocket(`${wsUrl}/ws/live-insights`);
       
       wsRef.current.onopen = () => {
         setIsConnected(true);

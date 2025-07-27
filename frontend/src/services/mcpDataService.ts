@@ -58,6 +58,7 @@ interface MCPEPFDetails {
 
 interface BackendFinancialData {
   status: string;
+  message?: string;
   data: {
     net_worth: MCPNetWorthResponse;
     credit_report: MCPCreditReport;
@@ -68,6 +69,7 @@ interface BackendFinancialData {
     total_assets: number;
     total_liabilities: number;
     credit_score: string;
+    data_source?: string;
   };
 }
 
@@ -80,8 +82,24 @@ class MCPDataService {
   private isDemoMode: boolean = false;
 
   private constructor() {
-    // Use environment variable or production backend URL
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+    // Use environment variable or production backend URL with explicit checks
+    const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    
+    // Log for debugging
+    console.log('Environment variables check:', { envBackendUrl, envApiUrl });
+    
+    // Ensure we never use placeholder URLs
+    let backendUrl = envBackendUrl || envApiUrl || 'https://artha-agent.onrender.com';
+    
+    // Safety check for placeholder URLs and localhost
+    if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+      backendUrl = 'https://artha-agent.onrender.com';
+      console.warn('⚠️ Detected placeholder/localhost URL, using production fallback:', backendUrl);
+    }
+    
+    this.backendUrl = backendUrl;
+    console.log('✅ MCPDataService initialized with backend URL:', this.backendUrl);
   }
 
   setDemoMode(enabled: boolean): void {
