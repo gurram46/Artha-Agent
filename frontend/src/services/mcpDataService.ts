@@ -56,6 +56,50 @@ interface MCPEPFDetails {
   };
 }
 
+interface MCPBankTransaction {
+  bank: string;
+  txns: Array<[string, string, string, number, string, string]>; // [amount, narration, date, type, mode, balance]
+}
+
+interface MCPBankTransactions {
+  schemaDescription: string;
+  bankTransactions: MCPBankTransaction[];
+}
+
+interface MCPMutualFundTransaction {
+  isinNumber: string;
+  folioId: string;
+  externalOrderType: string;
+  transactionDate: string;
+  purchasePrice: {
+    currencyCode: string;
+    units: string;
+    nanos?: number;
+  };
+  transactionAmount: {
+    currencyCode: string;
+    units: string;
+    nanos?: number;
+  };
+  transactionUnits: number;
+  transactionMode: string;
+  schemeName: string;
+}
+
+interface MCPMFTransactions {
+  transactions: MCPMutualFundTransaction[];
+}
+
+interface MCPStockTransaction {
+  isin: string;
+  txns: Array<[number, string, number, number?]>; // [type, date, quantity, navValue?]
+}
+
+interface MCPStockTransactions {
+  schemaDescription: string;
+  stockTransactions: MCPStockTransaction[];
+}
+
 interface BackendFinancialData {
   status: string;
   message?: string;
@@ -63,6 +107,9 @@ interface BackendFinancialData {
     net_worth: MCPNetWorthResponse;
     credit_report: MCPCreditReport;
     epf_details: MCPEPFDetails;
+    bank_transactions?: MCPBankTransactions;
+    mf_transactions?: MCPMFTransactions;
+    stock_transactions?: MCPStockTransactions;
   };
   summary: {
     total_net_worth_formatted: string;
@@ -122,12 +169,15 @@ class MCPDataService {
       net_worth: MCPNetWorthResponse;
       credit_report: MCPCreditReport;
       epf_details: MCPEPFDetails;
+      bank_transactions?: MCPBankTransactions;
+      mf_transactions?: MCPMFTransactions;
+      stock_transactions?: MCPStockTransactions;
     };
     error?: string;
     authRequired?: boolean;
   }> {
     try {
-      console.log('🎭 Loading MCP data from local files...');
+      console.log('🎭 Loading comprehensive mock MCP data...');
 
       // Check cache first
       const now = Date.now();
@@ -139,66 +189,172 @@ class MCPDataService {
         };
       }
 
-      // Load data from local MCP files
-      const netWorthResponse = await fetch('/mcp-docs/fetch_net_worth.json');
-      const creditReportResponse = await fetch('/mcp-docs/fetch_credit_report.json');
-      const epfDetailsResponse = await fetch('/mcp-docs/fetch_epf_details.json');
-
-      if (!netWorthResponse.ok || !creditReportResponse.ok || !epfDetailsResponse.ok) {
-        throw new Error('Failed to load MCP data files');
-      }
-
-      const netWorthData = await netWorthResponse.json();
-      const creditReportData = await creditReportResponse.json();
-      const epfDetailsData = await epfDetailsResponse.json();
-
-      // Transform to expected format
-      const mcpData = {
-        net_worth: netWorthData,
-        credit_report: creditReportData,
-        epf_details: {
-          epfDetails: {
-            balance: {
-              currencyCode: "INR",
-              units: epfDetailsData.uanAccounts[0]?.rawDetails?.overall_pf_balance?.current_pf_balance || "211111"
-            }
-          }
-        }
-      };
+      // Comprehensive hardcoded mock data
+      const mockData = this.getComprehensiveMockData();
 
       // Create mock backend response for caching
       this.cachedData = {
         status: 'success',
-        message: 'Data loaded from local MCP files',
-        data: mcpData,
+        message: 'Comprehensive mock data loaded',
+        data: mockData,
         summary: {
-          total_net_worth_formatted: this.formatCurrency(parseInt(netWorthData.netWorthResponse.totalNetWorthValue.units)),
-          total_assets: this.calculateTotalAssets(netWorthData.netWorthResponse.assetValues),
-          total_liabilities: this.calculateTotalLiabilities(netWorthData.netWorthResponse.liabilityValues),
-          credit_score: creditReportData.creditReports[0]?.creditReportData?.score?.bureauScore || '746',
-          data_source: 'Local MCP Files'
+          total_net_worth_formatted: this.formatCurrency(1250000),
+          total_assets: 1325000,
+          total_liabilities: 75000,
+          credit_score: '768',
+          data_source: 'Comprehensive Mock Data'
         }
       };
       
       this.lastFetch = now;
 
-      console.log('✅ Successfully loaded MCP data from local files');
-      console.log('📊 Data source: Local MCP Files');
+      console.log('✅ Successfully loaded comprehensive mock data');
+      console.log('📊 Data source: Comprehensive Mock Data');
 
       return {
         success: true,
-        data: mcpData
+        data: mockData
       };
 
     } catch (error) {
-      console.error('❌ Failed to load MCP data from local files:', error);
+      console.error('❌ Failed to load mock data:', error);
       
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to load local MCP data files',
+        error: error instanceof Error ? error.message : 'Failed to load mock data',
         authRequired: false
       };
     }
+  }
+
+  private getComprehensiveMockData() {
+    return {
+      net_worth: {
+        netWorthResponse: {
+          assetValues: [
+            {
+              netWorthAttribute: "ASSET_TYPE_MUTUAL_FUND",
+              value: { currencyCode: "INR", units: "450000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_SAVINGS_ACCOUNTS",
+              value: { currencyCode: "INR", units: "285000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_EPF",
+              value: { currencyCode: "INR", units: "320000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_FIXED_DEPOSIT",
+              value: { currencyCode: "INR", units: "150000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_INDIAN_SECURITIES",
+              value: { currencyCode: "INR", units: "120000" }
+            }
+          ],
+          liabilityValues: [
+            {
+              netWorthAttribute: "LIABILITY_TYPE_CREDIT_CARD",
+              value: { currencyCode: "INR", units: "45000" }
+            },
+            {
+              netWorthAttribute: "LIABILITY_TYPE_PERSONAL_LOAN",
+              value: { currencyCode: "INR", units: "30000" }
+            }
+          ],
+          totalNetWorthValue: {
+            currencyCode: "INR",
+            units: "1250000"
+          }
+        }
+      },
+      credit_report: {
+        creditReports: [
+          {
+            creditReportData: {
+              score: { bureauScore: "768" },
+              creditAccount: {
+                creditAccountSummary: {
+                  totalOutstandingBalance: {
+                    outstandingBalanceAll: "75000"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      epf_details: {
+        epfDetails: {
+          balance: {
+            currencyCode: "INR",
+            units: "320000"
+          }
+        }
+      },
+      bank_transactions: {
+        schemaDescription: "Mock bank transactions for demo",
+        bankTransactions: [
+          {
+            bank: "HDFC Bank",
+            txns: [
+              ["5000", "SALARY CREDIT", "2025-01-15", 1, "NEFT", "285000"],
+              ["1200", "UPI-SWIGGY PAYMENT", "2025-01-14", 2, "UPI", "280000"],
+              ["500", "ATM WITHDRAWAL", "2025-01-13", 2, "ATM", "279500"],
+              ["2500", "GROCERY PAYMENT", "2025-01-12", 2, "UPI", "277000"],
+              ["1500", "ELECTRICITY BILL", "2025-01-11", 2, "AUTO_DEBIT", "275500"]
+            ]
+          }
+        ]
+      },
+      mf_transactions: {
+        transactions: [
+          {
+            isinNumber: "INF109K012B0",
+            folioId: "MF001234",
+            externalOrderType: "BUY",
+            transactionDate: "2025-01-10T10:30:00Z",
+            purchasePrice: { currencyCode: "INR", units: "145", nanos: 500000000 },
+            transactionAmount: { currencyCode: "INR", units: "14550" },
+            transactionUnits: 100,
+            transactionMode: "SIP",
+            schemeName: "ICICI Prudential Balanced Advantage Fund - Direct Plan"
+          },
+          {
+            isinNumber: "INF760K01FC4",
+            folioId: "MF005678",
+            externalOrderType: "BUY",
+            transactionDate: "2025-01-05T09:15:00Z",
+            purchasePrice: { currencyCode: "INR", units: "125", nanos: 750000000 },
+            transactionAmount: { currencyCode: "INR", units: "12575" },
+            transactionUnits: 100,
+            transactionMode: "SIP",
+            schemeName: "SBI Blue Chip Fund - Direct Plan"
+          }
+        ]
+      },
+      stock_transactions: {
+        schemaDescription: "Mock stock transactions for demo",
+        stockTransactions: [
+          {
+            isin: "INE040A01034",
+            txns: [
+              [1, "2025-01-12", 10, 1580.50],
+              [1, "2024-12-15", 5, 1520.25],
+              [2, "2024-11-20", 3, 1650.75]
+            ]
+          },
+          {
+            isin: "INE002A01018",
+            txns: [
+              [1, "2025-01-08", 25, 890.30],
+              [1, "2024-12-10", 15, 875.60]
+            ]
+          }
+        ]
+      }
+    };
   }
 
   private calculateTotalAssets(assetValues: MCPAsset[]): number {
