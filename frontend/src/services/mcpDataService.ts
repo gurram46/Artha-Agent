@@ -209,7 +209,7 @@ class MCPDataService {
     return liabilityValues.reduce((total, liability) => total + parseInt(liability.value.units), 0);
   }
 
-  // Fi Money Web Authentication Methods
+  // Local MCP Authentication Methods (simplified for local data)
   async initiateWebAuthentication(): Promise<{
     success: boolean;
     loginRequired?: boolean;
@@ -217,152 +217,59 @@ class MCPDataService {
     sessionId?: string;
     message: string;
   }> {
-    try {
-      console.log('🌐 Initiating Fi Money web authentication...');
-      
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Authentication initiation failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.status === 'login_required') {
-        console.log('🔗 Fi Money login URL received');
-        return {
-          success: true,
-          loginRequired: true,
-          loginUrl: result.login_url,
-          sessionId: result.session_id,
-          message: result.message
-        };
-      } else if (result.status === 'already_authenticated') {
-        console.log('✅ Already authenticated with Fi Money');
-        return {
-          success: true,
-          loginRequired: false,
-          message: result.message
-        };
-      } else {
-        console.error('❌ Fi Money authentication initiation failed');
-        return {
-          success: false,
-          message: result.message || 'Authentication initiation failed'
-        };
-      }
-      
-    } catch (error) {
-      console.error('❌ Fi Money authentication initiation error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Authentication initiation error'
-      };
-    }
+    console.log('🎭 Mock authentication - using local MCP data');
+    
+    // Simulate successful authentication since we're using local data
+    return {
+      success: true,
+      loginRequired: false,
+      message: 'Local MCP data - no authentication required'
+    };
   }
 
   async checkAuthenticationStatus(): Promise<{
     authenticated: boolean;
     expiresInMinutes?: number;
     message?: string;
+    isDemo?: boolean;
   }> {
-    try {
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/status`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Status check failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.status === 'success') {
-        const authStatus = result.auth_status;
-        return {
-          authenticated: authStatus.authenticated || false,
-          expiresInMinutes: authStatus.expires_in_minutes,
-          message: authStatus.message
-        };
-      } else {
-        return {
-          authenticated: false,
-          message: result.message
-        };
-      }
-      
-    } catch (error) {
-      console.error('❌ Auth status check error:', error);
-      return {
-        authenticated: false,
-        message: 'Status check failed'
-      };
-    }
+    // Always authenticated since we're using local data
+    return {
+      authenticated: true,
+      isDemo: true,
+      message: 'Using local MCP data files'
+    };
   }
 
   async logout(): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
-      });
-
-      const result = await response.json();
-      
-      // Clear cache regardless of response
-      this.cachedData = null;
-      this.lastFetch = 0;
-      
-      return {
-        success: result.status === 'success',
-        message: result.message
-      };
-      
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-      return {
-        success: false,
-        message: 'Logout failed'
-      };
-    }
+    // Clear cache
+    this.cachedData = null;
+    this.lastFetch = 0;
+    
+    return {
+      success: true,
+      message: 'Logged out from local MCP data'
+    };
   }
 
-  // New method to get additional portfolio insights from backend
+  // Local portfolio insights (using MCP data)
   async getPortfolioInsights(): Promise<{
     success: boolean;
     insights?: any;
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/portfolio-health`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Portfolio insights API error: ${response.status}`);
+      const mcpResult = await this.loadMCPData();
+      if (!mcpResult.success || !mcpResult.data) {
+        throw new Error('MCP data not available');
       }
 
-      const data = await response.json();
+      // Generate insights from local MCP data
+      const insights = this.generatePortfolioInsights(mcpResult.data);
+      
       return {
         success: true,
-        insights: data.portfolio_health
+        insights
       };
 
     } catch (error) {
@@ -374,29 +281,24 @@ class MCPDataService {
     }
   }
 
-  // New method to get risk assessment from backend
+  // Local risk assessment (using MCP data)
   async getRiskAssessment(): Promise<{
     success: boolean;
     assessment?: any;
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/risk-assessment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Risk assessment API error: ${response.status}`);
+      const mcpResult = await this.loadMCPData();
+      if (!mcpResult.success || !mcpResult.data) {
+        throw new Error('MCP data not available');
       }
 
-      const data = await response.json();
+      // Generate risk assessment from local MCP data
+      const assessment = this.generateRiskAssessment(mcpResult.data);
+      
       return {
         success: true,
-        assessment: data.risk_assessment
+        assessment
       };
 
     } catch (error) {
@@ -406,6 +308,55 @@ class MCPDataService {
         error: error instanceof Error ? error.message : 'Risk assessment unavailable'
       };
     }
+  }
+
+  private generatePortfolioInsights(mcpData: any) {
+    const netWorth = mcpData.net_worth.netWorthResponse;
+    const totalAssets = this.calculateTotalAssets(netWorth.assetValues);
+    const totalLiabilities = this.calculateTotalLiabilities(netWorth.liabilityValues);
+    
+    return {
+      portfolio_health: {
+        overall_score: 75,
+        health_status: 'Good',
+        key_insights: [
+          `Total net worth: ${this.formatCurrency(totalAssets - totalLiabilities)}`,
+          `Asset allocation looks balanced across multiple asset classes`,
+          `Credit score of ${mcpData.credit_report.creditReports[0]?.creditReportData?.score?.bureauScore || '746'} is good`,
+          `EPF balance: ${this.formatCurrency(parseInt(mcpData.epf_details.epfDetails.balance.units))}`
+        ],
+        recommendations: [
+          'Consider increasing emergency fund to 6 months of expenses',
+          'Review mutual fund allocation for better tax efficiency',
+          'Monitor credit utilization ratio'
+        ]
+      }
+    };
+  }
+
+  private generateRiskAssessment(mcpData: any) {
+    const creditScore = parseInt(mcpData.credit_report.creditReports[0]?.creditReportData?.score?.bureauScore || '746');
+    const outstandingBalance = parseInt(mcpData.credit_report.creditReports[0]?.creditReportData?.creditAccount?.creditAccountSummary?.totalOutstandingBalance?.outstandingBalanceAll || '75000');
+    
+    return {
+      risk_assessment: {
+        overall_risk_level: creditScore > 750 ? 'Low' : creditScore > 650 ? 'Moderate' : 'High',
+        credit_risk: creditScore > 750 ? 'Low' : 'Moderate',
+        liquidity_risk: 'Low',
+        market_risk: 'Moderate',
+        concentration_risk: 'Low',
+        key_risks: [
+          `Outstanding debt: ${this.formatCurrency(outstandingBalance)}`,
+          'Equity exposure in mutual funds carries market risk',
+          'Multiple bank accounts provide good liquidity'
+        ],
+        mitigation_strategies: [
+          'Maintain emergency fund in liquid assets',
+          'Diversify across asset classes',
+          'Monitor and pay down high-interest debt'
+        ]
+      }
+    };
   }
 
   transformToPortfolioFormat(mcpData: {
