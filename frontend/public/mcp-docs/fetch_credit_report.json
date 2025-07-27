@@ -1,0 +1,18 @@
+{
+  "creditReports": [
+    {
+      "creditReportData": {
+        "score": {
+          "bureauScore": "746"
+        },
+        "creditAccount": {
+          "creditAccountSummary": {
+            "totalOutstandingBalance": {
+              "outstandingBalanceAll": "75000"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

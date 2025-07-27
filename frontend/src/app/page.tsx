@@ -9,96 +9,55 @@ import HydrationProvider from '@/components/HydrationProvider';
 import EnhancedFinancialStats from '@/components/EnhancedFinancialStats';
 import EnhancedAnalytics from '@/components/EnhancedAnalytics';
 import LocalLLMInsights from '@/components/LocalLLMInsights';
-import UnifiedCard from '@/components/ui/UnifiedCard';
-import UnifiedButton from '@/components/ui/UnifiedButton';
-import FiMoneyWebAuth from '@/components/FiMoneyWebAuth';
-import { designSystem } from '@/styles/designSystem';
 import MCPDataService from '@/services/mcpDataService';
 
 export default function Home() {
   const [financialData, setFinancialData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('portfolio');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   const mcpService = MCPDataService.getInstance();
 
   useEffect(() => {
-    checkAuthenticationAndFetchData();
+    // Check if demo mode is already enabled
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    if (demoMode) {
+      setIsDemoMode(true);
+      setIsAuthenticated(true);
+      loadFinancialDataImmediately();
+    }
   }, []);
 
-  const checkAuthenticationAndFetchData = async () => {
-    setIsCheckingAuth(true);
+  const loadFinancialDataImmediately = async () => {
     try {
-      // Check if demo mode is enabled first
-      const demoMode = sessionStorage.getItem('demoMode') === 'true';
-      if (demoMode) {
-        console.log('🎭 Demo mode detected');
-        setIsDemoMode(true);
-        mcpService.setDemoMode(true);
-        setIsAuthenticated(true);
-        await fetchFinancialData();
-        return;
-      }
-
-      // Check if already authenticated with Fi Money
-      const authStatus = await mcpService.checkAuthenticationStatus();
+      console.log('🎭 Loading MCP data from local files...');
       
-      if (authStatus.authenticated) {
-        console.log('✅ Already authenticated with Fi Money MCP');
-        setIsAuthenticated(true);
-        setIsDemoMode(authStatus.isDemo || false);
-        await fetchFinancialData();
-      } else {
-        console.log('🔐 Fi Money authentication required');
-        setIsAuthenticated(false);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }
-    setIsCheckingAuth(false);
-  };
-
-  const fetchFinancialData = async () => {
-    try {
-      console.log('🔄 Loading real-time financial data from Fi Money MCP...');
-      setIsLoading(true);
+      // Set demo mode
+      mcpService.setDemoMode(true);
       
+      // Load data immediately
       const result = await mcpService.loadMCPData();
       
       if (result.success && result.data) {
-        console.log('✅ Real-time financial data loaded successfully from Fi Money');
+        console.log('✅ Local MCP data loaded successfully');
         const transformedData = mcpService.transformToPortfolioFormat(result.data);
         setFinancialData(transformedData);
         setAuthError('');
-      } else if (result.authRequired) {
-        console.log('🔐 Fi Money authentication required');
-        setIsAuthenticated(false);
-        setAuthError(result.error || 'Please authenticate with Fi Money');
       } else {
-        throw new Error(result.error || 'Failed to load financial data from Fi Money');
+        console.warn('⚠️ Failed to load local MCP data');
+        setAuthError('Unable to load financial data');
       }
       
     } catch (error) {
-      console.error('💥 Error loading financial data from Fi Money:', error);
-      setFinancialData(null);
-      if (error instanceof Error && (error.message.includes('authentication') || error.message.includes('expired'))) {
-        setIsAuthenticated(false);
-        setAuthError('Session expired. Please authenticate again.');
-      }
-    } finally {
-      setIsLoading(false);
+      console.error('❌ Error loading local MCP data:', error);
+      setAuthError('Error loading financial data');
     }
   };
 
   const handleAuthSuccess = async () => {
-    console.log('✅ Fi Money authentication successful');
+    console.log('✅ Authentication successful');
     setIsAuthenticated(true);
     setAuthError('');
     
@@ -106,87 +65,17 @@ export default function Home() {
     const demoMode = sessionStorage.getItem('demoMode') === 'true';
     setIsDemoMode(demoMode);
     
-    await fetchFinancialData();
+    await loadFinancialDataImmediately();
   };
 
   const handleAuthError = (error: string) => {
-    console.error('❌ Fi Money authentication failed:', error);
+    console.error('❌ Authentication failed:', error);
     setAuthError(error);
     setIsAuthenticated(false);
   };
 
-  // Transformation handled by MCPDataService
 
-  if (isCheckingAuth || isLoading) {
-    return (
-      <div className="min-h-screen bg-[rgb(0,26,30)] flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <div className="w-12 h-12 border-4 border-[rgba(0,184,153,0.3)] border-t-[rgb(0,184,153)] rounded-full animate-spin mx-auto"></div>
-          <div>
-            <h2 className="text-2xl font-black text-white">Artha AI</h2>
-            <p className="text-gray-300 mt-2">
-              {isCheckingAuth ? 'Checking Fi Money connection...' : 'Loading real-time financial data...'}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show authentication screen if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <HydrationProvider>
-        <div className="min-h-screen bg-[rgb(0,26,30)]">
-          {/* Fi Money Auth Header */}
-          <header className="bg-[rgba(26,26,26,0.95)] backdrop-blur-xl border-b border-[rgba(0,184,153,0.2)] sticky top-0 z-50 shadow-2xl">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-20">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-xl">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight">Artha AI</h1>
-                    <p className="text-xs text-[rgb(0,184,153)] font-semibold">AI Financial Intelligence</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Fi Money Authentication Content */}
-          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-black text-white mb-6">
-                Connect to Fi Money for Real-Time Financial Intelligence
-              </h2>
-              <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                Get AI-powered insights on your complete financial portfolio with live data from Fi Money's MCP server
-              </p>
-            </div>
-
-            {authError && (
-              <div className="mb-8 max-w-md mx-auto">
-                <div className="bg-[rgba(220,53,69,0.1)] border border-[rgba(220,53,69,0.3)] rounded-2xl p-4">
-                  <p className="text-sm text-red-400">{authError}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="mx-auto">
-              <FiMoneyWebAuth
-                onAuthSuccess={handleAuthSuccess}
-                onAuthError={handleAuthError}
-              />
-            </div>
-          </main>
-        </div>
-      </HydrationProvider>
-    );
-  }
+  // No loading screens - go straight to the app
 
   const navigationItems = [
     { id: 'portfolio', label: 'Portfolio', icon: 'M4 7v10c0 2.21 3.79 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.79 4 8 4s8-1.79 8-4M4 7c0-2.21 3.79-4 8-4s8 1.79 8 4' },
@@ -214,7 +103,7 @@ export default function Home() {
                   <div>
                     <h1 className="text-2xl font-black text-white tracking-tight">Artha</h1>
                     <p className="text-xs text-[rgb(0,184,153)] font-semibold">
-                      {isDemoMode ? '🎭 Demo Mode • AI Financial Intelligence' : 'AI Financial Intelligence'}
+                      Local MCP Data • AI Financial Intelligence
                     </p>
                   </div>
                 </div>
@@ -295,12 +184,12 @@ export default function Home() {
                     </div>
                     <div>
                       <h1 className="text-xl font-bold text-white tracking-tight">
-                        {isDemoMode ? 'Demo Portfolio' : 'My Portfolio'}
+                        MCP Portfolio
                       </h1>
                       <div className="flex items-center mt-1 space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} animate-pulse`}></div>
-                        <span className={`text-xs font-medium ${isDemoMode ? 'text-yellow-400' : 'text-[rgb(0,184,153)]'}`}>
-                          {isDemoMode ? 'Demo Mode' : 'Live Data'}
+                        <div className="w-2 h-2 rounded-full bg-[rgb(0,184,153)] animate-pulse"></div>
+                        <span className="text-xs font-medium text-[rgb(0,184,153)]">
+                          Local MCP Data
                         </span>
                       </div>
                     </div>
@@ -314,15 +203,7 @@ export default function Home() {
             </div>
           )}
           
-          {/* Compact Auth Status */}
-          {!isDemoMode && (
-            <div className="mb-4">
-              <FiMoneyWebAuth
-                onAuthSuccess={handleAuthSuccess}
-                onAuthError={handleAuthError}
-              />
-            </div>
-          )}
+          {/* No authentication needed - using local MCP data */}
           
           {/* Compact Content Sections */}
           <div className="space-y-5">
