@@ -1,6 +1,6 @@
 """
 Quick Response Agent 🚀
-Single agent for fast financial responses using Gemini 2.5 Flash with Google Search grounding
+Single agent for fast financial responses using Gemini 2.5 Flash without grounding
 Optimized for speed and immediate actionable insights
 """
 
@@ -22,25 +22,25 @@ from google.genai import types
 logger = logging.getLogger(__name__)
 
 class QuickResponseAgent(BaseFinancialAgent):
-    """Quick Response Agent - Single agent for fast financial responses with Google Search grounding"""
+    """Quick Response Agent - Single agent for fast financial responses without grounding"""
     
     def __init__(self):
         super().__init__("analyst")  # Inherits analyst agent configuration
         self.name = "Quick Response Financial Advisor"
         self.emoji = "⚡"
         self.personality = "fast and focused financial advisor"
-        logger.info("⚡ Quick Response Financial Advisor initialized - Speed optimized with Google Search grounding")
+        logger.info("⚡ Quick Response Financial Advisor initialized - Speed optimized without grounding")
     
     async def generate_quick_response(self, user_query: str, financial_data: FinancialData) -> Dict[str, Any]:
-        """Generate fast response using Gemini 2.5 Flash with Google Search grounding"""
+        """Generate fast response using Gemini 2.5 Flash without grounding"""
         
         try:
             # Quick financial context extraction
             financial_summary = self._extract_quick_financial_context(financial_data)
             
-            # Create optimized prompt for quick response with Google Search grounding
+            # Create optimized prompt for quick response without grounding
             quick_prompt = f"""
-You are a fast and focused Indian financial advisor. Provide immediate, actionable financial advice using real-time market data.
+You are a fast and focused Indian financial advisor. Provide immediate, actionable financial advice based on general market knowledge and best practices.
 
 USER QUERY: {user_query}
 
@@ -48,71 +48,42 @@ USER'S FINANCIAL SITUATION:
 {financial_summary}
 
 INSTRUCTIONS:
-1. Use Google Search to get current market information relevant to the query
-2. Provide IMMEDIATE actionable advice (2-3 sentences max)
-3. Include specific numbers, rates, or recommendations from search results
-4. Focus on Indian financial context (₹, Indian markets, Indian products)
-5. Be direct and practical - NO lengthy explanations
+1. Provide IMMEDIATE actionable advice (2-3 sentences max)
+2. Use general market knowledge and established financial principles
+3. Focus on Indian financial context (₹, Indian markets, Indian products)
+4. Be direct and practical - NO lengthy explanations
+5. Give specific actionable steps the user can take
 
-Provide fast, actionable response using real-time market data from Google Search.
+Provide fast, actionable response based on established financial principles.
 """
             
-            # Configure Google Search grounding tool
-            grounding_tool = types.Tool(
-                google_search=types.GoogleSearch()
-            )
-            
-            # Generate response with Google Search grounding
-            logger.info("⚡ Generating quick response with Google Search grounding...")
+            # Generate response without grounding
+            logger.info("⚡ Generating quick response without grounding...")
             
             response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=quick_prompt,
                 config=types.GenerateContentConfig(
-                    tools=[grounding_tool],
                     temperature=0.4,
                     top_p=0.9,
-                    system_instruction="You are a fast Indian financial advisor. Use Google Search for current data. Be direct, actionable, and specific. Focus on immediate practical advice."
+                    system_instruction="You are a fast Indian financial advisor. Be direct, actionable, and specific. Focus on immediate practical advice based on established financial principles."
                 )
             )
             
             if response and response.text:
                 response_content = response.text.strip()
                 
-                # Extract grounding metadata if available
-                sources = []
-                search_queries = []
-                
-                if response.candidates and len(response.candidates) > 0:
-                    candidate = response.candidates[0]
-                    if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
-                        metadata = candidate.grounding_metadata
-                        
-                        # Extract search queries used
-                        if hasattr(metadata, 'web_search_queries') and metadata.web_search_queries:
-                            search_queries = list(metadata.web_search_queries)
-                        
-                        # Extract sources from grounding chunks
-                        if hasattr(metadata, 'grounding_chunks') and metadata.grounding_chunks:
-                            for i, chunk in enumerate(metadata.grounding_chunks):
-                                if hasattr(chunk, 'web') and chunk.web:
-                                    source = {
-                                        'title': getattr(chunk.web, 'title', f'Source {i+1}'),
-                                        'uri': getattr(chunk.web, 'uri', '#')
-                                    }
-                                    sources.append(source)
-                
-                logger.info(f"⚡ Quick response generated: {len(response_content)} chars, {len(sources)} sources")
+                logger.info(f"⚡ Quick response generated: {len(response_content)} chars")
                 
                 return {
                     'agent': 'Quick Response Financial Advisor',
                     'content': response_content,
                     'emoji': '⚡',
-                    'sources': sources,
-                    'search_queries': search_queries,
+                    'sources': [],
+                    'search_queries': [],
                     'response_time': 'fast',
                     'mode': 'quick',
-                    'grounded': len(sources) > 0
+                    'grounded': False
                 }
             else:
                 logger.warning("⚡ Empty response from Gemini, using fallback")
@@ -194,8 +165,8 @@ Provide fast, actionable response using real-time market data from Google Search
     
     # Required abstract methods (simplified for quick response)
     async def generate_grounding_queries(self, user_query: str, financial_data: FinancialData) -> List[str]:
-        """Not used in quick response mode - Google Search grounding handles this automatically"""
-        return [f"{user_query} India financial advice 2025"]
+        """Not used in quick response mode - no grounding enabled"""
+        return []
     
     async def analyze_financial_data(self, financial_data: FinancialData) -> Dict[str, Any]:
         """Quick financial data analysis"""

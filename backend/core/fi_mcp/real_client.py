@@ -120,9 +120,27 @@ async def get_user_financial_data() -> FinancialData:
             logger.error(f"Stock transactions fetch failed: {stock_transactions}")
             stock_transactions = {}
         
-        # Extract transaction lists
+        # Extract transaction lists with proper format handling
         mf_tx_list = mf_transactions.get('transactions', []) if mf_transactions else []
-        bank_tx_list = bank_transactions.get('transactions', []) if bank_transactions else []
+        
+        # Bank transactions have a different format - extract from bankTransactions array
+        bank_tx_list = []
+        if bank_transactions and 'bankTransactions' in bank_transactions:
+            for bank_data in bank_transactions['bankTransactions']:
+                bank_name = bank_data.get('bank', 'Unknown Bank')
+                txns = bank_data.get('txns', [])
+                for txn in txns:
+                    if len(txn) >= 6:  # Ensure all required fields are present
+                        bank_tx_list.append({
+                            'bank': bank_name,
+                            'amount': txn[0],
+                            'narration': txn[1], 
+                            'date': txn[2],
+                            'type': txn[3],  # 1=CREDIT, 2=DEBIT, etc.
+                            'mode': txn[4],
+                            'balance': txn[5]
+                        })
+        
         stock_tx_list = stock_transactions.get('transactions', []) if stock_transactions else []
         
         financial_data = FinancialData(

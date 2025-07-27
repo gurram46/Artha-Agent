@@ -216,7 +216,7 @@ class FiMCPClient:
                         'holdings': account_info['equitySummary']
                     })
         
-        # Parse transactions
+        # Parse transactions with proper format handling
         mf_transactions = []
         bank_transactions = []
         stock_transactions = []
@@ -227,7 +227,22 @@ class FiMCPClient:
             
         if bank_transaction_data:
             bank_tx_data = json.loads(bank_transaction_data) if isinstance(bank_transaction_data, str) else bank_transaction_data
-            bank_transactions = bank_tx_data.get('transactions', [])
+            # Bank transactions have a different format - extract from bankTransactions array
+            if 'bankTransactions' in bank_tx_data:
+                for bank_data in bank_tx_data['bankTransactions']:
+                    bank_name = bank_data.get('bank', 'Unknown Bank')
+                    txns = bank_data.get('txns', [])
+                    for txn in txns:
+                        if len(txn) >= 6:  # Ensure all required fields are present
+                            bank_transactions.append({
+                                'bank': bank_name,
+                                'amount': txn[0],
+                                'narration': txn[1], 
+                                'date': txn[2],
+                                'type': txn[3],  # 1=CREDIT, 2=DEBIT, etc.
+                                'mode': txn[4],
+                                'balance': txn[5]
+                            })
             
         if stock_transaction_data:
             stock_tx_data = json.loads(stock_transaction_data) if isinstance(stock_transaction_data, str) else stock_transaction_data
@@ -299,7 +314,22 @@ async def get_user_financial_data() -> FinancialData:
         try:
             with open(bank_file, 'r') as f:
                 bank_data = json.load(f)
-                bank_transactions = bank_data.get('transactions', [])
+                # Parse bank transactions format
+                if 'bankTransactions' in bank_data:
+                    for bank_info in bank_data['bankTransactions']:
+                        bank_name = bank_info.get('bank', 'Unknown Bank')
+                        txns = bank_info.get('txns', [])
+                        for txn in txns:
+                            if len(txn) >= 6:  # Ensure all required fields are present
+                                bank_transactions.append({
+                                    'bank': bank_name,
+                                    'amount': txn[0],
+                                    'narration': txn[1], 
+                                    'date': txn[2],
+                                    'type': txn[3],  # 1=CREDIT, 2=DEBIT, etc.
+                                    'mode': txn[4],
+                                    'balance': txn[5]
+                                })
                 logger.info(f"✅ Loaded bank transactions from: {bank_file}")
         except FileNotFoundError:
             logger.warning(f"Bank transactions file not found: {bank_file}")

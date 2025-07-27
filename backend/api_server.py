@@ -109,7 +109,9 @@ async def get_financial_data_with_demo_support(demo_mode: bool = False):
                 net_worth=await client.fetch_net_worth(),
                 credit_report=await client.fetch_credit_report(),
                 epf_details=await client.fetch_epf_details(),
-                bank_transactions=await client.fetch_bank_transactions()
+                mf_transactions=await client.fetch_mf_transactions(),
+                bank_transactions=await client.fetch_bank_transactions(),
+                stock_transactions=await client.fetch_stock_transactions()
             )
             return demo_data
         else:
@@ -424,8 +426,9 @@ async def get_financial_data(demo: bool = False):
                     "net_worth": demo_data.net_worth,
                     "credit_report": demo_data.credit_report,
                     "epf_details": demo_data.epf_details,
+                    "mf_transactions": demo_data.mf_transactions,
                     "bank_transactions": demo_data.bank_transactions,
-                    "mf_transactions": await client.fetch_mf_transactions()
+                    "stock_transactions": demo_data.stock_transactions
                 },
                 "is_demo": True,
                 "message": "Demo data loaded successfully"
@@ -455,7 +458,8 @@ async def get_financial_data(demo: bool = False):
                 "credit_report": financial_data.credit_report,
                 "epf_details": financial_data.epf_details,
                 "mf_transactions": financial_data.mf_transactions,
-                "bank_transactions": financial_data.bank_transactions
+                "bank_transactions": financial_data.bank_transactions,
+                "stock_transactions": financial_data.stock_transactions
             },
             "summary": {
                 "total_net_worth": total_net_worth,
@@ -476,6 +480,103 @@ async def get_financial_data(demo: bool = False):
             "auth_required": "Session expired" in str(e) or "Not authenticated" in str(e)
         }
 
+@app.get("/api/transactions")
+async def get_all_transactions(demo: bool = False, limit: int = 50, transaction_type: str = "all"):
+    """Get all user transactions with filtering and pagination"""
+    try:
+        # Get financial data (demo or real)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
+        
+        all_transactions = []
+        
+        # Add bank transactions
+        for tx in financial_data.bank_transactions:
+            all_transactions.append({
+                "id": f"bank_{tx.get('date', '')}_{tx.get('amount', '')}",
+                "type": "bank",
+                "bank": tx.get('bank', 'Unknown Bank'),
+                "amount": float(tx.get('amount', '0').replace(',', '') if isinstance(tx.get('amount'), str) else tx.get('amount', 0)),
+                "description": tx.get('narration', ''),
+                "date": tx.get('date', ''),
+                "transaction_type": "credit" if tx.get('type') == 1 else "debit" if tx.get('type') == 2 else "other",
+                "mode": tx.get('mode', ''),
+                "balance": float(tx.get('balance', '0').replace(',', '') if isinstance(tx.get('balance'), str) else tx.get('balance', 0))
+            })
+        
+        # Add mutual fund transactions
+        for tx in financial_data.mf_transactions:
+            all_transactions.append({
+                "id": f"mf_{tx.get('transactionDate', '')}_{tx.get('transactionAmount', {}).get('units', '')}",
+                "type": "mutual_fund",
+                "fund_name": tx.get('schemeDetail', {}).get('nameData', {}).get('longName', 'Unknown Fund'),
+                "amount": float(tx.get('transactionAmount', {}).get('units', '0')),
+                "description": f"{tx.get('externalOrderType', '')} - {tx.get('transactionUnits', '')} units",
+                "date": tx.get('transactionDate', ''),
+                "transaction_type": "buy" if tx.get('externalOrderType') == "BUY" else "sell",
+                "nav": float(tx.get('purchasePrice', {}).get('units', '0'))
+            })
+        
+        # Add stock transactions
+        for tx in financial_data.stock_transactions:
+            all_transactions.append({
+                "id": f"stock_{tx.get('transactionDate', '')}_{tx.get('isinNumber', '')}",
+                "type": "stock",
+                "isin": tx.get('isinNumber', ''),
+                "amount": float(tx.get('transactionValue', '0')),
+                "description": f"{tx.get('transactionType', '')} - {tx.get('quantity', '')} shares",
+                "date": tx.get('transactionDate', ''),
+                "transaction_type": tx.get('transactionType', '').lower(),
+                "nav": float(tx.get('navValue', '0'))
+            })
+        
+        # Sort by date (newest first)
+        all_transactions.sort(key=lambda x: x.get('date', ''), reverse=True)
+        
+        # Filter by transaction type if specified
+        if transaction_type != "all":
+            all_transactions = [tx for tx in all_transactions if tx['type'] == transaction_type]
+        
+        # Apply limit
+        if limit > 0:
+            all_transactions = all_transactions[:limit]
+        
+        # Calculate summary statistics
+        total_transactions = len(all_transactions)
+        bank_count = len([tx for tx in all_transactions if tx['type'] == 'bank'])
+        mf_count = len([tx for tx in all_transactions if tx['type'] == 'mutual_fund'])
+        stock_count = len([tx for tx in all_transactions if tx['type'] == 'stock'])
+        
+        # Calculate total amounts by type
+        bank_credits = sum([tx['amount'] for tx in all_transactions if tx['type'] == 'bank' and tx['transaction_type'] == 'credit'])
+        bank_debits = sum([abs(tx['amount']) for tx in all_transactions if tx['type'] == 'bank' and tx['transaction_type'] == 'debit'])
+        
+        return {
+            "status": "success",
+            "data": {
+                "transactions": all_transactions,
+                "summary": {
+                    "total_count": total_transactions,
+                    "bank_transactions": bank_count,
+                    "mf_transactions": mf_count,
+                    "stock_transactions": stock_count,
+                    "bank_credits": bank_credits,
+                    "bank_debits": bank_debits,
+                    "net_bank_flow": bank_credits - bank_debits
+                },
+                "filters_applied": {
+                    "transaction_type": transaction_type,
+                    "limit": limit,
+                    "demo_mode": demo
+                }
+            },
+            "is_demo": demo,
+            "message": f"Successfully retrieved {total_transactions} transactions"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get transactions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch transactions: {str(e)}")
+
 @app.post("/api/stream/query")
 async def stream_query(request: QueryRequest):
     """Stream user financial query response - routes to quick or research mode"""
@@ -492,7 +593,7 @@ async def deep_research_endpoint(request: QueryRequest):
 
 @app.post("/api/quick-response")
 async def stream_quick_response(request: QueryRequest):
-    """Stream quick financial response using single agent with Google Search grounding"""
+    """Stream quick financial response using single agent without grounding"""
     if not quick_agent:
         raise HTTPException(status_code=500, detail="Quick agent not initialized")
     
@@ -501,7 +602,7 @@ async def stream_quick_response(request: QueryRequest):
             newline = "\n"
             
             # Quick mode activation
-            quick_content = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}🚀 Single agent with Google Search grounding'
+            quick_content = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}🚀 Single agent for fast financial advice'
             yield f"data: {json.dumps({'type': 'log', 'content': quick_content})}\n\n"
             await asyncio.sleep(0.1)
             
@@ -511,14 +612,14 @@ async def stream_quick_response(request: QueryRequest):
             financial_data = await get_financial_data_with_demo_support(request.demo_mode)
             await asyncio.sleep(0.1)
             
-            yield f"data: {json.dumps({'type': 'log', 'content': '🔍 Searching real-time market data with Google...'})}\n\n"
+            yield f"data: {json.dumps({'type': 'log', 'content': '🧠 Analyzing your query for quick insights...'})}\n\n"
             await asyncio.sleep(0.2)
             
             # Generate quick response
             response_data = await quick_agent.generate_quick_response(request.query, financial_data)
             
             sources_count = len(response_data.get("sources", []))
-            sources_msg = f'✅ Response generated with {sources_count} live sources'
+            sources_msg = f'✅ Quick response generated successfully'
             yield f"data: {json.dumps({'type': 'log', 'content': sources_msg})}\n\n"
             await asyncio.sleep(0.1)
             
@@ -528,14 +629,12 @@ async def stream_quick_response(request: QueryRequest):
                 yield f"data: {json.dumps({'type': 'content', 'content': chunk + ' '})}\n\n"
                 await asyncio.sleep(0.02)  # Fast streaming
             
-            # Add source information if available
+            # Add response completion notice
             sources = response_data.get('sources', [])
-            if sources:
-                sources_text = f"{newline}{newline}📊 **Based on {len(sources)} live market sources:**{newline}"
-                for i, source in enumerate(sources[:3], 1):
-                    sources_text += f"{i}. {source.get('title', 'Market Source')}{newline}"
+            if not sources:  # Since we removed grounding, this will always be true
+                completion_text = f"{newline}{newline}💡 **Quick advice based on established financial principles**{newline}"
                 
-                for chunk in sources_text.split():
+                for chunk in completion_text.split():
                     yield f"data: {json.dumps({'type': 'content', 'content': chunk + ' '})}\n\n"
                     await asyncio.sleep(0.01)
             

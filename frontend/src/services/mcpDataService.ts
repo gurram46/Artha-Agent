@@ -381,6 +381,68 @@ class MCPDataService {
     }
   }
 
+  // New method to get all transactions from backend
+  async getAllTransactions(limit: number = 50, transactionType: string = 'all'): Promise<{
+    success: boolean;
+    data?: {
+      transactions: any[];
+      summary: {
+        total_count: number;
+        bank_transactions: number;
+        mf_transactions: number;
+        stock_transactions: number;
+        bank_credits: number;
+        bank_debits: number;
+        net_bank_flow: number;
+      };
+      filters_applied: {
+        transaction_type: string;
+        limit: number;
+        demo_mode: boolean;
+      };
+    };
+    error?: string;
+  }> {
+    try {
+      console.log(`🔄 Fetching transactions (type: ${transactionType}, limit: ${limit})...`);
+      
+      const url = this.isDemoMode 
+        ? `${this.backendUrl}/api/transactions?demo=true&limit=${limit}&transaction_type=${transactionType}`
+        : `${this.backendUrl}/api/transactions?limit=${limit}&transaction_type=${transactionType}`;
+        
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Transactions API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        console.log(`✅ Successfully fetched ${result.data.summary.total_count} transactions`);
+        return {
+          success: true,
+          data: result.data
+        };
+      } else {
+        throw new Error(result.message || 'Failed to fetch transactions');
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to fetch transactions:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch transactions'
+      };
+    }
+  }
+
   transformToPortfolioFormat(mcpData: {
     net_worth: MCPNetWorthResponse;
     credit_report: MCPCreditReport;

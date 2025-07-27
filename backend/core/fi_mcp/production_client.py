@@ -452,9 +452,27 @@ class FiMoneyMCPClient:
                     tool_names = ['net_worth', 'credit_report', 'epf_details', 'mf_transactions', 'bank_transactions', 'stock_transactions']
                     logger.warning(f"Failed to fetch {tool_names[i]}: {result}")
             
-            # Extract transaction lists
+            # Extract transaction lists with proper parsing for different formats
             mf_tx_list = mf_transactions.get('transactions', []) if mf_transactions else []
-            bank_tx_list = bank_transactions.get('transactions', []) if bank_transactions else []
+            
+            # Bank transactions have a different format - extract from bankTransactions array
+            bank_tx_list = []
+            if bank_transactions and 'bankTransactions' in bank_transactions:
+                for bank_data in bank_transactions['bankTransactions']:
+                    bank_name = bank_data.get('bank', 'Unknown Bank')
+                    txns = bank_data.get('txns', [])
+                    for txn in txns:
+                        if len(txn) >= 6:  # Ensure all required fields are present
+                            bank_tx_list.append({
+                                'bank': bank_name,
+                                'amount': txn[0],
+                                'narration': txn[1], 
+                                'date': txn[2],
+                                'type': txn[3],  # 1=CREDIT, 2=DEBIT, etc.
+                                'mode': txn[4],
+                                'balance': txn[5]
+                            })
+            
             stock_tx_list = stock_transactions.get('transactions', []) if stock_transactions else []
             
             # Create comprehensive financial data object

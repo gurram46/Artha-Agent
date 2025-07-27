@@ -6,6 +6,7 @@ import StocksList from './StocksList';
 import UserRiskProfile from './UserRiskProfile';
 import InvestmentRecommendationCard from './InvestmentRecommendationCard';
 import CreditCardTransactions from './CreditCardTransactions';
+import AllTransactions from './AllTransactions';
 
 interface Props {
   financialData: any;
@@ -361,8 +362,8 @@ export default function Dashboard({ financialData }: Props) {
       {/* Stock Market Overview */}
       <StocksList />
 
-      {/* Credit Card Transactions */}
-      <CreditCardTransactions financialData={financialData} />
+      {/* All Transactions - Comprehensive View */}
+      <AllTransactions financialData={financialData} />
 
       {schemes.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
