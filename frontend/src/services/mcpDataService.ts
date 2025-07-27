@@ -80,8 +80,8 @@ class MCPDataService {
   private isDemoMode: boolean = false;
 
   private constructor() {
-    // Default to localhost backend, can be configured via environment
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8003';
+    // Use environment variable or production backend URL
+    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
   }
 
   setDemoMode(enabled: boolean): void {

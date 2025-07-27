@@ -40,7 +40,14 @@ app = FastAPI(title="Artha AI Backend API - Enhanced", version="2.0.0")
 # Enable CORS for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3002", "http://localhost:3001"],  # Next.js dev server on different ports
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://localhost:3002", 
+        "http://localhost:3001",
+        "https://artha-agent-1.onrender.com",
+        "https://artha-agent.onrender.com",
+        "*"  # Allow all origins for production
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
