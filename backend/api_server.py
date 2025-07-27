@@ -1602,20 +1602,28 @@ async def trip_planning_chat(request: TripChatRequest):
 
 
 # ============================================================================
-# SANDEEP-ARTHA INVESTMENT SYSTEM API ENDPOINTS  
+# AI INVESTMENT SYSTEM API ENDPOINTS  
 # ============================================================================
 
-@app.post("/api/sandeep-investment-recommendations")
-async def get_sandeep_investment_recommendations(request: dict, demo: bool = False):
-    """Get investment recommendations using SAndeep's multi-agent system"""
+@app.post("/api/ai-investment-recommendations")
+async def get_ai_investment_recommendations(request: dict, demo: bool = False):
+    """Get investment recommendations using AI multi-agent system
+    
+    For demo mode: Pass demo=true as query parameter
+    Demo accounts get instant hardcoded responses with * indicators
+    Real accounts get actual AI agent analysis
+    """
     try:
         from sandeep_investment_system.sandeep_api_integration import sandeep_api
         
         if not sandeep_api.initialized:
             raise HTTPException(status_code=500, detail="SAndeep Investment System not properly initialized. Check Google ADK dependencies.")
         
-        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
-        logger.info(f"✅ Using {'demo' if demo else 'real Fi Money MCP'} data for SAndeep analysis")
+        # Check for demo mode from request or query parameter
+        is_demo_mode = demo or request.get('demo_mode', False) or request.get('demo', False)
+        
+        financial_data = await get_financial_data_with_demo_support(demo_mode=is_demo_mode)
+        logger.info(f"🎭 Using {'DEMO' if is_demo_mode else 'REAL Fi Money MCP'} data for SAndeep analysis")
         
         mcp_data = {
             "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
@@ -1635,15 +1643,17 @@ async def get_sandeep_investment_recommendations(request: dict, demo: bool = Fal
             investment_amount=investment_amount,
             risk_tolerance=risk_tolerance,
             investment_goal=investment_goal,
-            time_horizon=time_horizon
+            time_horizon=time_horizon,
+            demo_mode=is_demo_mode
         )
         
-        logger.info("✅ SAndeep multi-agent analysis completed successfully")
+        logger.info(f"✅ SAndeep {'demo' if is_demo_mode else 'AI'} analysis completed successfully")
         
         return {
             "status": "success",
             "investment_recommendations": investment_analysis,
-            "sandeep_system": "Multi-Agent AI Analysis Complete"
+            "sandeep_system": f"Multi-Agent {'Demo' if is_demo_mode else 'AI'} Analysis Complete",
+            "demo_mode": is_demo_mode
         }
         
     except ImportError as e:
@@ -1658,15 +1668,23 @@ class SandeepInvestmentChatRequest(BaseModel):
     mode: str = "comprehensive"
 
 @app.post("/api/sandeep-investment-recommendations/chat")
-async def sandeep_investment_chat(request: SandeepInvestmentChatRequest):
-    """Interactive chat with SAndeep's multi-agent investment system"""
+async def sandeep_investment_chat(request: SandeepInvestmentChatRequest, demo: bool = False):
+    """Interactive chat with SAndeep's multi-agent investment system
+    
+    For demo mode: Pass demo=true as query parameter
+    Demo accounts get instant hardcoded chat responses with * indicators
+    Real accounts get actual SAndeep AI agent chat responses
+    """
     try:
         from sandeep_investment_system.sandeep_api_integration import sandeep_api
         
         if not sandeep_api.initialized:
             raise HTTPException(status_code=500, detail="SAndeep Investment System not properly initialized")
         
-        financial_data = await get_financial_data_with_demo_support(demo_mode=True)
+        # Check for demo mode
+        is_demo_mode = demo
+        
+        financial_data = await get_financial_data_with_demo_support(demo_mode=is_demo_mode)
         
         mcp_data = {
             "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
@@ -1678,15 +1696,17 @@ async def sandeep_investment_chat(request: SandeepInvestmentChatRequest):
         
         response = await sandeep_api.get_chat_response(
             query=request.query,
-            financial_data=mcp_data
+            financial_data=mcp_data,
+            demo_mode=is_demo_mode
         )
         
-        logger.info(f"✅ SAndeep chat response generated ({len(response)} chars)")
+        logger.info(f"✅ SAndeep {'demo' if is_demo_mode else 'AI'} chat response generated ({len(response)} chars)")
         
         return {
             "status": "success",
             "response": response,
-            "sandeep_system": "Multi-Agent Chat Response"
+            "sandeep_system": f"Multi-Agent {'Demo' if is_demo_mode else 'AI'} Chat Response",
+            "demo_mode": is_demo_mode
         }
         
     except ImportError as e:

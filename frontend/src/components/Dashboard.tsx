@@ -354,7 +354,7 @@ export default function Dashboard({ financialData }: Props) {
         {/* Investment Profile */}
         <UserRiskProfile onProfileUpdate={handleProfileUpdate} />
         
-        {/* SAndeep Investment Recommendations */}
+        {/* AI Investment Recommendations */}
         <InvestmentRecommendationCard financialData={financialData} />
       </div>
 

@@ -179,16 +179,129 @@ Use your multi-agent analysis system for comprehensive research and recommendati
                                            risk_tolerance: str = 'moderate',
                                            investment_goal: str = 'wealth_creation',
                                            time_horizon: str = 'long_term',
-                                           phone_number: str = '9999999999') -> Dict[str, Any]:
+                                           phone_number: str = '9999999999',
+                                           demo_mode: bool = False) -> Dict[str, Any]:
         """
-        Get investment recommendations using SAndeep's exact CLI pattern
+        Get investment recommendations using SAndeep's exact CLI pattern with DEMO SUPPORT
+        For demo_mode=True: Return instant hardcoded responses with * indicator
+        For demo_mode=False: Use real SAndeep AI agents
         """
         
+        # DEMO MODE: Return hardcoded intelligent responses instantly
+        if demo_mode:
+            logger.info(f"🎭 DEMO MODE: Generating hardcoded response for ₹{investment_amount:,.0f}")
+            
+            try:
+                from .demo_responses import demo_responses
+                
+                # Extract net worth for personalization
+                net_worth = 0
+                if financial_data.get('net_worth', {}).get('netWorthResponse', {}).get('totalNetWorthValue', {}):
+                    net_worth = float(financial_data['net_worth']['netWorthResponse']['totalNetWorthValue'].get('units', '0'))
+                
+                # Generate comprehensive hardcoded response
+                demo_response = demo_responses.get_hardcoded_investment_recommendation(
+                    investment_amount=investment_amount,
+                    risk_tolerance=risk_tolerance,
+                    investment_goal=investment_goal,
+                    net_worth=net_worth
+                )
+                
+                # Get intelligent investment recommendations
+                from .intelligent_responses import intelligent_responses
+                best_funds = intelligent_responses.get_best_mutual_funds_2025("all")
+                top_stocks = intelligent_responses.get_top_stocks_2025()
+                broker_data = intelligent_responses.get_broker_comparison_2025()
+                
+                # Create demo result with * indicators
+                result = {
+                    "status": "success",
+                    "analysis_type": "SAndeep Multi-Agent Demo Analysis * DEMO DATA",
+                    "demo_mode": True,
+                    "timestamp": datetime.now().isoformat(),
+                    "investment_amount": investment_amount,
+                    "parameters": {
+                        "risk_tolerance": risk_tolerance,
+                        "investment_goal": investment_goal,
+                        "time_horizon": time_horizon
+                    },
+                    "agent_analysis": {
+                        "full_response": demo_response,
+                        "response_type": "Hardcoded Demo Response * DEMO DATA",
+                        "agents_used": ["data_analyst *", "trading_analyst *", "execution_analyst *", "risk_analyst *"]
+                    },
+                    "investment_analysis": {
+                        "final_recommendation": demo_response,
+                        "personalized_plan": demo_response,
+                        "actionable_investments": [
+                            {
+                                "name": best_funds["large_cap"][0]["name"] + " * DEMO",
+                                "type": "mutual_fund",
+                                "amount": investment_amount * 0.25,
+                                "allocation": 25,
+                                "returns_3yr": best_funds["large_cap"][0]["returns_3yr"] + " *"
+                            },
+                            {
+                                "name": best_funds["mid_cap"][0]["name"] + " * DEMO", 
+                                "type": "mutual_fund",
+                                "amount": investment_amount * 0.20,
+                                "allocation": 20,
+                                "returns_3yr": best_funds["mid_cap"][0]["returns_3yr"] + " *"
+                            },
+                            {
+                                "name": best_funds["elss"][0]["name"] + " * DEMO",
+                                "type": "elss",
+                                "amount": investment_amount * 0.15,
+                                "allocation": 15,
+                                "returns_3yr": best_funds["elss"][0]["returns_3yr"] + " *"
+                            },
+                            {
+                                "name": top_stocks["blue_chip_stocks"][0]["name"] + " * DEMO",
+                                "type": "stock",
+                                "amount": investment_amount * 0.10,
+                                "allocation": 10,
+                                "sector": top_stocks["blue_chip_stocks"][0]["sector"] + " *"
+                            }
+                        ],
+                        "invest_now_urls": {
+                            "groww": "https://groww.in/ * DEMO BROKER",
+                            "zerodha": "https://kite.zerodha.com/ * DEMO BROKER",
+                            "angel_one": "https://trade.angelone.in/ * DEMO BROKER",
+                            "demo_note": "All broker links are for demo purposes *"
+                        }
+                    },
+                    "key_insights": [
+                        f"Investment Amount: ₹{investment_amount:,.0f} * DEMO",
+                        "SAndeep 4-agent demo analysis completed * DEMO DATA",
+                        "Hardcoded responses based on July 2025 market research * DEMO",
+                        "Real-time demo data integrated * DEMO DATA",
+                        "Tax-optimized demo recommendations * DEMO DATA"
+                    ]
+                }
+                
+                logger.info(f"✅ Demo response generated instantly with * indicators")
+                return result
+                
+            except Exception as e:
+                logger.error(f"❌ Demo response generation failed: {e}")
+                # Fallback demo response
+                return {
+                    "status": "success",
+                    "analysis_type": "SAndeep Demo Fallback * DEMO DATA", 
+                    "demo_mode": True,
+                    "agent_analysis": {
+                        "full_response": f"Demo investment recommendation for ₹{investment_amount:,.0f} with {risk_tolerance} risk profile. * DEMO DATA - This is hardcoded demo content. For real AI analysis, please use a live account.",
+                        "response_type": "Basic Demo Fallback * DEMO DATA"
+                    },
+                    "key_insights": ["Demo mode active * DEMO DATA"]
+                }
+        
+        # REAL MODE: Use actual SAndeep AI agents
         if not self.initialized:
             raise Exception("SAndeep Investment System not properly initialized")
         
         try:
-            logger.info(f"🤖 Starting SAndeep multi-agent analysis for ₹{investment_amount:,.0f}")
+            logger.info(f"🤖 Starting REAL SAndeep multi-agent analysis for ₹{investment_amount:,.0f}")
             
             # Create investment query using SAndeep's pattern
             query = self.create_investment_query(
@@ -279,9 +392,24 @@ Use your multi-agent analysis system for comprehensive research and recommendati
             logger.error(f"❌ SAndeep investment analysis failed: {e}")
             raise Exception(f"SAndeep analysis failed: {str(e)}")
     
-    async def get_chat_response(self, query: str, financial_data: Dict[str, Any]) -> str:
-        """Get chat response using SAndeep system"""
+    async def get_chat_response(self, query: str, financial_data: Dict[str, Any], demo_mode: bool = False) -> str:
+        """Get chat response using SAndeep system with DEMO SUPPORT"""
         
+        # DEMO MODE: Return hardcoded intelligent chat responses instantly
+        if demo_mode:
+            logger.info(f"🎭 DEMO CHAT: Generating hardcoded response for: {query[:100]}...")
+            
+            try:
+                from .demo_responses import demo_responses
+                demo_response = demo_responses.get_hardcoded_chat_response(query, financial_data)
+                logger.info(f"✅ Demo chat response generated instantly with * indicators")
+                return demo_response
+                
+            except Exception as e:
+                logger.error(f"❌ Demo chat response failed: {e}")
+                return f"Demo chat response for: '{query}' * DEMO DATA - This is hardcoded demo content with intelligent responses based on July 2025 market research. For real AI analysis, please use a live account."
+        
+        # REAL MODE: Use actual SAndeep AI agents
         if not self.initialized:
             return "SAndeep Investment System is not available. Please check system configuration."
         

@@ -31,8 +31,8 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
   const handleGetRecommendation = async () => {
     setIsAnalyzing(true);
     try {
-      // Call SAndeep Investment System API endpoint
-      const response = await fetch(`http://localhost:8003/api/sandeep-investment-recommendations?demo=${isDemoMode}`, {
+      // Call AI Investment System API endpoint
+      const response = await fetch(`http://localhost:8003/api/ai-investment-recommendations?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -47,12 +47,12 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       const data = await response.json();
       
       if (data.status === 'success') {
-        // Get personalized recommendation using SAndeep's chat system
-        const chatResponse = await fetch('http://localhost:8003/api/sandeep-investment-recommendations/chat', {
+        // Get personalized recommendation using AI chat system
+        const chatResponse = await fetch('http://localhost:8003/api/ai-investment-recommendations/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            query: `Create investment plan for ₹${formData.investmentAmount.toLocaleString()} with ${formData.riskTolerance} risk tolerance, ${formData.investmentGoal} goal, ${formData.timeHorizon} horizon, ₹${formData.monthlyInvestment.toLocaleString()} monthly SIP. Use SAndeep's multi-agent analysis to provide specific Indian stocks, mutual funds, and platform recommendations.`,
+            query: `Create investment plan for ₹${formData.investmentAmount.toLocaleString()} with ${formData.riskTolerance} risk tolerance, ${formData.investmentGoal} goal, ${formData.timeHorizon} horizon, ₹${formData.monthlyInvestment.toLocaleString()} monthly SIP. Use our multi-agent AI analysis to provide specific Indian stocks, mutual funds, and platform recommendations.`,
             mode: 'comprehensive'
           })
         });
@@ -67,7 +67,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
         }
       }
     } catch (error) {
-      console.error('SAndeep Investment analysis failed:', error);
+      console.error('AI Investment analysis failed:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -89,7 +89,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     if (!recommendation?.personalized_plan) return;
     
     try {
-      const response = await fetch('/api/sandeep-investment-recommendations/broker-plan', {
+      const response = await fetch('/api/ai-investment-recommendations/broker-plan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     if (!brokerPlan) return;
     
     try {
-      const response = await fetch('/api/sandeep-investment-recommendations/execute', {
+      const response = await fetch('/api/ai-investment-recommendations/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">📈 Investment Agent</h3>
-            <p className="text-sm text-gray-300">SAndeep's Multi-Agent AI System</p>
+            <p className="text-sm text-gray-300">Multi-Agent AI System</p>
           </div>
           <button
             onClick={() => setShowForm(false)}
@@ -243,10 +243,10 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             {isAnalyzing ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
-                SAndeep AI Analyzing...
+                AI Analyzing...
               </>
             ) : (
-              '🤖 Get SAndeep AI Investment Plan'
+              '🤖 Get AI Investment Plan'
             )}
           </button>
         </div>
@@ -259,7 +259,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">🎯 SAndeep Investment Plan</h3>
+            <h3 className="text-xl font-bold text-white mb-1">🎯 AI Investment Plan</h3>
             <p className="text-sm text-gray-300">Multi-Agent AI Analysis Complete</p>
           </div>
           <button
@@ -288,7 +288,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             </div>
           </div>
 
-          {/* SAndeep AI Recommendations */}
+          {/* AI Recommendations */}
           <div className="max-h-64 overflow-y-auto">
             <div className="prose prose-sm max-w-none">
               <ReactMarkdown
@@ -306,21 +306,21 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             </div>
           </div>
 
-          {/* SAndeep Multi-Broker Integration */}
+          {/* Multi-Broker Integration */}
           <div className="bg-gradient-to-br from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.05)] border border-[rgba(0,184,153,0.3)] rounded-2xl p-6 mb-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-full flex items-center justify-center">
                 <span className="text-2xl">🚀</span>
               </div>
               <div>
-                <h4 className="text-white font-bold text-xl">SAndeep Invest Now</h4>
+                <h4 className="text-white font-bold text-xl">Invest Now</h4>
                 <p className="text-gray-300 text-sm">Execute via 6 major Indian brokers</p>
               </div>
             </div>
             
-            {/* SAndeep Broker Selection Grid */}
+            {/* Broker Selection Grid */}
             <div className="mb-6">
-              <h5 className="text-white font-semibold text-lg mb-4">Choose Your Broker (SAndeep Integration)</h5>
+              <h5 className="text-white font-semibold text-lg mb-4">Choose Your Broker</h5>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                   { id: 'angel_one', name: 'Angel One', emoji: '📈', desc: 'Zero brokerage delivery', color: 'from-orange-500 to-orange-600', features: ['Zero Delivery', 'Real-time Data', 'Research'] },
@@ -373,7 +373,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
                 className="flex-1 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white px-6 py-4 rounded-xl hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <span>📋</span>
-                Generate SAndeep URLs
+                Generate Investment URLs
               </button>
               {brokerPlan && (
                 <button
@@ -391,7 +391,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
               <div className="mt-6 p-4 bg-[rgba(0,0,0,0.3)] rounded-xl border border-[rgba(255,255,255,0.1)]">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">✅</span>
-                  <h5 className="text-white font-semibold">SAndeep Investment Ready</h5>
+                  <h5 className="text-white font-semibold">Investment Ready</h5>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div>
@@ -419,7 +419,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             )}
           </div>
 
-          {/* SAndeep Investment Platform Buttons */}
+          {/* Investment Platform Buttons */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <button
               onClick={() => openInvestmentPlatform('angel_one')}
@@ -474,7 +474,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
           </div>
           <div>
             <h3 className="text-md font-semibold text-white">Investment Recommendations</h3>
-            <p className="text-xs text-gray-400">SAndeep Multi-Agent AI System</p>
+            <p className="text-xs text-gray-400">Multi-Agent AI System</p>
           </div>
         </div>
       </div>
@@ -497,7 +497,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
 
         <div className="space-y-4 border-t border-[rgba(0,184,153,0.2)] pt-4">
           <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl p-3">
-            <h4 className="text-xs font-bold text-white mb-2">🎯 SAndeep AI Features:</h4>
+            <h4 className="text-xs font-bold text-white mb-2">🎯 AI Features:</h4>
             <ul className="text-xs text-gray-300 space-y-1">
               <li>• Multi-agent analysis (Data, Trading, Execution, Risk)</li>
               <li>• Specific Indian stocks, ETFs, and mutual fund recommendations</li>
@@ -514,7 +514,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
-            Get SAndeep AI Investment Plan
+            Get AI Investment Plan
           </button>
         </div>
       </div>

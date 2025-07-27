@@ -1,0 +1,32 @@
+services:
+  # Backend - FastAPI with SAndeep AI agents
+  - type: web
+    name: artha-ai-backend
+    env: python
+    buildCommand: "cd backend && pip install -r requirements.txt && pip install -r sandeep_investment_system/requirements.txt && pip install google-adk google-genai"
+    startCommand: "cd backend && uvicorn api_server:app --host 0.0.0.0 --port $PORT"
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+
+  # Frontend - Next.js application
+  - type: web
+    name: artha-ai-frontend
+    env: node
+    buildCommand: "cd frontend && npm ci && npm run build"
+    startCommand: "cd frontend && npm start"
+    plan: starter
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: artha-ai-backend
+          property: host
+      - key: NODE_ENV
+        value: production
