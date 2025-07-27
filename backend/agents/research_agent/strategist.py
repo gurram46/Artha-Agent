@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from agents.base_agent import BaseFinancialAgent, AgentResponse
 from core.fi_mcp.client import FinancialData
 from core.google_grounding.grounding_client import GroundingResult
-from google.genai import types
+from google.generativeai import types
 
 logger = logging.getLogger(__name__)
 
