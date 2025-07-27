@@ -36,12 +36,11 @@ class StockService {
   private lastFetchTime: number = 0;
   private cachedData: StockData[] = [];
   private isClient: boolean = false;
+  private fetchInProgress: boolean = false;
 
   private constructor() {
     this.isClient = typeof window !== 'undefined';
-    if (this.isClient) {
-      this.startPriceUpdates();
-    }
+    // Don't start updates automatically - only when first subscriber is added
   }
 
   static getInstance(): StockService {
@@ -52,22 +51,35 @@ class StockService {
   }
 
   private startPriceUpdates() {
+    // Prevent multiple intervals
+    if (this.priceUpdateInterval) {
+      return;
+    }
+    
     // Fetch immediately on start
     this.fetchRealTimeData();
     
-    // Update every 30 seconds during market hours
+    // Update every 5 minutes during market hours
     this.priceUpdateInterval = setInterval(() => {
       this.fetchRealTimeData();
-    }, 30000); // 30 seconds
+    }, 5 * 60 * 1000); // 5 minutes instead of 30 seconds
   }
 
   private async fetchRealTimeData() {
     try {
-      // Only fetch if more than 30 seconds have passed
-      if (Date.now() - this.lastFetchTime < 30000 && this.cachedData.length > 0) {
+      // Prevent concurrent fetches
+      if (this.fetchInProgress) {
+        console.log('🔄 Fetch already in progress, skipping...');
+        return;
+      }
+
+      // Only fetch if more than 2 minutes have passed to prevent spam
+      if (Date.now() - this.lastFetchTime < 120000 && this.cachedData.length > 0) {
         this.notifySubscribers();
         return;
       }
+
+      this.fetchInProgress = true;
 
       const realData = await this.getTopIndianStocksFromProxy();
       
@@ -92,12 +104,29 @@ class StockService {
     } catch (error) {
       console.error('❌ Failed to fetch real-time data from proxy:', error);
       
+      // If rate limited, stop polling for a while
+      if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+        console.warn('⚠️ Rate limited - stopping polling temporarily');
+        if (this.priceUpdateInterval) {
+          clearInterval(this.priceUpdateInterval);
+          this.priceUpdateInterval = null;
+          // Restart after 2 minutes
+          setTimeout(() => {
+            if (this.subscribers.size > 0) {
+              this.startPriceUpdates();
+            }
+          }, 2 * 60 * 1000);
+        }
+      }
+      
       // Try to load from localStorage as fallback
       if (this.isClient && this.cachedData.length === 0) {
         this.loadFromStorage();
       }
       
       throw error;
+    } finally {
+      this.fetchInProgress = false;
     }
   }
 
@@ -138,6 +167,10 @@ class StockService {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('⚠️ Rate limit exceeded, using cached data if available');
+          throw new Error('Rate limit exceeded. Using cached data.');
+        }
         throw new Error(`Proxy API returned ${response.status} ${response.statusText}`);
       }
 
@@ -162,10 +195,21 @@ class StockService {
 
   subscribe(id: string, callback: (data: StockData[]) => void) {
     this.subscribers.set(id, callback);
+    
+    // Start polling only when first subscriber is added
+    if (this.subscribers.size === 1 && this.isClient && !this.priceUpdateInterval) {
+      this.startPriceUpdates();
+    }
   }
 
   unsubscribe(id: string) {
     this.subscribers.delete(id);
+    
+    // Stop polling when no more subscribers
+    if (this.subscribers.size === 0 && this.priceUpdateInterval) {
+      clearInterval(this.priceUpdateInterval);
+      this.priceUpdateInterval = null;
+    }
   }
 
   async getTopStocks(): Promise<StockData[]> {
@@ -183,7 +227,18 @@ class StockService {
         this.loadFromStorage();
       }
 
-      // Always try to get fresh data
+      // Check if we have recent cached data first
+      if (this.cachedData.length > 0 && (Date.now() - this.lastFetchTime < 120000)) {
+        return this.cachedData;
+      }
+
+      // Prevent concurrent calls
+      if (this.fetchInProgress) {
+        console.log('🔄 Fetch already in progress, returning cached data');
+        return this.cachedData.length > 0 ? this.cachedData : [];
+      }
+
+      // Try to get fresh data
       const realData = await this.getTopIndianStocksFromProxy();
       
       if (realData && realData.length > 0) {

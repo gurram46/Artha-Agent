@@ -111,9 +111,65 @@ function formatMarketCap(marketCap: number): string {
   return `₹${marketCap}`;
 }
 
+// Rate limiting configuration
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 5; // requests per minute
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+// Caching configuration
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 30 * 1000; // 30 seconds for real-time data
+
+function getRateLimitKey(request: Request): string {
+  return request.headers.get('x-forwarded-for') || 
+         request.headers.get('x-real-ip') || 
+         'unknown';
+}
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now();
+  const userLimit = requestCounts.get(key);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    requestCounts.set(key, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+  
+  if (userLimit.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
+}
+
+function getCachedData(key: string): any | null {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedData(key: string, data: any): void {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
 // GET endpoint for fetching stock data
 export async function GET(request: Request) {
   try {
+    // Rate limiting check
+    const rateLimitKey = getRateLimitKey(request);
+    if (!checkRateLimit(rateLimitKey)) {
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded. Please wait before making more requests.',
+          success: false 
+        },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol');
     const action = searchParams.get('action') || 'quote';
@@ -121,6 +177,14 @@ export async function GET(request: Request) {
     console.log(`🔄 Stock proxy API called - Action: ${action}, Symbol: ${symbol}`);
 
     if (action === 'top-stocks') {
+      // Check cache first
+      const cacheKey = 'top-stocks';
+      const cachedData = getCachedData(cacheKey);
+      if (cachedData) {
+        console.log('✅ Serving cached top stocks data');
+        return NextResponse.json(cachedData);
+      }
+
       // Fetch top 10 Indian stocks
       console.log('📊 Fetching top 10 Indian stocks via proxy...');
       
@@ -156,12 +220,17 @@ export async function GET(request: Request) {
 
       console.log(`✅ Successfully fetched ${validStocks.length} stocks via proxy`);
       
-      return NextResponse.json({
+      const responseData = {
         success: true,
         data: validStocks,
         source: 'Yahoo Finance via Proxy',
         timestamp: new Date().toISOString()
-      });
+      };
+
+      // Cache the response
+      setCachedData(cacheKey, responseData);
+      
+      return NextResponse.json(responseData);
 
     } else if (action === 'quote' && symbol) {
       // Fetch single stock quote
