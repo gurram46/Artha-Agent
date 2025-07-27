@@ -108,7 +108,8 @@ async def get_financial_data_with_demo_support(demo_mode: bool = False):
             demo_data = FinancialData(
                 net_worth=await client.fetch_net_worth(),
                 credit_report=await client.fetch_credit_report(),
-                epf_details=await client.fetch_epf_details()
+                epf_details=await client.fetch_epf_details(),
+                bank_transactions=await client.fetch_bank_transactions()
             )
             return demo_data
         else:
@@ -413,7 +414,8 @@ async def get_financial_data(demo: bool = False):
             demo_data = FinancialData(
                 net_worth=await client.fetch_net_worth(),
                 credit_report=await client.fetch_credit_report(),
-                epf_details=await client.fetch_epf_details()
+                epf_details=await client.fetch_epf_details(),
+                bank_transactions=await client.fetch_bank_transactions()
             )
             
             return {
@@ -422,6 +424,7 @@ async def get_financial_data(demo: bool = False):
                     "net_worth": demo_data.net_worth,
                     "credit_report": demo_data.credit_report,
                     "epf_details": demo_data.epf_details,
+                    "bank_transactions": demo_data.bank_transactions,
                     "mf_transactions": await client.fetch_mf_transactions()
                 },
                 "is_demo": True,

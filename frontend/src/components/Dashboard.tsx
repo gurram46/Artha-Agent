@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import StocksList from './StocksList';
 import UserRiskProfile from './UserRiskProfile';
 import InvestmentRecommendationCard from './InvestmentRecommendationCard';
+import CreditCardTransactions from './CreditCardTransactions';
 
 interface Props {
   financialData: any;
@@ -58,73 +59,6 @@ const MetricCard = ({ title, value, change, changeType, subtitle, icon }: Metric
     </div>
   </div>
 );
-
-const AssetAllocationChart = memo(({ data }: { data: any[] }) => {
-  const COLORS = ['rgb(0, 184, 153)', 'rgb(0, 164, 133)', 'rgb(59, 130, 246)', 'rgb(139, 92, 246)', 'rgb(245, 158, 11)'];
-  
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      return (
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-3 shadow-xl">
-          <p className="font-semibold text-white">{item.name}</p>
-          <p className="text-sm font-medium text-gray-300">₹{(item.value / 100000).toFixed(1)}L ({item.percentage.toFixed(1)}%)</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-white mb-1">Asset Allocation</h3>
-        <p className="text-sm font-medium text-gray-300">Portfolio distribution by asset class</p>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`allocation-cell-${entry.name || index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="space-y-3">
-          {data.map((item, index) => (
-            <div key={`allocation-item-${item.name || index}`} className="flex items-center justify-between p-3 hover:bg-[rgba(0,184,153,0.05)] rounded-lg transition-colors">
-              <div className="flex items-center space-x-3">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <span className="font-semibold text-white">{item.name}</span>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-white">{item.percentage.toFixed(1)}%</p>
-                <p className="text-sm font-medium text-gray-300">₹{(item.value / 100000).toFixed(1)}L</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-});
 
 const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
   // Generate performance data based on schemes
@@ -363,7 +297,6 @@ export default function Dashboard({ financialData }: Props) {
   const data = useMemo(() => financialData.data || {}, [financialData.data]);
   const schemes = useMemo(() => data.mutual_fund_schemes || [], [data.mutual_fund_schemes]);
   const bankAccounts = useMemo(() => data.bank_accounts || [], [data.bank_accounts]);
-  const assetAllocation = useMemo(() => data.asset_allocation || [], [data.asset_allocation]);
   const performanceMetrics = useMemo(() => data.performance_metrics || {}, [data.performance_metrics]);
 
   const calculatePortfolioGrowth = () => {
@@ -428,13 +361,8 @@ export default function Dashboard({ financialData }: Props) {
       {/* Stock Market Overview */}
       <StocksList />
 
-      {/* Charts Grid */}
-      {assetAllocation.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <AssetAllocationChart data={assetAllocation} />
-          {schemes.length > 0 && <PerformanceChart schemes={schemes} />}
-        </div>
-      )}
+      {/* Credit Card Transactions */}
+      <CreditCardTransactions financialData={financialData} />
 
       {schemes.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -132,7 +132,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">📈 Investment Preferences</h3>
+            <h3 className="text-xl font-bold text-white mb-1">📈 Investment Agent</h3>
             <p className="text-sm text-gray-300">Tell us about your investment goals</p>
           </div>
           <button

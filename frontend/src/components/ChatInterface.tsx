@@ -166,14 +166,14 @@ export default function ChatInterface() {
     {
       id: '1',
       type: 'assistant',
-      content: 'Hello! I\'m your AI financial advisor. Choose **Quick Response** for fast answers using single agent with Google Search, or **Deep Research** for comprehensive 3-agent analysis. I have access to your complete financial data through Fi MCP.',
+      content: 'Hello! I\'m your AI financial advisor with quick responses powered by advanced AI. Toggle **FiXpert Mode** for deep 3-agent analysis when you need comprehensive research. I have access to your complete financial data through Fi MCP.',
       timestamp: new Date('2024-01-01T00:00:00Z'), // Fixed timestamp to prevent hydration mismatch
       agentDetails: {}
     }
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [agentMode, setAgentMode] = useState<AgentMode>('research');
+  const [agentMode, setAgentMode] = useState<AgentMode>('quick');
   const [isDemoMode, setIsDemoMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -592,28 +592,11 @@ export default function ChatInterface() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="flex bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-1 backdrop-blur-sm">
-                  <button
-                    onClick={() => setAgentMode('quick')}
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                      agentMode === 'quick' 
-                        ? 'bg-[rgb(0,184,153)] text-white shadow-md transform scale-105' 
-                        : 'text-gray-300 hover:text-white hover:bg-[rgba(0,184,153,0.2)]'
-                    }`}
-                  >
-                    ⚡ Quick
-                  </button>
-                  <button
-                    onClick={() => setAgentMode('research')}
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                      agentMode === 'research' 
-                        ? 'bg-[rgb(0,184,153)] text-white shadow-md transform scale-105' 
-                        : 'text-gray-300 hover:text-white hover:bg-[rgba(0,184,153,0.2)]'
-                    }`}
-                  >
-                    🔬 Research
-                  </button>
-                </div>
+                {agentMode === 'research' && (
+                  <div className="text-xs bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 px-3 py-1 rounded-full font-semibold text-purple-300 animate-pulse">
+                    🔬 FiXpert Mode Active
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -693,7 +676,7 @@ export default function ChatInterface() {
                               message.mode === 'quick' ? 'bg-[rgba(245,158,11,0.1)] text-yellow-400 border border-[rgba(245,158,11,0.2)]' : 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]'
                             }`}>
                               <span>{message.mode === 'quick' ? '⚡' : '🔬'}</span>
-                              <span>{message.mode === 'quick' ? 'Quick' : 'Research'}</span>
+                              <span>{message.mode === 'quick' ? 'Quick' : 'FiXpert'}</span>
                             </div>
                           )}
                         </div>
@@ -728,6 +711,17 @@ export default function ChatInterface() {
                 </div>
               </div>
               <button
+                onClick={() => setAgentMode(agentMode === 'quick' ? 'research' : 'quick')}
+                className={`p-3 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  agentMode === 'research'
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white border-2 border-purple-400/50'
+                    : 'bg-[rgba(30,32,34,0.8)] border-2 border-[rgba(0,184,153,0.3)] text-gray-300 hover:text-white hover:border-[rgba(0,184,153,0.6)]'
+                }`}
+                title={agentMode === 'research' ? 'DeepFI Mode Active' : 'Enable DeepFI Mode'}
+              >
+                DeepFI
+              </button>
+              <button
                 onClick={handleSendMessage}
                 disabled={!currentMessage.trim() || isLoading}
                 className={`p-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform ${
@@ -746,8 +740,10 @@ export default function ChatInterface() {
               </button>
             </div>
             
-            {/* Modern Example Questions */}
-            <div className="mt-4 flex flex-wrap gap-3">
+            {/* Example Questions */}
+            <div className="mt-4 space-y-3">
+              {/* Example Questions */}
+              <div className="flex flex-wrap gap-3 justify-center">
               {exampleQueries.slice(0, 3).map((query, index) => (
                 <button
                   key={index}
@@ -758,6 +754,7 @@ export default function ChatInterface() {
                   <span className="text-sm font-medium">{query.text}</span>
                 </button>
               ))}
+              </div>
             </div>
           </div>
         </div>
