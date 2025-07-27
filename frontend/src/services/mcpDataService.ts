@@ -127,9 +127,7 @@ class MCPDataService {
     authRequired?: boolean;
   }> {
     try {
-      console.log(this.isDemoMode 
-        ? '🎭 Fetching demo financial data...'
-        : '🔄 Fetching real-time financial data from Fi Money MCP...');
+      console.log('🎭 Loading MCP data from local files...');
 
       // Check cache first
       const now = Date.now();
@@ -141,63 +139,74 @@ class MCPDataService {
         };
       }
 
-      // Fetch from Fi Money MCP via backend (with demo mode support)
-      const url = this.isDemoMode 
-        ? `${this.backendUrl}/financial-data?demo=true`
-        : `${this.backendUrl}/financial-data`;
-        
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(15000) // 15 second timeout for real API
-      });
+      // Load data from local MCP files
+      const netWorthResponse = await fetch('/mcp-docs/fetch_net_worth.json');
+      const creditReportResponse = await fetch('/mcp-docs/fetch_credit_report.json');
+      const epfDetailsResponse = await fetch('/mcp-docs/fetch_epf_details.json');
 
-      if (!response.ok) {
-        throw new Error(`Fi Money MCP API error: ${response.status} ${response.statusText}`);
+      if (!netWorthResponse.ok || !creditReportResponse.ok || !epfDetailsResponse.ok) {
+        throw new Error('Failed to load MCP data files');
       }
 
-      const backendData: BackendFinancialData = await response.json();
+      const netWorthData = await netWorthResponse.json();
+      const creditReportData = await creditReportResponse.json();
+      const epfDetailsData = await epfDetailsResponse.json();
 
-      // Handle authentication required
-      if (backendData.status === 'unauthenticated') {
-        console.warn('🔐 Fi Money authentication required');
-        return {
-          success: false,
-          error: backendData.message || 'Authentication required',
-          authRequired: true
-        };
-      }
+      // Transform to expected format
+      const mcpData = {
+        net_worth: netWorthData,
+        credit_report: creditReportData,
+        epf_details: {
+          epfDetails: {
+            balance: {
+              currencyCode: "INR",
+              units: epfDetailsData.uanAccounts[0]?.rawDetails?.overall_pf_balance?.current_pf_balance || "211111"
+            }
+          }
+        }
+      };
 
-      if (backendData.status !== 'success') {
-        throw new Error(backendData.message || 'Fi Money MCP server error');
-      }
-
-      // Cache the successful response
-      this.cachedData = backendData;
+      // Create mock backend response for caching
+      this.cachedData = {
+        status: 'success',
+        message: 'Data loaded from local MCP files',
+        data: mcpData,
+        summary: {
+          total_net_worth_formatted: this.formatCurrency(parseInt(netWorthData.netWorthResponse.totalNetWorthValue.units)),
+          total_assets: this.calculateTotalAssets(netWorthData.netWorthResponse.assetValues),
+          total_liabilities: this.calculateTotalLiabilities(netWorthData.netWorthResponse.liabilityValues),
+          credit_score: creditReportData.creditReports[0]?.creditReportData?.score?.bureauScore || '746',
+          data_source: 'Local MCP Files'
+        }
+      };
+      
       this.lastFetch = now;
 
-      console.log(this.isDemoMode 
-        ? '✅ Successfully loaded demo data'
-        : '✅ Successfully fetched real-time data from Fi Money MCP');
-      console.log(`📊 Data source: ${this.isDemoMode ? 'Demo Data' : backendData.summary?.data_source || 'Fi Money MCP'}`);
+      console.log('✅ Successfully loaded MCP data from local files');
+      console.log('📊 Data source: Local MCP Files');
 
       return {
         success: true,
-        data: backendData.data
+        data: mcpData
       };
 
     } catch (error) {
-      console.error('❌ Failed to fetch real-time data from Fi Money MCP:', error);
+      console.error('❌ Failed to load MCP data from local files:', error);
       
-      // NO FALLBACKS - Production ready
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to connect to Fi Money MCP server',
-        authRequired: error instanceof Error && (error.message.includes('authentication') || error.message.includes('expired'))
+        error: error instanceof Error ? error.message : 'Failed to load local MCP data files',
+        authRequired: false
       };
     }
+  }
+
+  private calculateTotalAssets(assetValues: MCPAsset[]): number {
+    return assetValues.reduce((total, asset) => total + parseInt(asset.value.units), 0);
+  }
+
+  private calculateTotalLiabilities(liabilityValues: MCPLiability[]): number {
+    return liabilityValues.reduce((total, liability) => total + parseInt(liability.value.units), 0);
   }
 
   // Fi Money Web Authentication Methods
