@@ -28,7 +28,9 @@ class FinancialData:
     equity_holdings: List[Dict[str, Any]]
     credit_report: Optional[Dict[str, Any]]
     epf_details: Optional[Dict[str, Any]]
-    transactions: List[Dict[str, Any]]
+    mf_transactions: List[Dict[str, Any]]
+    bank_transactions: List[Dict[str, Any]]
+    stock_transactions: List[Dict[str, Any]]
     
     def get_total_assets(self) -> float:
         """Calculate total assets value"""
@@ -148,6 +150,26 @@ class FiMCPClient:
             logger.error(f"Failed to fetch MF transactions: {e}")
             return {}
     
+    async def fetch_bank_transactions(self) -> Dict[str, Any]:
+        """Fetch bank transactions"""
+        try:
+            result = await self.session.call_tool('fetch_bank_transactions', {})
+            return result.content[0].text if result.content else {}
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch bank transactions: {e}")
+            return {}
+    
+    async def fetch_stock_transactions(self) -> Dict[str, Any]:
+        """Fetch stock transactions"""
+        try:
+            result = await self.session.call_tool('fetch_stock_transactions', {})
+            return result.content[0].text if result.content else {}
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch stock transactions: {e}")
+            return {}
+    
     async def fetch_all_financial_data(self) -> FinancialData:
         """Fetch all available financial data"""
         logger.info("Fetching comprehensive financial data from Fi MCP...")
@@ -157,10 +179,12 @@ class FiMCPClient:
             self.fetch_net_worth(),
             self.fetch_credit_report(), 
             self.fetch_epf_details(),
-            self.fetch_mf_transactions()
+            self.fetch_mf_transactions(),
+            self.fetch_bank_transactions(),
+            self.fetch_stock_transactions()
         ]
         
-        net_worth_data, credit_data, epf_data, transaction_data = await asyncio.gather(*tasks)
+        net_worth_data, credit_data, epf_data, mf_transaction_data, bank_transaction_data, stock_transaction_data = await asyncio.gather(*tasks)
         
         # Parse net worth data to extract components
         net_worth = json.loads(net_worth_data) if isinstance(net_worth_data, str) else net_worth_data
@@ -193,10 +217,21 @@ class FiMCPClient:
                     })
         
         # Parse transactions
-        transactions = []
-        if transaction_data:
-            tx_data = json.loads(transaction_data) if isinstance(transaction_data, str) else transaction_data
-            transactions = tx_data.get('transactions', [])
+        mf_transactions = []
+        bank_transactions = []
+        stock_transactions = []
+        
+        if mf_transaction_data:
+            mf_tx_data = json.loads(mf_transaction_data) if isinstance(mf_transaction_data, str) else mf_transaction_data
+            mf_transactions = mf_tx_data.get('transactions', [])
+            
+        if bank_transaction_data:
+            bank_tx_data = json.loads(bank_transaction_data) if isinstance(bank_transaction_data, str) else bank_transaction_data
+            bank_transactions = bank_tx_data.get('transactions', [])
+            
+        if stock_transaction_data:
+            stock_tx_data = json.loads(stock_transaction_data) if isinstance(stock_transaction_data, str) else stock_transaction_data
+            stock_transactions = stock_tx_data.get('transactions', [])
         
         return FinancialData(
             net_worth=net_worth.get('netWorthResponse', {}),
@@ -205,7 +240,9 @@ class FiMCPClient:
             equity_holdings=equity_holdings,
             credit_report=json.loads(credit_data) if credit_data else None,
             epf_details=json.loads(epf_data) if epf_data else None,
-            transactions=transactions
+            mf_transactions=mf_transactions,
+            bank_transactions=bank_transactions,
+            stock_transactions=stock_transactions
         )
 
 async def get_user_financial_data() -> FinancialData:
@@ -256,6 +293,28 @@ async def get_user_financial_data() -> FinancialData:
         except FileNotFoundError:
             logger.warning(f"MF transactions file not found: {mf_file}")
         
+        # Load bank transactions from actual sample file
+        bank_file = os.path.join(base_path, "fetch_bank_transactions.json")
+        bank_transactions = []
+        try:
+            with open(bank_file, 'r') as f:
+                bank_data = json.load(f)
+                bank_transactions = bank_data.get('transactions', [])
+                logger.info(f"✅ Loaded bank transactions from: {bank_file}")
+        except FileNotFoundError:
+            logger.warning(f"Bank transactions file not found: {bank_file}")
+        
+        # Load stock transactions from actual sample file
+        stock_file = os.path.join(base_path, "fetch_stock_transactions.json")
+        stock_transactions = []
+        try:
+            with open(stock_file, 'r') as f:
+                stock_data = json.load(f)
+                stock_transactions = stock_data.get('transactions', [])
+                logger.info(f"✅ Loaded stock transactions from: {stock_file}")
+        except FileNotFoundError:
+            logger.warning(f"Stock transactions file not found: {stock_file}")
+        
         # Extract structured data from the loaded files
         net_worth_response = net_worth_data.get('netWorthResponse', {})
         
@@ -298,7 +357,9 @@ async def get_user_financial_data() -> FinancialData:
             equity_holdings=equity_holdings,
             credit_report=credit_data,
             epf_details=epf_data,
-            transactions=mf_transactions
+            mf_transactions=mf_transactions,
+            bank_transactions=bank_transactions,
+            stock_transactions=stock_transactions
         )
         
     except Exception as e:
@@ -319,5 +380,7 @@ async def get_user_financial_data() -> FinancialData:
             equity_holdings=[],
             credit_report=None,
             epf_details=None,
-            transactions=[]
+            mf_transactions=[],
+            bank_transactions=[],
+            stock_transactions=[]
         )

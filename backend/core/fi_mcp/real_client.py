@@ -18,7 +18,9 @@ class FinancialData:
     net_worth: Dict[str, Any]
     credit_report: Optional[Dict[str, Any]]
     epf_details: Optional[Dict[str, Any]]
-    bank_transactions: Optional[Dict[str, Any]] = None
+    mf_transactions: List[Dict[str, Any]]
+    bank_transactions: List[Dict[str, Any]]
+    stock_transactions: List[Dict[str, Any]]
 
 class RealFiMCPClient:
     """Real Fi MCP Client that uses actual sample data"""
@@ -61,6 +63,10 @@ class RealFiMCPClient:
     async def fetch_bank_transactions(self) -> Dict[str, Any]:
         """Fetch bank/credit card transactions using actual Fi MCP structure"""
         return self._load_sample_data('fetch_bank_transactions.json')
+    
+    async def fetch_stock_transactions(self) -> Dict[str, Any]:
+        """Fetch stock transactions using actual Fi MCP structure"""
+        return self._load_sample_data('fetch_stock_transactions.json')
 
 async def get_user_financial_data() -> FinancialData:
     """
@@ -74,14 +80,18 @@ async def get_user_financial_data() -> FinancialData:
         net_worth_task = client.fetch_net_worth()
         credit_report_task = client.fetch_credit_report()
         epf_details_task = client.fetch_epf_details()
+        mf_transactions_task = client.fetch_mf_transactions()
         bank_transactions_task = client.fetch_bank_transactions()
+        stock_transactions_task = client.fetch_stock_transactions()
         
         # Wait for all data
-        net_worth, credit_report, epf_details, bank_transactions = await asyncio.gather(
+        net_worth, credit_report, epf_details, mf_transactions, bank_transactions, stock_transactions = await asyncio.gather(
             net_worth_task,
             credit_report_task, 
             epf_details_task,
+            mf_transactions_task,
             bank_transactions_task,
+            stock_transactions_task,
             return_exceptions=True
         )
         
@@ -98,15 +108,30 @@ async def get_user_financial_data() -> FinancialData:
             logger.error(f"EPF details fetch failed: {epf_details}")
             epf_details = None
             
+        if isinstance(mf_transactions, Exception):
+            logger.error(f"MF transactions fetch failed: {mf_transactions}")
+            mf_transactions = {}
+        
         if isinstance(bank_transactions, Exception):
             logger.error(f"Bank transactions fetch failed: {bank_transactions}")
-            bank_transactions = None
+            bank_transactions = {}
+            
+        if isinstance(stock_transactions, Exception):
+            logger.error(f"Stock transactions fetch failed: {stock_transactions}")
+            stock_transactions = {}
+        
+        # Extract transaction lists
+        mf_tx_list = mf_transactions.get('transactions', []) if mf_transactions else []
+        bank_tx_list = bank_transactions.get('transactions', []) if bank_transactions else []
+        stock_tx_list = stock_transactions.get('transactions', []) if stock_transactions else []
         
         financial_data = FinancialData(
             net_worth=net_worth,
             credit_report=credit_report,
             epf_details=epf_details,
-            bank_transactions=bank_transactions
+            mf_transactions=mf_tx_list,
+            bank_transactions=bank_tx_list,
+            stock_transactions=stock_tx_list
         )
         
         logger.info("💰 Successfully fetched real Fi MCP financial data")
@@ -119,7 +144,9 @@ async def get_user_financial_data() -> FinancialData:
             net_worth={},
             credit_report=None,
             epf_details=None,
-            bank_transactions=None
+            mf_transactions=[],
+            bank_transactions=[],
+            stock_transactions=[]
         )
 
 def parse_currency_value(currency_obj: Dict[str, Any]) -> float:

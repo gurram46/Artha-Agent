@@ -39,6 +39,7 @@ class FinancialData:
     epf_details: Optional[Dict[str, Any]]
     mf_transactions: List[Dict[str, Any]]
     bank_transactions: List[Dict[str, Any]]
+    stock_transactions: List[Dict[str, Any]]
     raw_data: Dict[str, Any]
     
     def get_total_net_worth(self) -> float:
@@ -412,6 +413,11 @@ class FiMoneyMCPClient:
         logger.info("🏧 Fetching real-time bank transactions from Fi Money...")
         return await self._make_mcp_call('fetch_bank_transactions')
     
+    async def fetch_stock_transactions(self) -> Dict[str, Any]:
+        """Fetch real-time stock transactions from Fi Money"""
+        logger.info("📊 Fetching real-time stock transactions from Fi Money...")
+        return await self._make_mcp_call('fetch_stock_transactions')
+    
     async def fetch_all_financial_data(self) -> FinancialData:
         """
         Fetch all real-time financial data from Fi Money MCP server
@@ -426,7 +432,8 @@ class FiMoneyMCPClient:
                 self.fetch_credit_report(),
                 self.fetch_epf_details(),
                 self.fetch_mf_transactions(),
-                self.fetch_bank_transactions()
+                self.fetch_bank_transactions(),
+                self.fetch_stock_transactions()
             ]
             
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -437,16 +444,18 @@ class FiMoneyMCPClient:
             epf_details = results[2] if not isinstance(results[2], Exception) else None
             mf_transactions = results[3] if not isinstance(results[3], Exception) else {}
             bank_transactions = results[4] if not isinstance(results[4], Exception) else {}
+            stock_transactions = results[5] if not isinstance(results[5], Exception) else {}
             
             # Log any errors
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
-                    tool_names = ['net_worth', 'credit_report', 'epf_details', 'mf_transactions', 'bank_transactions']
+                    tool_names = ['net_worth', 'credit_report', 'epf_details', 'mf_transactions', 'bank_transactions', 'stock_transactions']
                     logger.warning(f"Failed to fetch {tool_names[i]}: {result}")
             
             # Extract transaction lists
             mf_tx_list = mf_transactions.get('transactions', []) if mf_transactions else []
             bank_tx_list = bank_transactions.get('transactions', []) if bank_transactions else []
+            stock_tx_list = stock_transactions.get('transactions', []) if stock_transactions else []
             
             # Create comprehensive financial data object
             financial_data = FinancialData(
@@ -455,12 +464,14 @@ class FiMoneyMCPClient:
                 epf_details=epf_details,
                 mf_transactions=mf_tx_list,
                 bank_transactions=bank_tx_list,
+                stock_transactions=stock_tx_list,
                 raw_data={
                     'net_worth': net_worth,
                     'credit_report': credit_report,
                     'epf_details': epf_details,
                     'mf_transactions': mf_transactions,
                     'bank_transactions': bank_transactions,
+                    'stock_transactions': stock_transactions,
                     'fetched_at': time.time(),
                     'session_id': self.session.session_id
                 }
@@ -476,6 +487,7 @@ class FiMoneyMCPClient:
             logger.info(f"   📉 Liabilities: {len(liabilities)} categories")
             logger.info(f"   📈 MF Transactions: {len(mf_tx_list)}")
             logger.info(f"   🏧 Bank Transactions: {len(bank_tx_list)}")
+            logger.info(f"   📊 Stock Transactions: {len(stock_tx_list)}")
             
             return financial_data
             
