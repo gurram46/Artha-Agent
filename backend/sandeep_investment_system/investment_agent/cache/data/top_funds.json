@@ -1,0 +1,55 @@
+{
+  "timestamp": 1753565712.2436545,
+  "cache_type": "top_funds",
+  "expiry_minutes": 60,
+  "data": {
+    "large_cap": [
+      {
+        "name": "SBI Large Cap Fund",
+        "nav": 65.23,
+        "returns_1y": 12.5,
+        "rating": 4
+      },
+      {
+        "name": "HDFC Top 100 Fund",
+        "nav": 58.45,
+        "returns_1y": 11.8,
+        "rating": 4
+      },
+      {
+        "name": "ICICI Pru Bluechip Fund",
+        "nav": 52.34,
+        "returns_1y": 13.2,
+        "rating": 5
+      }
+    ],
+    "mid_cap": [
+      {
+        "name": "SBI Mid Cap Fund",
+        "nav": 45.67,
+        "returns_1y": 18.5,
+        "rating": 4
+      },
+      {
+        "name": "HDFC Mid-Cap Fund",
+        "nav": 67.89,
+        "returns_1y": 16.8,
+        "rating": 4
+      }
+    ],
+    "elss": [
+      {
+        "name": "Axis Long Term Equity Fund",
+        "nav": 42.34,
+        "returns_1y": 14.5,
+        "rating": 5
+      },
+      {
+        "name": "SBI Long Term Equity Fund",
+        "nav": 38.92,
+        "returns_1y": 13.8,
+        "rating": 4
+      }
+    ]
+  }
+}

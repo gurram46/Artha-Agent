@@ -1,0 +1,24 @@
+{
+  "timestamp": 1753565712.2433577,
+  "cache_type": "market_overview",
+  "expiry_minutes": 30,
+  "data": {
+    "nifty_50": {
+      "value": 24500,
+      "change": "+0.5%",
+      "status": "open"
+    },
+    "sensex": {
+      "value": 80500,
+      "change": "+0.3%",
+      "status": "open"
+    },
+    "bank_nifty": {
+      "value": 51200,
+      "change": "+0.8%",
+      "status": "open"
+    },
+    "market_status": "open",
+    "volatility": "moderate"
+  }
+}

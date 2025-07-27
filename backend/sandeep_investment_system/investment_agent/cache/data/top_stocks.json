@@ -1,0 +1,53 @@
+{
+  "timestamp": 1753565712.243909,
+  "cache_type": "top_stocks",
+  "expiry_minutes": 30,
+  "data": {
+    "large_cap": [
+      {
+        "symbol": "RELIANCE",
+        "price": 2850,
+        "change": "+1.2%",
+        "market_cap": "Large"
+      },
+      {
+        "symbol": "TCS",
+        "price": 3920,
+        "change": "+0.8%",
+        "market_cap": "Large"
+      },
+      {
+        "symbol": "INFY",
+        "price": 1850,
+        "change": "+0.5%",
+        "market_cap": "Large"
+      },
+      {
+        "symbol": "HDFCBANK",
+        "price": 1720,
+        "change": "+0.3%",
+        "market_cap": "Large"
+      },
+      {
+        "symbol": "ICICIBANK",
+        "price": 1280,
+        "change": "+0.9%",
+        "market_cap": "Large"
+      }
+    ],
+    "mid_cap": [
+      {
+        "symbol": "LICI",
+        "price": 920,
+        "change": "+2.1%",
+        "market_cap": "Mid"
+      },
+      {
+        "symbol": "FEDERALBNK",
+        "price": 185,
+        "change": "+1.5%",
+        "market_cap": "Mid"
+      }
+    ]
+  }
+}

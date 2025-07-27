@@ -1,0 +1,21 @@
+{
+  "timestamp": 1753565712.2441356,
+  "cache_type": "gold_data",
+  "expiry_minutes": 30,
+  "data": {
+    "spot_price": 72500,
+    "change": "+0.3%",
+    "etfs": [
+      {
+        "name": "SBI Gold ETF",
+        "nav": 47.23,
+        "change": "+0.2%"
+      },
+      {
+        "name": "HDFC Gold ETF",
+        "nav": 46.89,
+        "change": "+0.3%"
+      }
+    ]
+  }
+}

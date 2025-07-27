@@ -1,0 +1,11 @@
+{
+  "timestamp": 1753565712.2442837,
+  "cache_type": "economic_data",
+  "expiry_minutes": 120,
+  "data": {
+    "inflation": 4.8,
+    "repo_rate": 6.5,
+    "gdp_growth": 7.2,
+    "fiscal_deficit": 5.8
+  }
+}
