@@ -1639,6 +1639,78 @@ async def investment_recommendations_chat(request: InvestmentChatRequest):
         logging.error(f"Investment recommendations chat failed: {e}")
         raise HTTPException(status_code=500, detail=f"Investment chat failed: {str(e)}")
 
+@app.post("/api/investment-recommendations/broker-plan")
+async def get_broker_execution_plan(request: dict):
+    """Generate broker execution plan for investment recommendations"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        recommendation_text = request.get('recommendation_text', '')
+        preferred_broker = request.get('preferred_broker', 'groww')
+        
+        if not recommendation_text:
+            raise HTTPException(status_code=400, detail="Recommendation text is required")
+        
+        # Get broker execution plan
+        broker_plan = await money_truth_engine.investment_recommendation_agent.get_broker_execution_plan(
+            recommendation_text, preferred_broker
+        )
+        
+        return {
+            "status": "success",
+            "broker_plan": broker_plan,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Broker plan generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Broker plan generation failed: {str(e)}")
+
+@app.post("/api/investment-recommendations/execute")
+async def execute_investments(request: dict):
+    """Execute investments by launching broker platforms"""
+    if not money_truth_engine:
+        raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
+    
+    try:
+        broker_plan = request.get('broker_plan', {})
+        
+        if not broker_plan:
+            raise HTTPException(status_code=400, detail="Broker plan is required")
+        
+        # Execute investments
+        execution_result = await money_truth_engine.investment_recommendation_agent.execute_investments(broker_plan)
+        
+        return {
+            "status": "success",
+            "execution_result": execution_result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Investment execution failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Investment execution failed: {str(e)}")
+
+@app.get("/api/brokers")
+async def get_supported_brokers():
+    """Get list of supported brokers for investment execution"""
+    try:
+        from services.broker_integration import broker_service
+        
+        brokers = broker_service.get_broker_comparison()
+        
+        return {
+            "status": "success",
+            "supported_brokers": brokers,
+            "total_brokers": len(brokers),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to get brokers: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get brokers: {str(e)}")
+
 # Stock Analysis Streaming API endpoint
 @app.post("/api/stock/analysis-stream")  
 async def stock_analysis_stream(request: StockAnalysisRequest):

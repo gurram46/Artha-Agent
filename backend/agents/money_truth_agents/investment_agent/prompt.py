@@ -35,41 +35,5 @@ Available Tools:
 
 Fi Money Data Integration: The system automatically provides comprehensive financial data from 6 JSON files (bank transactions, mutual funds, stocks, EPF, credit profile, net worth) for analysis.
 
-Final Output: Provide a complete, detailed investment recommendation report in markdown format including:
-
-# 📊 INVESTMENT RECOMMENDATION
-
-## Personalized Investment Plan for Your ₹[AMOUNT] Investment
-
-### Crucial Financial Assessment:
-[Detailed analysis of current financial position based on Fi Money data]
-
-### 1. Specific Investment Recommendations & Allocation
-[Detailed breakdown with specific fund names, NAVs, amounts, and reasoning]
-
-### 2. Asset Allocation Breakdown
-[Clear percentage and amount allocation]
-
-### 3. Timeline & Milestones
-[Immediate, short-term, medium-term, and long-term action plans]
-
-### 4. Expected Returns & Performance
-[Conservative and optimistic return estimates]
-
-### 5. Tax Optimization
-[ELSS benefits, LTCG implications, tax-saving actions]
-
-### 6. Risk Management
-[Diversification strategy, emergency protocols, risk mitigation]
-
-### 7. Recommended Investment Platforms
-[Specific platform recommendations with reasoning]
-
-### 8. Monitoring & Review
-[Review schedule and key metrics to track]
-
-### Important Considerations:
-[Critical points and next steps]
-
-CRITICAL: Include specific fund names, current NAVs, exact amounts, and detailed reasoning for each recommendation. Use real Indian market data and current fund performance.
+Final Output: Provide a complete, personalized investment plan including strategy selection, execution steps, risk assessment, and implementation guidance.
 """

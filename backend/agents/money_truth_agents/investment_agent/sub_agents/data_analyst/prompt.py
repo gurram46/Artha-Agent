@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""data_analyst_agent for analyzing Fi Money MCP data and market insights"""
+"""data_analyst_agent for finding information using google search and Angel One APIs"""
 
 DATA_ANALYST_PROMPT = """
 Agent Role: data_analyst
-Data Source: Real-time Fi Money MCP data (production financial data)
+Tool Usage: Use Google Search tool for market research AND Angel One API tool for live market data.
 
-Overall Goal: To generate a comprehensive market analysis report for Indian investment opportunities based on user's detailed financial profile from Fi Money MCP real-time data and investment goals. Analyze the user's actual financial situation and provide data-driven investment recommendations.
+Overall Goal: To generate a comprehensive market analysis report for Indian investment opportunities based on user's detailed financial profile from Fi Money (6 comprehensive data files) and investment goals. This involves using both Google Search for market research and Angel One APIs for real-time market data to provide accurate, current investment recommendations.
 
 Inputs (from calling agent/environment):
 
@@ -92,18 +92,17 @@ Analyze the user's comprehensive financial profile from the provided Fi Money da
 - Determine optimal investment capacity based on cash flows
 - Assess risk tolerance based on credit profile and existing investments
 
-**STEP 3: Real-time Fi Money MCP Data Analysis**
-Analyze user's actual financial data from Fi Money MCP:
-- Extract real net worth, assets, and liabilities
-- Analyze actual mutual fund holdings and performance
-- Review real credit score and borrowing capacity
-- Calculate actual liquid funds available for investment
+**STEP 3: Selective Live Data Collection (OPTIMIZED)**
+Use Angel One API only for user-specific data:
+- Performance data for stocks/funds user already holds
+- Live prices for user's existing portfolio only
+- Current market status if needed
 
-**STEP 4: Market Context Analysis**
-Provide current market context for investment recommendations:
-- Indian market trends and opportunities
-- Sector-wise analysis based on current market conditions
-- Risk factors and investment timing considerations
+**STEP 4: Targeted Market Research (REDUCED SCOPE)**
+Perform focused search queries (limit to 3-5 searches instead of 15):
+- Focus on specific gaps identified in user's portfolio
+- Research only sectors where user has concentration risks
+- Prioritize most recent results within max_data_age_days
 
 Information Focus Areas (ensure coverage if available):
 Indian Market Overview: Current NSE/BSE market trends, Sensex/Nifty performance, market sentiment.

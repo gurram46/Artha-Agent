@@ -24,7 +24,7 @@ class BaseMoneyAgent:
         # Standard AI configuration for financial analysis
         self.config = types.GenerateContentConfig(
             temperature=0.3,  # Lower temperature for more consistent financial analysis
-            max_output_tokens=2000,
+            max_output_tokens=8000,
             top_p=0.8,
             top_k=40
         )

@@ -12,6 +12,8 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
   const [showForm, setShowForm] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [recommendation, setRecommendation] = useState<any>(null);
+  const [brokerPlan, setBrokerPlan] = useState<any>(null);
+  const [selectedBroker, setSelectedBroker] = useState('groww');
   const [formData, setFormData] = useState({
     investmentAmount: 50000,
     riskTolerance: 'moderate',
@@ -65,6 +67,58 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       paytm_money: 'https://www.paytmmoney.com'
     };
     window.open(platforms[platform as keyof typeof platforms] || platforms.angel_one, '_blank');
+  };
+
+  const generateBrokerPlan = async () => {
+    if (!recommendation?.personalized_plan) return;
+    
+    try {
+      const response = await fetch('/api/investment-recommendations/broker-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recommendation_text: recommendation.personalized_plan,
+          preferred_broker: selectedBroker
+        }),
+      });
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        setBrokerPlan(data.broker_plan);
+      } else {
+        console.error('Failed to generate broker plan:', data);
+      }
+    } catch (error) {
+      console.error('Error generating broker plan:', error);
+    }
+  };
+
+  const executeInvestments = async () => {
+    if (!brokerPlan) return;
+    
+    try {
+      const response = await fetch('/api/investment-recommendations/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          broker_plan: brokerPlan.execution_plan
+        }),
+      });
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        // Investment platforms opened in browser
+        alert('Investment platforms opened! Please complete your investments in the opened tabs.');
+      } else {
+        console.error('Failed to execute investments:', data);
+      }
+    } catch (error) {
+      console.error('Error executing investments:', error);
+    }
   };
 
   if (showForm) {
@@ -235,6 +289,157 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
               </ReactMarkdown>
             </div>
           </div>
+
+          {/* Enhanced Invest Now Feature */}
+          {recommendation?.investment_analysis?.invest_now_urls && (
+            <div className="bg-gradient-to-br from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.05)] border border-[rgba(0,184,153,0.3)] rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-full flex items-center justify-center">
+                  <span className="text-2xl">🚀</span>
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-xl">Invest Now</h4>
+                  <p className="text-gray-300 text-sm">Execute your investment plan immediately</p>
+                </div>
+              </div>
+              
+              {/* Broker Selection Grid */}
+              <div className="mb-6">
+                <h5 className="text-white font-semibold text-lg mb-4">Choose Your Broker</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { id: 'angel_one', name: 'Angel One', emoji: '📈', desc: 'API Integration & Real-time Data', color: 'from-orange-500 to-orange-600', features: ['Live Prices', 'Basket Orders', 'Research'] },
+                    { id: 'zerodha', name: 'Zerodha Kite', emoji: '🔷', desc: 'Advanced Trading Platform', color: 'from-blue-500 to-blue-600', features: ['Low Brokerage', 'Kite Platform', 'Education'] },
+                    { id: 'groww', name: 'Groww', emoji: '🌱', desc: 'Beginner-Friendly', color: 'from-green-500 to-green-600', features: ['Simple UI', 'Zero AMC', 'Goal Based'] },
+                    { id: 'upstox', name: 'Upstox', emoji: '⚡', desc: 'Professional Tools', color: 'from-purple-500 to-purple-600', features: ['Pro Platform', 'Research', 'Charts'] },
+                    { id: 'paytm_money', name: 'Paytm Money', emoji: '💰', desc: 'Digital-First Experience', color: 'from-indigo-500 to-indigo-600', features: ['Zero Delivery', 'Digital KYC', 'UPI'] },
+                    { id: 'iifl', name: 'IIFL Securities', emoji: '🏛️', desc: 'Full-Service Broker', color: 'from-gray-500 to-gray-600', features: ['Advisory', 'Research', 'Wealth Mgmt'] }
+                  ].map((broker) => (
+                    <div
+                      key={broker.id}
+                      onClick={() => setSelectedBroker(broker.id)}
+                      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 ${
+                        selectedBroker === broker.id
+                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)] shadow-lg shadow-[rgba(0,184,153,0.3)]'
+                          : 'border-[rgba(255,255,255,0.1)] hover:border-[rgba(0,184,153,0.5)] bg-[rgba(255,255,255,0.02)]'
+                      }`}
+                    >
+                      {selectedBroker === broker.id && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 bg-gradient-to-r ${broker.color} rounded-lg flex items-center justify-center`}>
+                          <span className="text-xl">{broker.emoji}</span>
+                        </div>
+                        <div>
+                          <h6 className="text-white font-semibold text-sm">{broker.name}</h6>
+                          <p className="text-gray-400 text-xs">{broker.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {broker.features.map((feature, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-[rgba(255,255,255,0.1)] rounded-full text-xs text-gray-300">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Investment Summary Preview */}
+              {recommendation?.investment_analysis?.actionable_investments && (
+                <div className="bg-[rgba(255,255,255,0.05)] rounded-xl p-4 mb-6">
+                  <h5 className="text-white font-semibold text-sm mb-3">📊 Investment Summary</h5>
+                  <div className="space-y-2">
+                    {recommendation.investment_analysis.actionable_investments.slice(0, 3).map((investment: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center text-sm">
+                        <span className="text-gray-300">{investment.name}</span>
+                        <span className="text-[rgb(0,184,153)] font-semibold">₹{investment.amount?.toLocaleString()}</span>
+                      </div>
+                    ))}
+                    {recommendation.investment_analysis.actionable_investments.length > 3 && (
+                      <div className="text-gray-400 text-xs">
+                        +{recommendation.investment_analysis.actionable_investments.length - 3} more investments
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={generateBrokerPlan}
+                  disabled={!selectedBroker}
+                  className="flex-1 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white px-6 py-4 rounded-xl hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <span>📋</span>
+                  Generate Investment URLs
+                </button>
+                {brokerPlan && (
+                  <button
+                    onClick={executeInvestments}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <span>🚀</span>
+                    Execute Now
+                  </button>
+                )}
+              </div>
+
+              {/* Enhanced Broker Plan Details */}
+              {brokerPlan && (
+                <div className="mt-6 p-4 bg-[rgba(0,0,0,0.3)] rounded-xl border border-[rgba(255,255,255,0.1)]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">✅</span>
+                    <h5 className="text-white font-semibold">Ready to Invest</h5>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-[rgb(0,184,153)] font-bold text-lg">{brokerPlan.execution_plan?.broker || 'Selected Broker'}</div>
+                      <div className="text-gray-400 text-xs">Broker</div>
+                    </div>
+                    <div>
+                      <div className="text-[rgb(0,184,153)] font-bold text-lg">{brokerPlan.execution_plan?.total_investments || '0'}</div>
+                      <div className="text-gray-400 text-xs">Investments</div>
+                    </div>
+                    <div>
+                      <div className="text-[rgb(0,184,153)] font-bold text-lg">
+                        {brokerPlan.execution_plan?.real_time_data ? '🟢 Live' : '🟡 Static'}
+                      </div>
+                      <div className="text-gray-400 text-xs">Data</div>
+                    </div>
+                    <div>
+                      <div className="text-[rgb(0,184,153)] font-bold text-lg">
+                        ₹{Math.round(brokerPlan.investment_summary?.reduce((sum: number, inv: string) => {
+                          const match = inv.match(/₹([0-9,]+)/);
+                          return sum + (match ? parseInt(match[1].replace(/,/g, '')) : 0);
+                        }, 0) || 0).toLocaleString()}
+                      </div>
+                      <div className="text-gray-400 text-xs">Total Amount</div>
+                    </div>
+                  </div>
+                  {brokerPlan.investment_summary && brokerPlan.investment_summary.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
+                      <h6 className="text-white text-sm mb-2">Investment Details:</h6>
+                      <div className="space-y-1">
+                        {brokerPlan.investment_summary.map((investment: string, index: number) => (
+                          <div key={index} className="text-gray-300 text-xs flex items-center gap-2">
+                            <span className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full"></span>
+                            {investment}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Investment Platform Buttons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
