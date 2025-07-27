@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface RiskProfile {
   riskTolerance: 'conservative' | 'moderate' | 'aggressive';
@@ -140,66 +140,43 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
   const currentRisk = getCurrentRiskOption();
 
   return (
-    <div className="bg-[rgb(24,25,27)] rounded-2xl border border-[rgba(0,184,153,0.2)] shadow-xl overflow-hidden">
-      {/* Header */}
-      <div 
-        className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)] cursor-pointer hover:bg-[rgba(0,184,153,0.05)] transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+    <div className="bg-[rgb(24,25,27)] rounded-xl border border-[rgba(0,184,153,0.2)] shadow-lg">
+      {/* Always Visible Header */}
+      <div className="px-4 py-3 border-b border-[rgba(0,184,153,0.2)]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className={`w-12 h-12 rounded-2xl ${currentRisk?.bgColor} ${currentRisk?.borderColor} border-2 flex items-center justify-center`}>
-              <span className="text-2xl">{currentRisk?.icon}</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-lg flex items-center justify-center">
+              <span className="text-lg">⚖️</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Investment Profile</h3>
-              <p className="text-sm text-slate-600">
+              <h3 className="text-md font-semibold text-white">Investment Profile</h3>
+              <p className="text-xs text-gray-400">
                 {currentRisk?.label} • {horizonOptions.find(h => h.id === profile.investmentHorizon)?.duration} • 
                 {goalOptions.find(g => g.id === profile.investmentGoal)?.label}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {hasChanges && (
               <motion.button
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  saveProfile();
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                onClick={saveProfile}
+                className="px-3 py-1 bg-[rgb(0,184,153)] text-white rounded-md text-xs font-medium hover:bg-[rgb(0,164,133)] transition-colors"
               >
-                Save Changes
+                Save
               </motion.button>
             )}
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Expanded Content */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="p-6 space-y-8">
-              {/* Risk Tolerance */}
+      {/* Always Expanded Content */}
+      <div className="p-4 space-y-5">
+              {/* Compact Risk Tolerance */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Risk Tolerance</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h4 className="text-md font-semibold text-white mb-3">Risk Tolerance</h4>
+                <div className="grid grid-cols-3 gap-2">
                   {riskOptions.map((option) => (
                     <motion.div
                       key={option.id}
@@ -207,26 +184,26 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       whileTap={{ scale: 0.98 }}
                       onClick={() => updateProfile({ riskTolerance: option.id as any })}
                       className={`
-                        relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                        relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.riskTolerance === option.id 
-                          ? `${option.borderColor} ${option.bgColor} ring-2 ring-offset-2 ring-blue-500` 
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
-                        <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.riskTolerance === option.id ? option.textColor : 'text-white'}`}>
+                        <div className="text-xl mb-1">{option.icon}</div>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.riskTolerance === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
-                        <p className="text-sm text-slate-600">{option.description}</p>
+                        <p className="text-xs text-gray-500">{option.description}</p>
                       </div>
                       {profile.riskTolerance === option.id && (
                         <motion.div
                           layoutId="risk-selected"
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
                         >
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </motion.div>
@@ -236,10 +213,10 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                 </div>
               </div>
 
-              {/* Investment Horizon */}
+              {/* Compact Investment Horizon */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Investment Horizon</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h4 className="text-md font-semibold text-white mb-3">Investment Horizon</h4>
+                <div className="grid grid-cols-3 gap-2">
                   {horizonOptions.map((option) => (
                     <motion.div
                       key={option.id}
@@ -247,26 +224,26 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       whileTap={{ scale: 0.98 }}
                       onClick={() => updateProfile({ investmentHorizon: option.id as any })}
                       className={`
-                        relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                        relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.investmentHorizon === option.id 
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-offset-2 ring-blue-500' 
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
-                        <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.investmentHorizon === option.id ? 'text-blue-400' : 'text-white'}`}>
+                        <div className="text-xl mb-1">{option.icon}</div>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentHorizon === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
-                        <p className="text-sm text-slate-600">{option.duration}</p>
+                        <p className="text-xs text-gray-500">{option.duration}</p>
                       </div>
                       {profile.investmentHorizon === option.id && (
                         <motion.div
                           layoutId="horizon-selected"
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
                         >
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </motion.div>
@@ -276,10 +253,10 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                 </div>
               </div>
 
-              {/* Investment Goal */}
+              {/* Compact Investment Goal */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Investment Goal</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h4 className="text-md font-semibold text-white mb-3">Investment Goal</h4>
+                <div className="grid grid-cols-3 gap-2">
                   {goalOptions.map((option) => (
                     <motion.div
                       key={option.id}
@@ -287,26 +264,26 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       whileTap={{ scale: 0.98 }}
                       onClick={() => updateProfile({ investmentGoal: option.id as any })}
                       className={`
-                        relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                        relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.investmentGoal === option.id 
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-offset-2 ring-blue-500' 
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
-                        <div className="text-3xl mb-2">{option.icon}</div>
-                        <h5 className={`font-semibold mb-1 ${profile.investmentGoal === option.id ? 'text-blue-400' : 'text-white'}`}>
+                        <div className="text-xl mb-1">{option.icon}</div>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentGoal === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
-                        <p className="text-sm text-slate-600">{option.description}</p>
+                        <p className="text-xs text-gray-500">{option.description}</p>
                       </div>
                       {profile.investmentGoal === option.id && (
                         <motion.div
                           layoutId="goal-selected"
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
                         >
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </motion.div>
@@ -316,12 +293,12 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                 </div>
               </div>
 
-              {/* Monthly Investment */}
+              {/* Compact Monthly Investment */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Monthly Investment Budget</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm font-medium text-slate-700 min-w-0">₹1,000</span>
+                <h4 className="text-md font-semibold text-white mb-3">Monthly Budget</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-gray-400">₹1K</span>
                     <div className="flex-1">
                       <input
                         type="range"
@@ -330,64 +307,44 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                         step="1000"
                         value={profile.monthlyInvestment}
                         onChange={(e) => updateProfile({ monthlyInvestment: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-[rgba(0,184,153,0.2)] rounded-lg appearance-none cursor-pointer slider"
+                        className="w-full h-2 bg-[rgba(0,184,153,0.2)] rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'none',
+                        }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-slate-700 min-w-0">₹1,00,000</span>
+                    <span className="text-xs text-gray-400">₹1L</span>
                   </div>
                   <div className="text-center">
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-lg font-bold text-[rgb(0,184,153)]">
                       ₹{profile.monthlyInvestment.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-sm text-slate-600 ml-2">per month</span>
+                    <span className="text-xs text-gray-400 ml-1">per month</span>
                   </div>
                 </div>
               </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end pt-4 border-t border-slate-200">
+              {/* Compact Save Button */}
+              <div className="flex justify-end pt-3 border-t border-gray-700">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={saveProfile}
                   disabled={!hasChanges}
                   className={`
-                    px-6 py-3 rounded-lg font-medium transition-all duration-200
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${hasChanges 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg' 
-                      : 'bg-[rgba(70,68,68,0.3)] text-gray-500 cursor-not-allowed'
+                      ? 'bg-[rgb(0,184,153)] text-white hover:bg-[rgb(0,164,133)]' 
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     }
                   `}
                 >
-                  {hasChanges ? 'Save Profile' : 'Profile Saved'}
+                  {hasChanges ? 'Save' : 'Saved'}
                 </motion.button>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
 
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
     </div>
   );
 }

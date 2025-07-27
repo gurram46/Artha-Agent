@@ -312,8 +312,8 @@ const EnhancedAnalytics = () => {
         </div>
       </UnifiedCard>
 
-      {/* Performance Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Compact Performance Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <UnifiedCard className="p-6 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] shadow-xl">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Investment Performance</h3>

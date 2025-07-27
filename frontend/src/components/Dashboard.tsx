@@ -337,20 +337,20 @@ export default function Dashboard({ financialData }: Props) {
 
   if (!financialData) {
     return (
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-center shadow-xl">
-        <div className="space-y-4">
-          <div className="w-12 h-12 bg-[rgba(220,53,69,0.1)] border border-[rgba(220,53,69,0.3)] rounded-lg flex items-center justify-center mx-auto">
-            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-6 text-center shadow-lg">
+        <div className="space-y-3">
+          <div className="w-8 h-8 bg-[rgba(220,53,69,0.1)] rounded-lg flex items-center justify-center mx-auto">
+            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">No Data Available</h3>
-            <p className="font-medium text-gray-300 mt-1">Unable to load financial data</p>
+            <h3 className="text-md font-semibold text-white">No Data Available</h3>
+            <p className="text-sm text-gray-400">Unable to load financial data</p>
           </div>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg"
+            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-medium py-2 px-4 rounded-lg transition-all text-sm"
           >
             Retry
           </button>
@@ -374,15 +374,24 @@ export default function Dashboard({ financialData }: Props) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="space-y-5">
+      {/* Top Metrics Row with Bank Accounts First */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Bank Accounts - Top Priority */}
+        {bankAccounts.length > 0 && (
+          <MetricCard
+            title="Bank Accounts"
+            value={`₹${formatNumber(bankAccounts.reduce((total: number, account: any) => total + account.balance, 0))}`}
+            subtitle={`${bankAccounts.length} connected accounts`}
+            icon="M12 2C13.1 2 14 2.9 14 4V8C14 9.1 13.1 10 12 10H4C2.9 10 2 9.1 2 8V4C2 2.9 2.9 2 4 2H12M12 12C13.1 12 14 12.9 14 14V18C14 19.1 13.1 20 12 20H4C2.9 20 2 19.1 2 18V14C2 12.9 2.9 12 4 12H12M20 2C21.1 2 22 2.9 22 4V8C22 9.1 21.1 10 20 10H16C15.4 10 15 9.6 15 9S15.4 8 16 8H20V4H16C15.4 4 15 3.6 15 3S15.4 2 16 2H20M20 12C21.1 12 22 12.9 22 14V18C22 19.1 21.1 20 20 20H16C15.4 20 15 19.6 15 19S15.4 18 16 18H20V14H16C15.4 14 15 13.6 15 13S15.4 12 16 12H20Z"
+          />
+        )}
         <MetricCard
           title="Net Worth"
           value={summary.total_net_worth_formatted || '₹0'}
           change={performanceMetrics.total_returns > 0 ? `+${calculatePortfolioGrowth()}%` : undefined}
           changeType={performanceMetrics.total_returns > 0 ? 'positive' : 'neutral'}
-          subtitle="Total portfolio value"
+          subtitle="Total value"
           icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
         <MetricCard
@@ -390,28 +399,31 @@ export default function Dashboard({ financialData }: Props) {
           value={summary.mutual_funds_formatted || '₹0'}
           change={performanceMetrics.avg_xirr > 0 ? `${performanceMetrics.avg_xirr.toFixed(1)}% XIRR` : undefined}
           changeType={performanceMetrics.avg_xirr > 0 ? 'positive' : 'neutral'}
-          subtitle="Investment portfolio"
+          subtitle="Investments"
           icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
         />
         <MetricCard
           title="Liquid Assets"
           value={summary.liquid_funds_formatted || '₹0'}
-          subtitle="Available funds"
+          subtitle="Available"
           icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
         />
         <MetricCard
           title="EPF"
           value={summary.epf_formatted || '₹0'}
-          subtitle="Provident fund"
+          subtitle="Provident"
           icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
         />
       </div>
 
-      {/* User Investment Profile */}
-      <UserRiskProfile onProfileUpdate={handleProfileUpdate} />
-
-      {/* AI Investment Recommendations */}
-      <InvestmentRecommendationCard financialData={financialData} />
+      {/* Side by Side Investment Components */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Investment Profile */}
+        <UserRiskProfile onProfileUpdate={handleProfileUpdate} />
+        
+        {/* Investment Recommendations */}
+        <InvestmentRecommendationCard financialData={financialData} />
+      </div>
 
       {/* Stock Market Overview */}
       <StocksList />
@@ -461,8 +473,8 @@ export default function Dashboard({ financialData }: Props) {
                 </tr>
               </thead>
               <tbody className="bg-[rgb(24,25,27)] divide-y divide-[rgba(0,184,153,0.1)]">
-                {schemes.map((scheme, index) => (
-                  <tr key={scheme.isin || index} className="hover:bg-[rgba(0,184,153,0.05)]">
+                {schemes.map((scheme: any, index: number) => (
+                  <tr key={scheme.isin || index} className="hover:bg-[rgba(0,184,153,0.05)] border-b border-[rgba(0,184,153,0.1)]">
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-semibold text-white max-w-xs truncate">
@@ -503,41 +515,6 @@ export default function Dashboard({ financialData }: Props) {
         </div>
       )}
 
-      {/* Bank Accounts */}
-      {bankAccounts.length > 0 && (
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Bank Accounts</h3>
-                <p className="text-sm font-medium text-gray-300">{bankAccounts.length} connected accounts</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {bankAccounts.map((account, index) => (
-                <div key={index} className="p-4 border border-[rgba(0,184,153,0.2)] rounded-xl bg-[rgba(0,184,153,0.05)] hover:bg-[rgba(0,184,153,0.1)] transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-white">{account.bank}</h4>
-                    <span className="text-xs bg-[rgba(0,184,153,0.1)] font-medium text-[rgb(0,184,153)] px-2 py-1 rounded border border-[rgba(0,184,153,0.2)]">
-                      {account.accountType?.replace(/_/g, ' ') || 'Account'}
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-300 mb-2">{account.accountNumber}</p>
-                  <p className="text-lg font-semibold text-white">₹{formatNumber(account.balance)}</p>
-                  {account.balanceDate && (
-                    <p className="text-xs font-medium text-gray-400 mt-1">
-                      Updated: {new Date(account.balanceDate).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

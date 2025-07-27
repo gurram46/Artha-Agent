@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface InvestmentForm {
@@ -28,6 +28,7 @@ interface InvestmentRecommendationAgentProps {
 export default function InvestmentRecommendationAgent({ onClose }: InvestmentRecommendationAgentProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [formData, setFormData] = useState<InvestmentForm>({
     investmentAmount: 50000,
     investmentGoal: '',
@@ -39,6 +40,12 @@ export default function InvestmentRecommendationAgent({ onClose }: InvestmentRec
   });
   const [recommendation, setRecommendation] = useState<InvestmentRecommendation | null>(null);
   const [financialData, setFinancialData] = useState<any>(null);
+
+  // Detect demo mode
+  useEffect(() => {
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    setIsDemoMode(demoMode);
+  }, []);
 
   const investmentGoals = [
     { id: 'wealth_creation', label: '💰 Wealth Creation', desc: 'Long-term wealth building' },
@@ -90,8 +97,8 @@ export default function InvestmentRecommendationAgent({ onClose }: InvestmentRec
   const analyzeInvestment = async () => {
     setIsAnalyzing(true);
     try {
-      // First get the investment recommendation using real Fi Money data
-      const response = await fetch('http://localhost:8003/api/investment-recommendations', {
+      // First get the investment recommendation using Fi Money data (real or demo)
+      const response = await fetch(`http://localhost:8003/api/investment-recommendations?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -116,7 +123,8 @@ export default function InvestmentRecommendationAgent({ onClose }: InvestmentRec
             - Preferred Assets: ${formData.preferredAssets.join(', ')}
             
             Provide specific product recommendations with current NAV/prices and Angel Broking investment links.`,
-            mode: 'research'
+            mode: 'research',
+            demo_mode: isDemoMode
           })
         });
 

@@ -55,14 +55,19 @@ enhanced_risk_advisor = None
 quick_agent = None
 stock_analyst = None
 
+# Global demo mode state for session management
+_demo_mode_sessions = set()  # Track demo mode session IDs
+
 class QueryRequest(BaseModel):
     query: str
     mode: str = "research"  # "quick" or "research"
+    demo_mode: bool = False  # Support demo mode
 
 class TripChatRequest(BaseModel):
     query: str
     conversation_history: list = []
     mode: str = "research"
+    demo_mode: bool = False  # Support demo mode
 
 class QueryResponse(BaseModel):
     response: str
@@ -87,6 +92,31 @@ class LocalLLMRequest(BaseModel):
     query: str = "Give me financial insights"
     use_compressed: bool = True
     demo_mode: bool = False
+
+async def get_financial_data_with_demo_support(demo_mode: bool = False):
+    """
+    Get financial data with demo mode support
+    Returns demo data when demo_mode=True, otherwise real Fi Money data
+    """
+    try:
+        if demo_mode:
+            logger.info("📊 Loading demo financial data for chat/research")
+            from core.fi_mcp.real_client import RealFiMCPClient, FinancialData
+            
+            # Use the sample data from mcp-docs
+            client = RealFiMCPClient()
+            demo_data = FinancialData(
+                net_worth=await client.fetch_net_worth(),
+                credit_report=await client.fetch_credit_report(),
+                epf_details=await client.fetch_epf_details()
+            )
+            return demo_data
+        else:
+            # Use real Fi Money data
+            return await get_user_financial_data()
+    except Exception as e:
+        logger.error(f"Failed to get financial data (demo={demo_mode}): {e}")
+        raise
 
 @app.on_event("startup") 
 async def startup_event():
@@ -240,7 +270,7 @@ async def prepare_for_local_llm(request: LocalLLMRequest):
                 epf_details=await client.fetch_epf_details()
             )
         else:
-            financial_data = await get_user_financial_data()
+            financial_data = await get_financial_data_with_demo_support(demo_mode=False)
         
         # Prepare compressed data for local LLM
         result = prepare_local_llm_request(financial_data, request.query)
@@ -287,13 +317,13 @@ async def prepare_for_local_llm(request: LocalLLMRequest):
         raise HTTPException(status_code=500, detail=f"Failed to prepare data: {str(e)}")
 
 @app.get("/api/local-llm/data")
-async def get_compressed_financial_data():
+async def get_compressed_financial_data(demo: bool = False):
     """
     Get compressed financial data in JSON format for local processing
     """
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
         
         # Compress the data
         compressed = compress_for_local_llm(financial_data)
@@ -317,8 +347,8 @@ async def analyze_with_local_llm(request: LocalLLMRequest):
     Returns structured analysis with health score and recommendations
     """
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=request.demo_mode)
         
         # Compress the data
         compressed = compress_for_local_llm(financial_data)
@@ -408,7 +438,7 @@ async def get_financial_data(demo: bool = False):
             }
         
         # Fetch real-time data from Fi Money
-        financial_data = await get_user_financial_data()
+        financial_data = await get_financial_data_with_demo_support(demo_mode=False)
         
         # Extract portfolio summary from real data
         total_net_worth = financial_data.get_total_net_worth()
@@ -472,9 +502,9 @@ async def stream_quick_response(request: QueryRequest):
             yield f"data: {json.dumps({'type': 'log', 'content': quick_content})}\n\n"
             await asyncio.sleep(0.1)
             
-            # Get financial data
+            # Get financial data (with demo mode support)
             yield f"data: {json.dumps({'type': 'log', 'content': '📊 Loading your financial profile...'})}\n\n"
-            financial_data = await get_user_financial_data()
+            financial_data = await get_financial_data_with_demo_support(request.demo_mode)
             await asyncio.sleep(0.1)
             
             yield f"data: {json.dumps({'type': 'log', 'content': '🔍 Searching real-time market data with Google...'})}\n\n"
@@ -544,8 +574,8 @@ async def stream_research_response(request: QueryRequest):
             yield f"data: {json.dumps({'type': 'log', 'content': log_content})}\n\n"
             await asyncio.sleep(0.3)
             
-            # Get financial data
-            financial_data = await get_user_financial_data()
+            # Get financial data (with demo mode support)
+            financial_data = await get_financial_data_with_demo_support(request.demo_mode)
             
             # Extract real values from Fi MCP data
             net_worth_value = financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', '0')
@@ -707,7 +737,7 @@ async def process_query(request: QueryRequest):
         
         # Capture the response by modifying the process method
         # We'll create a custom method for API use
-        response_data = await process_query_for_api(request.query)
+        response_data = await process_query_for_api(request.query, request.demo_mode)
         
         processing_time = time.time() - start_time
         
@@ -722,11 +752,11 @@ async def process_query(request: QueryRequest):
         logging.error(f"Query processing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Query processing failed: {str(e)}")
 
-async def process_query_for_api(user_query: str) -> dict:
+async def process_query_for_api(user_query: str, demo_mode: bool = False) -> dict:
     """Custom query processing for API responses"""
     try:
-        # Get financial data
-        financial_data = await get_user_financial_data()
+        # Get financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode)
         
         # Generate search query
         search_query = await chatbot.analyst.generate_comprehensive_search_query(user_query, financial_data)
@@ -1274,14 +1304,14 @@ async def get_real_time_insights(query_request: QueryRequest):
         raise HTTPException(status_code=500, detail=f"Insights generation failed: {str(e)}")
 
 @app.post("/api/portfolio-health")
-async def get_portfolio_health():
+async def get_portfolio_health(demo: bool = False):
     """Get AI-driven portfolio health analysis using Money Truth Engine"""
     if not money_truth_engine:
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
         
         # Convert to MCP data format
         mcp_data = {
@@ -1333,14 +1363,14 @@ async def detect_money_leaks():
         raise HTTPException(status_code=500, detail=f"Leak detection failed: {str(e)}")
 
 @app.post("/api/risk-assessment")
-async def get_risk_assessment():
+async def get_risk_assessment(demo: bool = False):
     """Get comprehensive risk assessment using Money Truth Engine"""
     if not money_truth_engine:
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
         
         # Convert to MCP data format
         mcp_data = {
@@ -1363,15 +1393,15 @@ async def get_risk_assessment():
         raise HTTPException(status_code=500, detail=f"Risk assessment failed: {str(e)}")
 
 @app.post("/api/trip-planning")
-async def get_trip_planning():
+async def get_trip_planning(demo: bool = False):
     """Get AI-driven trip planning analysis using Money Truth Engine"""
     if not money_truth_engine:
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Always use real Fi Money MCP data - NO DEMO DATA
-        financial_data = await get_user_financial_data()
-        logger.info("✅ Using real Fi Money MCP data for trip planning")
+        # Get financial data with demo mode support
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
+        logger.info(f"✅ Using {'demo' if demo else 'real Fi Money MCP'} data for trip planning")
         
         # Extract REAL liquid funds using SAME logic as frontend mcpDataService
         accounts = []
@@ -1450,9 +1480,9 @@ async def trip_planning_chat(request: TripChatRequest):
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Always use real Fi Money MCP data - NO DEMO DATA
-        financial_data = await get_user_financial_data()
-        logger.info("✅ Using real Fi Money MCP data for trip planning")
+        # Get financial data with demo mode support
+        financial_data = await get_financial_data_with_demo_support(demo_mode=request.demo_mode)
+        logger.info(f"✅ Using {'demo' if request.demo_mode else 'real Fi Money MCP'} data for trip planning")
         
         # Debug log the financial data structure
         logger.info(f"🔍 Financial data type: {type(financial_data)}")
@@ -1564,14 +1594,14 @@ async def trip_planning_chat(request: TripChatRequest):
         raise HTTPException(status_code=500, detail=f"Trip planning chat failed: {str(e)}")
 
 @app.post("/api/investment-recommendations")
-async def get_investment_recommendations():
+async def get_investment_recommendations(demo: bool = False):
     """Get comprehensive investment recommendations using Money Truth Engine"""
     if not money_truth_engine:
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
         
         # Convert to MCP data format
         mcp_data = {
@@ -1606,9 +1636,9 @@ async def investment_recommendations_chat(request: InvestmentChatRequest):
         raise HTTPException(status_code=500, detail="Money Truth Engine not initialized")
     
     try:
-        # Get real Fi Money MCP data
-        financial_data = await get_user_financial_data()
-        logger.info("✅ Using real Fi Money MCP data for investment recommendations")
+        # Get financial data with demo mode support
+        financial_data = await get_financial_data_with_demo_support(demo_mode=request.demo_mode)
+        logger.info(f"✅ Using {'demo' if request.demo_mode else 'real Fi Money MCP'} data for investment recommendations")
         
         # Convert to MCP data format
         mcp_data = {
@@ -1924,8 +1954,9 @@ async def websocket_live_insights(websocket: WebSocket):
             })
             
             try:
-                # Get financial data
-                financial_data = await get_user_financial_data()
+                # Get financial data (check for demo mode in query data)
+                demo_mode = query_obj.get("demo_mode", False)
+                financial_data = await get_financial_data_with_demo_support(demo_mode=demo_mode)
                 mcp_data = {
                     "data": {
                         "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},

@@ -20,7 +20,14 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [financialContext, setFinancialContext] = useState<any>({});
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Detect demo mode
+  useEffect(() => {
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    setIsDemoMode(demoMode);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,7 +48,7 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
       const response = await fetch('http://localhost:8003/api/trip-planning/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: 'start', mode: 'research' })
+        body: JSON.stringify({ query: 'start', mode: 'research', demo_mode: isDemoMode })
       });
       
       const data = await response.json();
@@ -92,6 +99,7 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
         body: JSON.stringify({ 
           query, 
           mode: 'research',
+          demo_mode: isDemoMode,
           conversation_history: updatedMessages.map(msg => ({
             type: msg.type,
             content: msg.content,

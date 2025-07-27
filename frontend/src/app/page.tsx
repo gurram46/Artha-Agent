@@ -280,65 +280,43 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Fi Money Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Fi Money Portfolio Header */}
+        {/* Compact Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {/* Compact Portfolio Header */}
           {activeTab === 'portfolio' && financialData && (
-            <div className="mb-10">
-              <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 shadow-2xl">
+            <div className="mb-6">
+              <div className="bg-gradient-to-r from-[rgb(24,25,27)] to-[rgb(28,29,31)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-5 shadow-xl">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                      {isDemoMode ? 'Demo Account Fi Money Portfolio' : 'Fi Money Portfolio'}
-                    </h1>
-                    <p className="text-gray-300 text-lg font-medium">
-                      {isDemoMode 
-                        ? 'Financial intelligence with sample data for demonstration'
-                        : 'Real-time financial intelligence powered by Fi Money MCP'
-                      }
-                    </p>
-                    <div className="flex items-center mt-4 space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} animate-pulse`}></div>
-                      <span className={`text-sm font-bold ${isDemoMode ? 'text-yellow-400' : 'text-[rgb(0,184,153)]'}`}>
-                        {isDemoMode ? 'Demo Data Mode' : 'Live Fi Money Data'}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {isDemoMode 
-                          ? '• Sample Data • Development Environment'
-                          : '• No Sample Data • Production Ready'
-                        }
-                      </span>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-xl flex items-center justify-center shadow-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold text-white tracking-tight">
+                        {isDemoMode ? 'Demo Portfolio' : 'My Portfolio'}
+                      </h1>
+                      <div className="flex items-center mt-1 space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} animate-pulse`}></div>
+                        <span className={`text-xs font-medium ${isDemoMode ? 'text-yellow-400' : 'text-[rgb(0,184,153)]'}`}>
+                          {isDemoMode ? 'Demo Mode' : 'Live Data'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.3)] backdrop-blur-sm rounded-2xl p-6">
-                    <p className="text-sm text-gray-300 font-semibold mb-1">Total Net Worth</p>
-                    <p className="text-3xl font-black text-white tracking-tight">{financialData?.summary?.total_net_worth_formatted || '₹0'}</p>
-                    <div className="flex items-center justify-end mt-3 space-x-2">
-                      {isDemoMode ? (
-                        <>
-                          <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          <span className="text-xs text-yellow-400 font-bold">Demo Account</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 text-[rgb(0,184,153)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-xs text-[rgb(0,184,153)] font-bold">Fi Money MCP</span>
-                        </>
-                      )}
-                    </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 font-medium">Total Value</p>
+                    <p className="text-2xl font-bold text-white">{financialData?.summary?.total_net_worth_formatted || '₹0'}</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
           
-          {/* Show Fi Money Auth in header for logged in users - but not in demo mode */}
+          {/* Compact Auth Status */}
           {!isDemoMode && (
-            <div className="mb-6">
+            <div className="mb-4">
               <FiMoneyWebAuth
                 onAuthSuccess={handleAuthSuccess}
                 onAuthError={handleAuthError}
@@ -346,8 +324,8 @@ export default function Home() {
             </div>
           )}
           
-          {/* Premium Content Sections */}
-          <div className="space-y-8">
+          {/* Compact Content Sections */}
+          <div className="space-y-5">
             {activeTab === 'portfolio' && <Dashboard financialData={financialData} />}
             {activeTab === 'analytics' && <EnhancedAnalytics />}
             {activeTab === 'advisory' && <ChatInterface />}

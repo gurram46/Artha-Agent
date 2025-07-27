@@ -174,6 +174,7 @@ export default function ChatInterface() {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [agentMode, setAgentMode] = useState<AgentMode>('research');
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -183,6 +184,12 @@ export default function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Detect demo mode from session storage
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    setIsDemoMode(demoMode);
+  }, []);
 
   // Hackathon example queries from your submitted idea
   const exampleQueries = [
@@ -246,7 +253,8 @@ export default function ChatInterface() {
           },
           body: JSON.stringify({ 
             query,
-            mode: agentMode 
+            mode: agentMode,
+            demo_mode: isDemoMode
           }),
           signal: controller.signal
         });
@@ -497,7 +505,11 @@ export default function ChatInterface() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ 
+          query,
+          mode: agentMode,
+          demo_mode: isDemoMode
+        }),
         signal: controller.signal
       });
 

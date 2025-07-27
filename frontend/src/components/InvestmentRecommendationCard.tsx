@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface InvestmentRecommendationCardProps {
@@ -8,12 +8,12 @@ interface InvestmentRecommendationCardProps {
 }
 
 export default function InvestmentRecommendationCard({ financialData }: InvestmentRecommendationCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [recommendation, setRecommendation] = useState<any>(null);
   const [brokerPlan, setBrokerPlan] = useState<any>(null);
   const [selectedBroker, setSelectedBroker] = useState('groww');
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [formData, setFormData] = useState({
     investmentAmount: 50000,
     riskTolerance: 'moderate',
@@ -22,10 +22,16 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     monthlyInvestment: 5000
   });
 
+  // Detect demo mode
+  useEffect(() => {
+    const demoMode = sessionStorage.getItem('demoMode') === 'true';
+    setIsDemoMode(demoMode);
+  }, []);
+
   const handleGetRecommendation = async () => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch('http://localhost:8003/api/investment-recommendations', {
+      const response = await fetch(`http://localhost:8003/api/investment-recommendations?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -474,69 +480,59 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
   }
 
   return (
-    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-4 shadow-lg group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Investment Recommendations</h3>
-            <p className="text-sm text-gray-300">AI-powered investment strategy</p>
+            <h3 className="text-md font-semibold text-white">Investment Recommendations</h3>
+            <p className="text-xs text-gray-400">AI-powered investment strategy</p>
           </div>
         </div>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          <svg className={`w-6 h-6 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
       </div>
 
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-[rgb(0,184,153)]">🤖</p>
+            <p className="text-xl font-bold text-[rgb(0,184,153)]">🤖</p>
             <p className="text-xs text-gray-300 font-medium">AI Analysis</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-[rgb(0,184,153)]">📊</p>
+            <p className="text-xl font-bold text-[rgb(0,184,153)]">📊</p>
             <p className="text-xs text-gray-300 font-medium">Real Data</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-[rgb(0,184,153)]">🚀</p>
+            <p className="text-xl font-bold text-[rgb(0,184,153)]">🚀</p>
             <p className="text-xs text-gray-300 font-medium">Direct Invest</p>
           </div>
         </div>
 
-        {isExpanded && (
-          <div className="space-y-4 border-t border-[rgba(0,184,153,0.2)] pt-4">
-            <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-4">
-              <h4 className="text-sm font-bold text-white mb-2">🎯 What You'll Get:</h4>
-              <ul className="text-sm text-gray-300 space-y-1">
-                <li>• Personalized investment strategies based on your Fi Money data</li>
-                <li>• Specific mutual fund and stock recommendations</li>
-                <li>• Risk-appropriate portfolio allocation</li>
-                <li>• Direct links to invest on Angel One, Zerodha, Groww</li>
-                <li>• Tax-efficient investment planning</li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white px-6 py-4 rounded-xl hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] transition-all font-medium flex items-center justify-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              Get Personalized Investment Plan
-            </button>
+        <div className="space-y-4 border-t border-[rgba(0,184,153,0.2)] pt-4">
+          <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl p-3">
+            <h4 className="text-xs font-bold text-white mb-2">🎯 What You'll Get:</h4>
+            <ul className="text-xs text-gray-300 space-y-1">
+              <li>• Personalized investment strategies based on your Fi Money data</li>
+              <li>• Specific mutual fund and stock recommendations</li>
+              <li>• Risk-appropriate portfolio allocation</li>
+              <li>• Direct links to invest on Angel One, Zerodha, Groww</li>
+              <li>• Tax-efficient investment planning</li>
+            </ul>
           </div>
-        )}
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white px-4 py-3 rounded-lg hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] transition-all text-sm font-medium flex items-center justify-center"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Get AI Investment Plan
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -69,6 +69,15 @@ const getInitialState = (): FinancialInsightsState => {
 
 export function FinancialInsightsProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<FinancialInsightsState>(getInitialState);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Detect demo mode on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const demoMode = sessionStorage.getItem('demoMode') === 'true';
+      setIsDemoMode(demoMode);
+    }
+  }, []);
 
   // Persist to localStorage whenever state changes
   useEffect(() => {
@@ -119,7 +128,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingHealth(true);
     try {
-      const response = await fetch('http://localhost:8003/api/portfolio-health', {
+      const response = await fetch(`http://localhost:8003/api/portfolio-health?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -138,7 +147,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
     } finally {
       setIsLoadingHealth(false);
     }
-  }, [state.portfolioHealth, state.lastUpdated]);
+  }, [state.portfolioHealth, state.lastUpdated, isDemoMode]);
 
 
   const fetchRiskAssessment = useCallback(async () => {
@@ -152,7 +161,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingRisk(true);
     try {
-      const response = await fetch('http://localhost:8003/api/risk-assessment', {
+      const response = await fetch(`http://localhost:8003/api/risk-assessment?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -171,7 +180,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
     } finally {
       setIsLoadingRisk(false);
     }
-  }, [state.riskAssessment, state.lastUpdated]);
+  }, [state.riskAssessment, state.lastUpdated, isDemoMode]);
 
   const fetchTripPlanning = useCallback(async () => {
     const lastUpdate = state.lastUpdated['tripPlanning'];
@@ -184,7 +193,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingTrip(true);
     try {
-      const response = await fetch('http://localhost:8003/api/trip-planning', {
+      const response = await fetch(`http://localhost:8003/api/trip-planning?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -203,7 +212,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
     } finally {
       setIsLoadingTrip(false);
     }
-  }, [state.tripPlanning, state.lastUpdated]);
+  }, [state.tripPlanning, state.lastUpdated, isDemoMode]);
 
   const isDataStale = useCallback((key: string) => {
     const lastUpdate = state.lastUpdated[key];
