@@ -504,6 +504,7 @@ async def stream_quick_response(request: QueryRequest):
             
             # Get financial data (with demo mode support)
             yield f"data: {json.dumps({'type': 'log', 'content': '📊 Loading your financial profile...'})}\n\n"
+            logger.info(f"🔍 Demo mode detected: {request.demo_mode}")
             financial_data = await get_financial_data_with_demo_support(request.demo_mode)
             await asyncio.sleep(0.1)
             
@@ -575,6 +576,7 @@ async def stream_research_response(request: QueryRequest):
             await asyncio.sleep(0.3)
             
             # Get financial data (with demo mode support)
+            logger.info(f"🔍 Demo mode detected: {request.demo_mode}")
             financial_data = await get_financial_data_with_demo_support(request.demo_mode)
             
             # Extract real values from Fi MCP data
@@ -756,6 +758,7 @@ async def process_query_for_api(user_query: str, demo_mode: bool = False) -> dic
     """Custom query processing for API responses"""
     try:
         # Get financial data (with demo mode support)
+        logger.info(f"🔍 Demo mode detected: {demo_mode}")
         financial_data = await get_financial_data_with_demo_support(demo_mode)
         
         # Generate search query
@@ -1280,8 +1283,8 @@ async def get_real_time_insights(query_request: QueryRequest):
         raise HTTPException(status_code=500, detail="MoneyTruthEngine not initialized")
     
     try:
-        # Get user's financial data
-        financial_data = await get_user_financial_data()
+        # Get user's financial data (with demo mode support)
+        financial_data = await get_financial_data_with_demo_support(query_request.demo_mode)
         mcp_data = {
             "data": {
                 "net_worth": financial_data.net_worth if hasattr(financial_data, 'net_worth') else {},
