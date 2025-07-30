@@ -105,7 +105,13 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
       const demoMode = sessionStorage.getItem('demoMode') === 'true';
       setIsDemoMode(demoMode);
       
-      const response = await fetch('http://localhost:8003/api/local-llm/prepare', {
+      // Get backend URL with placeholder protection
+      let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+        backendUrl = 'https://artha-agent.onrender.com';
+      }
+      
+      const response = await fetch(`${backendUrl}/api/local-llm/prepare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

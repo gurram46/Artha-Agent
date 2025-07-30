@@ -8,9 +8,18 @@ interface UseStreamingChatOptions {
 }
 
 export const useStreamingChat = (options: UseStreamingChatOptions = {}) => {
+  // Get backend URL with placeholder protection
+  let baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+  
+  // Safety check for placeholder URLs and localhost
+  if (baseUrl.includes('your-backend-url') || baseUrl.includes('placeholder') || baseUrl.includes('localhost')) {
+    baseUrl = 'https://artha-agent.onrender.com';
+    console.warn('⚠️ useStreamingChat: Detected placeholder/localhost URL, using production fallback:', baseUrl);
+  }
+  
   const {
-    apiEndpoint = 'http://localhost:8003/query',
-    streamEndpoint = 'http://localhost:8003/api/deep-research',
+    apiEndpoint = `${baseUrl}/query`,
+    streamEndpoint = `${baseUrl}/api/deep-research`,
     config = {}
   } = options;
 

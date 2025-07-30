@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 
-// Integration with Stock AI Agents backend - REAL DATA ONLY  
-const STOCK_AI_URL = process.env.STOCK_AI_URL || 'http://localhost:8003';
+// Integration with Stock AI Agents backend - REAL DATA ONLY
+let STOCK_AI_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || process.env.STOCK_AI_URL || 'https://artha-agent.onrender.com';
+
+// Safety check for placeholder URLs and localhost
+if (STOCK_AI_URL.includes('your-backend-url') || STOCK_AI_URL.includes('placeholder') || STOCK_AI_URL.includes('localhost')) {
+  STOCK_AI_URL = 'https://artha-agent.onrender.com';
+  console.warn('⚠️ Stock API: Detected placeholder/localhost URL, using production fallback:', STOCK_AI_URL);
+}
 
 // Helper function to call stock AI agents - NO FALLBACKS
 async function callStockAIAgent(endpoint: string, data: any) {
@@ -92,7 +98,7 @@ export async function POST(request: Request) {
             if (!fullStockData || !fullStockData.currentPrice) {
               sendMessage('log', '📊 Fetching real-time stock data...');
               try {
-                const stockResponse = await fetch(`http://localhost:3002/api/stocks/proxy?action=quote&symbol=${symbol}`);
+                const stockResponse = await fetch(`${STOCK_AI_URL}/api/stocks/proxy?action=quote&symbol=${symbol}`);
                 if (stockResponse.ok) {
                   const stockResult = await stockResponse.json();
                   fullStockData = stockResult.data;

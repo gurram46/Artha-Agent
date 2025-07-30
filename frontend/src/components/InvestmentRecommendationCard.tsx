@@ -32,7 +32,8 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     setIsAnalyzing(true);
     try {
       // Call AI Investment System API endpoint
-      const response = await fetch(`http://localhost:8003/api/ai-investment-recommendations?demo=${isDemoMode}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      const response = await fetch(`${baseUrl}/api/ai-investment-recommendations?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,7 +49,8 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       
       if (data.status === 'success') {
         // Get personalized recommendation using AI chat system
-        const chatResponse = await fetch('http://localhost:8003/api/ai-investment-recommendations/chat', {
+        const baseUrl2 = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+        const chatResponse = await fetch(`${baseUrl2}/api/ai-investment-recommendations/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

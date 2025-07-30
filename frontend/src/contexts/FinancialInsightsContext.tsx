@@ -128,7 +128,13 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingHealth(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/portfolio-health?demo=${isDemoMode}`, {
+      // Get backend URL with placeholder protection
+      let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+        backendUrl = 'https://artha-agent.onrender.com';
+      }
+      
+      const response = await fetch(`${backendUrl}/api/portfolio-health?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -161,7 +167,13 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingRisk(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/risk-assessment?demo=${isDemoMode}`, {
+      // Get backend URL with placeholder protection
+      let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+        backendUrl = 'https://artha-agent.onrender.com';
+      }
+      
+      const response = await fetch(`${backendUrl}/api/risk-assessment?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -193,7 +205,13 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingTrip(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/trip-planning?demo=${isDemoMode}`, {
+      // Get backend URL with placeholder protection
+      let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+        backendUrl = 'https://artha-agent.onrender.com';
+      }
+      
+      const response = await fetch(`${backendUrl}/api/trip-planning?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });

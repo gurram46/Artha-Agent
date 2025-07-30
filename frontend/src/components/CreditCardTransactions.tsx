@@ -73,24 +73,107 @@ export default function CreditCardTransactions({ financialData }: CreditCardTran
       try {
         setIsLoading(true);
         
-        // Check if we're in demo mode
-        const demoMode = sessionStorage.getItem('demoMode') === 'true';
+        // Hardcoded comprehensive mock credit card transactions
+        const mockTransactions: Transaction[] = [
+          {
+            transactionId: "TXN001",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-15T10:30:00Z",
+            amount: { currencyCode: "INR", units: "2850" },
+            description: "SWIGGY ONLINE FOOD ORDER",
+            category: "FOOD_DELIVERY",
+            merchantName: "Swiggy",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN002",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-14T15:45:00Z",
+            amount: { currencyCode: "INR", units: "12500" },
+            description: "AMAZON SHOPPING",
+            category: "SHOPPING",
+            merchantName: "Amazon",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN003",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-13T09:20:00Z",
+            amount: { currencyCode: "INR", units: "4200" },
+            description: "BIG BAZAAR GROCERY",
+            category: "GROCERY",
+            merchantName: "Big Bazaar",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN004",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-12T18:30:00Z",
+            amount: { currencyCode: "INR", units: "8900" },
+            description: "ZOMATO FOOD ORDER",
+            category: "FOOD_DELIVERY",
+            merchantName: "Zomato",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN005",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-11T12:15:00Z",
+            amount: { currencyCode: "INR", units: "15600" },
+            description: "RELIANCE DIGITAL ELECTRONICS",
+            category: "SHOPPING",
+            merchantName: "Reliance Digital",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN006",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-10T20:45:00Z",
+            amount: { currencyCode: "INR", units: "3200" },
+            description: "INDIAN OIL PETROL PUMP",
+            category: "FUEL",
+            merchantName: "Indian Oil",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN007",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-09T14:20:00Z",
+            amount: { currencyCode: "INR", units: "850" },
+            description: "STARBUCKS COFFEE",
+            category: "FOOD_BEVERAGE",
+            merchantName: "Starbucks",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          },
+          {
+            transactionId: "TXN008",
+            accountNumber: "****5432",
+            accountType: "CREDIT_CARD",
+            transactionDate: "2025-01-08T19:00:00Z",
+            amount: { currencyCode: "INR", units: "1200" },
+            description: "UBER RIDE",
+            category: "TRANSPORTATION",
+            merchantName: "Uber",
+            transactionType: "DEBIT",
+            status: "COMPLETED"
+          }
+        ];
         
-        if (demoMode) {
-          // Load from demo data
-          const response = await fetch('/financial-data?demo=true');
-          const data = await response.json();
-          
-          if (data.success && data.data?.bank_transactions?.transactions) {
-            setTransactions(data.data.bank_transactions.transactions);
-          }
-        } else {
-          // For real mode, would fetch from actual API
-          // For now, we'll use the demo data structure
-          if (financialData?.bank_transactions?.transactions) {
-            setTransactions(financialData.bank_transactions.transactions);
-          }
-        }
+        setTransactions(mockTransactions);
       } catch (error) {
         console.error('Error loading transactions:', error);
       } finally {

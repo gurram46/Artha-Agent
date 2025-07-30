@@ -56,18 +56,67 @@ interface MCPEPFDetails {
   };
 }
 
+interface MCPBankTransaction {
+  bank: string;
+  txns: Array<[string, string, string, number, string, string]>; // [amount, narration, date, type, mode, balance]
+}
+
+interface MCPBankTransactions {
+  schemaDescription: string;
+  bankTransactions: MCPBankTransaction[];
+}
+
+interface MCPMutualFundTransaction {
+  isinNumber: string;
+  folioId: string;
+  externalOrderType: string;
+  transactionDate: string;
+  purchasePrice: {
+    currencyCode: string;
+    units: string;
+    nanos?: number;
+  };
+  transactionAmount: {
+    currencyCode: string;
+    units: string;
+    nanos?: number;
+  };
+  transactionUnits: number;
+  transactionMode: string;
+  schemeName: string;
+}
+
+interface MCPMFTransactions {
+  transactions: MCPMutualFundTransaction[];
+}
+
+interface MCPStockTransaction {
+  isin: string;
+  txns: Array<[number, string, number, number?]>; // [type, date, quantity, navValue?]
+}
+
+interface MCPStockTransactions {
+  schemaDescription: string;
+  stockTransactions: MCPStockTransaction[];
+}
+
 interface BackendFinancialData {
   status: string;
+  message?: string;
   data: {
     net_worth: MCPNetWorthResponse;
     credit_report: MCPCreditReport;
     epf_details: MCPEPFDetails;
+    bank_transactions?: MCPBankTransactions;
+    mf_transactions?: MCPMFTransactions;
+    stock_transactions?: MCPStockTransactions;
   };
   summary: {
     total_net_worth_formatted: string;
     total_assets: number;
     total_liabilities: number;
     credit_score: string;
+    data_source?: string;
   };
 }
 
@@ -80,8 +129,24 @@ class MCPDataService {
   private isDemoMode: boolean = false;
 
   private constructor() {
-    // Default to localhost backend, can be configured via environment
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8003';
+    // Use environment variable or production backend URL with explicit checks
+    const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    
+    // Log for debugging
+    console.log('Environment variables check:', { envBackendUrl, envApiUrl });
+    
+    // Ensure we never use placeholder URLs
+    let backendUrl = envBackendUrl || envApiUrl || 'https://artha-agent.onrender.com';
+    
+    // Safety check for placeholder URLs and localhost
+    if (backendUrl.includes('your-backend-url') || backendUrl.includes('placeholder') || backendUrl.includes('localhost')) {
+      backendUrl = 'https://artha-agent.onrender.com';
+      console.warn('⚠️ Detected placeholder/localhost URL, using production fallback:', backendUrl);
+    }
+    
+    this.backendUrl = backendUrl;
+    console.log('✅ MCPDataService initialized with backend URL:', this.backendUrl);
   }
 
   setDemoMode(enabled: boolean): void {
@@ -104,14 +169,15 @@ class MCPDataService {
       net_worth: MCPNetWorthResponse;
       credit_report: MCPCreditReport;
       epf_details: MCPEPFDetails;
+      bank_transactions?: MCPBankTransactions;
+      mf_transactions?: MCPMFTransactions;
+      stock_transactions?: MCPStockTransactions;
     };
     error?: string;
     authRequired?: boolean;
   }> {
     try {
-      console.log(this.isDemoMode 
-        ? '🎭 Fetching demo financial data...'
-        : '🔄 Fetching real-time financial data from Fi Money MCP...');
+      console.log('🎭 Loading comprehensive mock MCP data...');
 
       // Check cache first
       const now = Date.now();
@@ -123,66 +189,183 @@ class MCPDataService {
         };
       }
 
-      // Fetch from Fi Money MCP via backend (with demo mode support)
-      const url = this.isDemoMode 
-        ? `${this.backendUrl}/financial-data?demo=true`
-        : `${this.backendUrl}/financial-data`;
-        
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(15000) // 15 second timeout for real API
-      });
+      // Comprehensive hardcoded mock data
+      const mockData = this.getComprehensiveMockData();
 
-      if (!response.ok) {
-        throw new Error(`Fi Money MCP API error: ${response.status} ${response.statusText}`);
-      }
-
-      const backendData: BackendFinancialData = await response.json();
-
-      // Handle authentication required
-      if (backendData.status === 'unauthenticated') {
-        console.warn('🔐 Fi Money authentication required');
-        return {
-          success: false,
-          error: backendData.message || 'Authentication required',
-          authRequired: true
-        };
-      }
-
-      if (backendData.status !== 'success') {
-        throw new Error(backendData.message || 'Fi Money MCP server error');
-      }
-
-      // Cache the successful response
-      this.cachedData = backendData;
+      // Create mock backend response for caching
+      this.cachedData = {
+        status: 'success',
+        message: 'Comprehensive mock data loaded',
+        data: mockData,
+        summary: {
+          total_net_worth_formatted: this.formatCurrency(1250000),
+          total_assets: 1325000,
+          total_liabilities: 75000,
+          credit_score: '768',
+          data_source: 'Comprehensive Mock Data'
+        }
+      };
+      
       this.lastFetch = now;
 
-      console.log(this.isDemoMode 
-        ? '✅ Successfully loaded demo data'
-        : '✅ Successfully fetched real-time data from Fi Money MCP');
-      console.log(`📊 Data source: ${this.isDemoMode ? 'Demo Data' : backendData.summary?.data_source || 'Fi Money MCP'}`);
+      console.log('✅ Successfully loaded comprehensive mock data');
+      console.log('📊 Data source: Comprehensive Mock Data');
 
       return {
         success: true,
-        data: backendData.data
+        data: mockData
       };
 
     } catch (error) {
-      console.error('❌ Failed to fetch real-time data from Fi Money MCP:', error);
+      console.error('❌ Failed to load mock data:', error);
       
-      // NO FALLBACKS - Production ready
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to connect to Fi Money MCP server',
-        authRequired: error instanceof Error && (error.message.includes('authentication') || error.message.includes('expired'))
+        error: error instanceof Error ? error.message : 'Failed to load mock data',
+        authRequired: false
       };
     }
   }
 
-  // Fi Money Web Authentication Methods
+  private getComprehensiveMockData() {
+    return {
+      net_worth: {
+        netWorthResponse: {
+          assetValues: [
+            {
+              netWorthAttribute: "ASSET_TYPE_MUTUAL_FUND",
+              value: { currencyCode: "INR", units: "450000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_SAVINGS_ACCOUNTS",
+              value: { currencyCode: "INR", units: "285000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_EPF",
+              value: { currencyCode: "INR", units: "320000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_FIXED_DEPOSIT",
+              value: { currencyCode: "INR", units: "150000" }
+            },
+            {
+              netWorthAttribute: "ASSET_TYPE_INDIAN_SECURITIES",
+              value: { currencyCode: "INR", units: "120000" }
+            }
+          ],
+          liabilityValues: [
+            {
+              netWorthAttribute: "LIABILITY_TYPE_CREDIT_CARD",
+              value: { currencyCode: "INR", units: "45000" }
+            },
+            {
+              netWorthAttribute: "LIABILITY_TYPE_PERSONAL_LOAN",
+              value: { currencyCode: "INR", units: "30000" }
+            }
+          ],
+          totalNetWorthValue: {
+            currencyCode: "INR",
+            units: "1250000"
+          }
+        }
+      },
+      credit_report: {
+        creditReports: [
+          {
+            creditReportData: {
+              score: { bureauScore: "768" },
+              creditAccount: {
+                creditAccountSummary: {
+                  totalOutstandingBalance: {
+                    outstandingBalanceAll: "75000"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      epf_details: {
+        epfDetails: {
+          balance: {
+            currencyCode: "INR",
+            units: "320000"
+          }
+        }
+      },
+      bank_transactions: {
+        schemaDescription: "Mock bank transactions for demo",
+        bankTransactions: [
+          {
+            bank: "HDFC Bank",
+            txns: [
+              ["5000", "SALARY CREDIT", "2025-01-15", 1, "NEFT", "285000"],
+              ["1200", "UPI-SWIGGY PAYMENT", "2025-01-14", 2, "UPI", "280000"],
+              ["500", "ATM WITHDRAWAL", "2025-01-13", 2, "ATM", "279500"],
+              ["2500", "GROCERY PAYMENT", "2025-01-12", 2, "UPI", "277000"],
+              ["1500", "ELECTRICITY BILL", "2025-01-11", 2, "AUTO_DEBIT", "275500"]
+            ]
+          }
+        ]
+      },
+      mf_transactions: {
+        transactions: [
+          {
+            isinNumber: "INF109K012B0",
+            folioId: "MF001234",
+            externalOrderType: "BUY",
+            transactionDate: "2025-01-10T10:30:00Z",
+            purchasePrice: { currencyCode: "INR", units: "145", nanos: 500000000 },
+            transactionAmount: { currencyCode: "INR", units: "14550" },
+            transactionUnits: 100,
+            transactionMode: "SIP",
+            schemeName: "ICICI Prudential Balanced Advantage Fund - Direct Plan"
+          },
+          {
+            isinNumber: "INF760K01FC4",
+            folioId: "MF005678",
+            externalOrderType: "BUY",
+            transactionDate: "2025-01-05T09:15:00Z",
+            purchasePrice: { currencyCode: "INR", units: "125", nanos: 750000000 },
+            transactionAmount: { currencyCode: "INR", units: "12575" },
+            transactionUnits: 100,
+            transactionMode: "SIP",
+            schemeName: "SBI Blue Chip Fund - Direct Plan"
+          }
+        ]
+      },
+      stock_transactions: {
+        schemaDescription: "Mock stock transactions for demo",
+        stockTransactions: [
+          {
+            isin: "INE040A01034",
+            txns: [
+              [1, "2025-01-12", 10, 1580.50],
+              [1, "2024-12-15", 5, 1520.25],
+              [2, "2024-11-20", 3, 1650.75]
+            ]
+          },
+          {
+            isin: "INE002A01018",
+            txns: [
+              [1, "2025-01-08", 25, 890.30],
+              [1, "2024-12-10", 15, 875.60]
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  private calculateTotalAssets(assetValues: MCPAsset[]): number {
+    return assetValues.reduce((total, asset) => total + parseInt(asset.value.units), 0);
+  }
+
+  private calculateTotalLiabilities(liabilityValues: MCPLiability[]): number {
+    return liabilityValues.reduce((total, liability) => total + parseInt(liability.value.units), 0);
+  }
+
+  // Local MCP Authentication Methods (simplified for local data)
   async initiateWebAuthentication(): Promise<{
     success: boolean;
     loginRequired?: boolean;
@@ -190,152 +373,59 @@ class MCPDataService {
     sessionId?: string;
     message: string;
   }> {
-    try {
-      console.log('🌐 Initiating Fi Money web authentication...');
-      
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Authentication initiation failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.status === 'login_required') {
-        console.log('🔗 Fi Money login URL received');
-        return {
-          success: true,
-          loginRequired: true,
-          loginUrl: result.login_url,
-          sessionId: result.session_id,
-          message: result.message
-        };
-      } else if (result.status === 'already_authenticated') {
-        console.log('✅ Already authenticated with Fi Money');
-        return {
-          success: true,
-          loginRequired: false,
-          message: result.message
-        };
-      } else {
-        console.error('❌ Fi Money authentication initiation failed');
-        return {
-          success: false,
-          message: result.message || 'Authentication initiation failed'
-        };
-      }
-      
-    } catch (error) {
-      console.error('❌ Fi Money authentication initiation error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Authentication initiation error'
-      };
-    }
+    console.log('🎭 Mock authentication - using local MCP data');
+    
+    // Simulate successful authentication since we're using local data
+    return {
+      success: true,
+      loginRequired: false,
+      message: 'Local MCP data - no authentication required'
+    };
   }
 
   async checkAuthenticationStatus(): Promise<{
     authenticated: boolean;
     expiresInMinutes?: number;
     message?: string;
+    isDemo?: boolean;
   }> {
-    try {
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/status`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Status check failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.status === 'success') {
-        const authStatus = result.auth_status;
-        return {
-          authenticated: authStatus.authenticated || false,
-          expiresInMinutes: authStatus.expires_in_minutes,
-          message: authStatus.message
-        };
-      } else {
-        return {
-          authenticated: false,
-          message: result.message
-        };
-      }
-      
-    } catch (error) {
-      console.error('❌ Auth status check error:', error);
-      return {
-        authenticated: false,
-        message: 'Status check failed'
-      };
-    }
+    // Always authenticated since we're using local data
+    return {
+      authenticated: true,
+      isDemo: true,
+      message: 'Using local MCP data files'
+    };
   }
 
   async logout(): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await fetch(`${this.backendUrl}/api/fi-auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
-      });
-
-      const result = await response.json();
-      
-      // Clear cache regardless of response
-      this.cachedData = null;
-      this.lastFetch = 0;
-      
-      return {
-        success: result.status === 'success',
-        message: result.message
-      };
-      
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-      return {
-        success: false,
-        message: 'Logout failed'
-      };
-    }
+    // Clear cache
+    this.cachedData = null;
+    this.lastFetch = 0;
+    
+    return {
+      success: true,
+      message: 'Logged out from local MCP data'
+    };
   }
 
-  // New method to get additional portfolio insights from backend
+  // Local portfolio insights (using MCP data)
   async getPortfolioInsights(): Promise<{
     success: boolean;
     insights?: any;
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/portfolio-health`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Portfolio insights API error: ${response.status}`);
+      const mcpResult = await this.loadMCPData();
+      if (!mcpResult.success || !mcpResult.data) {
+        throw new Error('MCP data not available');
       }
 
-      const data = await response.json();
+      // Generate insights from local MCP data
+      const insights = this.generatePortfolioInsights(mcpResult.data);
+      
       return {
         success: true,
-        insights: data.portfolio_health
+        insights
       };
 
     } catch (error) {
@@ -347,29 +437,24 @@ class MCPDataService {
     }
   }
 
-  // New method to get risk assessment from backend
+  // Local risk assessment (using MCP data)
   async getRiskAssessment(): Promise<{
     success: boolean;
     assessment?: any;
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/risk-assessment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Risk assessment API error: ${response.status}`);
+      const mcpResult = await this.loadMCPData();
+      if (!mcpResult.success || !mcpResult.data) {
+        throw new Error('MCP data not available');
       }
 
-      const data = await response.json();
+      // Generate risk assessment from local MCP data
+      const assessment = this.generateRiskAssessment(mcpResult.data);
+      
       return {
         success: true,
-        assessment: data.risk_assessment
+        assessment
       };
 
     } catch (error) {
@@ -381,6 +466,7 @@ class MCPDataService {
     }
   }
 
+<<<<<<< HEAD
   // New method to get all transactions from backend
   async getAllTransactions(limit: number = 50, transactionType: string = 'all'): Promise<{
     success: boolean;
@@ -441,6 +527,55 @@ class MCPDataService {
         error: error instanceof Error ? error.message : 'Failed to fetch transactions'
       };
     }
+=======
+  private generatePortfolioInsights(mcpData: any) {
+    const netWorth = mcpData.net_worth.netWorthResponse;
+    const totalAssets = this.calculateTotalAssets(netWorth.assetValues);
+    const totalLiabilities = this.calculateTotalLiabilities(netWorth.liabilityValues);
+    
+    return {
+      portfolio_health: {
+        overall_score: 75,
+        health_status: 'Good',
+        key_insights: [
+          `Total net worth: ${this.formatCurrency(totalAssets - totalLiabilities)}`,
+          `Asset allocation looks balanced across multiple asset classes`,
+          `Credit score of ${mcpData.credit_report.creditReports[0]?.creditReportData?.score?.bureauScore || '746'} is good`,
+          `EPF balance: ${this.formatCurrency(parseInt(mcpData.epf_details.epfDetails.balance.units))}`
+        ],
+        recommendations: [
+          'Consider increasing emergency fund to 6 months of expenses',
+          'Review mutual fund allocation for better tax efficiency',
+          'Monitor credit utilization ratio'
+        ]
+      }
+    };
+  }
+
+  private generateRiskAssessment(mcpData: any) {
+    const creditScore = parseInt(mcpData.credit_report.creditReports[0]?.creditReportData?.score?.bureauScore || '746');
+    const outstandingBalance = parseInt(mcpData.credit_report.creditReports[0]?.creditReportData?.creditAccount?.creditAccountSummary?.totalOutstandingBalance?.outstandingBalanceAll || '75000');
+    
+    return {
+      risk_assessment: {
+        overall_risk_level: creditScore > 750 ? 'Low' : creditScore > 650 ? 'Moderate' : 'High',
+        credit_risk: creditScore > 750 ? 'Low' : 'Moderate',
+        liquidity_risk: 'Low',
+        market_risk: 'Moderate',
+        concentration_risk: 'Low',
+        key_risks: [
+          `Outstanding debt: ${this.formatCurrency(outstandingBalance)}`,
+          'Equity exposure in mutual funds carries market risk',
+          'Multiple bank accounts provide good liquidity'
+        ],
+        mitigation_strategies: [
+          'Maintain emergency fund in liquid assets',
+          'Diversify across asset classes',
+          'Monitor and pay down high-interest debt'
+        ]
+      }
+    };
+>>>>>>> 2484597a8f0684c3a63d5291c8be909830ec2981
   }
 
   transformToPortfolioFormat(mcpData: {

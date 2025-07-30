@@ -45,7 +45,8 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
   const initializeChatbot = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8003/api/trip-planning/chat', {
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      const response = await fetch(`${baseUrl}/api/trip-planning/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: 'start', mode: 'research', demo_mode: isDemoMode })
@@ -93,7 +94,8 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8003/api/trip-planning/chat', {
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      const response = await fetch(`${baseUrl}/api/trip-planning/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

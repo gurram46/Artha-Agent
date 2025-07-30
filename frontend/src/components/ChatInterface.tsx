@@ -246,7 +246,8 @@ export default function ChatInterface() {
         }, DEFAULT_STREAMING_CONFIG.timeout);
 
         // Try streaming first
-        const streamResponse = await fetch('http://localhost:8003/api/stream/query', {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+        const streamResponse = await fetch(`${baseUrl}/api/stream/query`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -500,7 +501,8 @@ export default function ChatInterface() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-      const response = await fetch('http://localhost:8003/query', {
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://artha-agent.onrender.com';
+      const response = await fetch(`${baseUrl}/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
