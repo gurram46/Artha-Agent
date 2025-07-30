@@ -40,7 +40,7 @@ class QuickResponseAgent(BaseFinancialAgent):
             
             # Create optimized prompt for quick response without grounding
             quick_prompt = f"""
-You are a fast and focused Indian financial advisor. Provide immediate, actionable financial advice based on general market knowledge and best practices.
+You are a fast and focused Indian financial advisor. Provide immediate, actionable financial advice based on the user's actual financial data.
 
 USER QUERY: {user_query}
 
@@ -48,13 +48,15 @@ USER'S FINANCIAL SITUATION:
 {financial_summary}
 
 INSTRUCTIONS:
-1. Provide IMMEDIATE actionable advice (2-3 sentences max)
-2. Use general market knowledge and established financial principles
-3. Focus on Indian financial context (₹, Indian markets, Indian products)
-4. Be direct and practical - NO lengthy explanations
-5. Give specific actionable steps the user can take
+1. Analyze the user's actual financial data provided above
+2. If asking about transactions, identify the top transactions from the recent transaction data
+3. Provide IMMEDIATE actionable advice (2-3 sentences max)
+4. Use the specific financial data provided, not general advice
+5. Focus on Indian financial context (₹, Indian markets, Indian products)
+6. Be direct and practical - NO lengthy explanations
+7. Give specific actionable steps based on their actual financial situation
 
-Provide fast, actionable response based on established financial principles.
+Provide fast, actionable response based on the user's actual financial data.
 """
             
             # Generate response without grounding
@@ -127,6 +129,26 @@ Provide fast, actionable response based on established financial principles.
                     if score:
                         context_parts.append(f"Credit Score: {score}")
             
+            # Add transaction summary if available
+            if hasattr(financial_data, 'bank_transactions') and financial_data.bank_transactions:
+                tx_count = len(financial_data.bank_transactions)
+                if tx_count > 0:
+                    context_parts.append(f"Bank Transactions: {tx_count} recent transactions available")
+                    
+                    # Get recent transaction summary for context
+                    if tx_count >= 3:
+                        recent_transactions = sorted(financial_data.bank_transactions, 
+                                                   key=lambda x: x.get('date', ''), reverse=True)[:3]
+                        tx_summary = []
+                        for tx in recent_transactions:
+                            amount = abs(float(tx.get('amount', '0')))
+                            narration = tx.get('narration', '')[:30] + '...' if len(tx.get('narration', '')) > 30 else tx.get('narration', '')
+                            date = tx.get('date', '')
+                            tx_type = 'credit' if tx.get('type') == 1 else 'debit'
+                            tx_summary.append(f"{date}: {tx_type.upper()} ₹{amount:,.0f} - {narration}")
+                        
+                        context_parts.append(f"Recent Transactions: {'; '.join(tx_summary)}")
+            
         except Exception as e:
             logger.warning(f"Quick context extraction error: {e}")
         
@@ -138,7 +160,26 @@ Provide fast, actionable response based on established financial principles.
         # Basic query analysis for fallback
         query_lower = user_query.lower()
         
-        if any(word in query_lower for word in ['buy', 'purchase', 'invest']):
+        if any(word in query_lower for word in ['transaction', 'spend', 'payment', 'top', 'largest', 'biggest']):
+            # Try to analyze actual transaction data for fallback
+            if hasattr(financial_data, 'bank_transactions') and financial_data.bank_transactions:
+                try:
+                    # Get top 3 transactions by amount
+                    sorted_transactions = sorted(financial_data.bank_transactions, 
+                                               key=lambda x: abs(float(x.get('amount', '0'))), reverse=True)[:3]
+                    tx_details = []
+                    for i, tx in enumerate(sorted_transactions, 1):
+                        amount = abs(float(tx.get('amount', '0')))
+                        narration = tx.get('narration', 'Unknown transaction')[:40]
+                        date = tx.get('date', '')
+                        tx_details.append(f"{i}. ₹{amount:,.0f} - {narration} ({date})")
+                    
+                    fallback_content = f"Your top 3 transactions: {'; '.join(tx_details)}. Review these for spending patterns and optimize high amounts."
+                except:
+                    fallback_content = "Check your transaction history in the portfolio page for detailed spending analysis. Focus on reducing high-value unnecessary expenses."
+            else:
+                fallback_content = "No transaction data available. Connect your bank accounts for detailed spending analysis and personalized recommendations."
+        elif any(word in query_lower for word in ['buy', 'purchase', 'invest']):
             fallback_content = "For investment decisions, consider: 1) Emergency fund adequacy (6 months expenses), 2) Debt obligations, 3) Risk tolerance. Research current market rates and consult financial advisors for specific recommendations."
         elif any(word in query_lower for word in ['emergency', 'fund', 'saving']):
             fallback_content = "Emergency fund target: 6-12 months of expenses in liquid savings accounts. Consider high-yield savings accounts or liquid mutual funds for better returns while maintaining accessibility."
