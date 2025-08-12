@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, memo, useCallback } from 'react';
+import { useEffect, useMemo, memo } from 'react';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, RadialBarChart, RadialBar, ComposedChart, Scatter, ScatterChart } from 'recharts';
 import StocksList from './StocksList';
-import UserRiskProfile from './UserRiskProfile';
-import InvestmentRecommendationCard from './InvestmentRecommendationCard';
 import CreditCardTransactions from './CreditCardTransactions';
+import EnhancedAnalytics from './EnhancedAnalytics';
 
 interface Props {
   financialData: any;
@@ -21,13 +20,13 @@ interface MetricCardProps {
 }
 
 const MetricCard = ({ title, value, change, changeType, subtitle, icon }: MetricCardProps) => (
-  <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
+  <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl p-6 group hover:border-[rgba(204,166,149,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
     <div className="flex items-center justify-between mb-4">
       <div>
         <p className="text-sm font-semibold text-gray-300 mb-1">{title}</p>
         <p className="text-xs text-gray-400 font-medium">{subtitle}</p>
       </div>
-      <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+      <div className="w-12 h-12 bg-gradient-to-br from-[#cca695] to-[#b8956a] rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
         </svg>
@@ -38,7 +37,7 @@ const MetricCard = ({ title, value, change, changeType, subtitle, icon }: Metric
       {change && changeType && (
         <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
           changeType === 'positive' 
-            ? 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]' 
+            ? 'bg-[rgba(204,166,149,0.1)] text-[#cca695] border border-[rgba(204,166,149,0.2)]' 
             : changeType === 'negative'
             ? 'bg-[rgba(220,53,69,0.1)] text-red-400 border border-[rgba(220,53,69,0.2)]'
             : 'bg-[rgba(70,68,68,0.3)] text-gray-300 border border-[rgba(70,68,68,0.5)]'
@@ -70,7 +69,7 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
   }));
 
   return (
-    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Fund Performance</h3>
@@ -81,7 +80,7 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={performanceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(204, 166, 149, 0.1)" />
             <XAxis 
               dataKey="name" 
               stroke="#9ca3af" 
@@ -94,7 +93,7 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'rgb(24, 25, 27)', 
-                border: '1px solid rgba(0, 184, 153, 0.2)',
+                border: '1px solid rgba(204, 166, 149, 0.2)',
                 borderRadius: '12px',
                 fontSize: '12px',
                 color: 'white'
@@ -104,9 +103,9 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
                 name === 'returns' ? 'XIRR' : name === 'invested' ? 'Invested' : 'Current Value'
               ]}
             />
-            <Bar dataKey="invested" fill="rgba(0, 184, 153, 0.3)" name="invested" />
-            <Bar dataKey="current" fill="rgb(0, 184, 153)" name="current" />
-            <Line type="monotone" dataKey="returns" stroke="rgb(0, 164, 133)" strokeWidth={3} name="returns" />
+            <Bar dataKey="invested" fill="rgba(204, 166, 149, 0.3)" name="invested" />
+            <Bar dataKey="current" fill="#cca695" name="current" />
+            <Line type="monotone" dataKey="returns" stroke="#b8956a" strokeWidth={3} name="returns" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -116,18 +115,18 @@ const PerformanceChart = memo(({ schemes }: { schemes: any[] }) => {
 
 const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
   const scatterData = schemes.map((scheme, index) => ({
-    x: Math.abs(scheme.xirr) || 0, // Returns
+    x: Math.abs(scheme.xirr || 0) || 0, // Returns
     y: scheme.riskLevel === 'VERY_HIGH_RISK' ? 5 : 
        scheme.riskLevel === 'HIGH_RISK' ? 4 :
        scheme.riskLevel === 'MODERATE_RISK' ? 3 :
        scheme.riskLevel === 'LOW_RISK' ? 2 : 1, // Risk Score
-    name: scheme.name.substring(0, 20),
-    value: scheme.currentValue / 100000,
-    category: scheme.assetClass
+    name: (scheme.name || 'Unknown Fund').substring(0, 20),
+    value: (scheme.currentValue || scheme.current_value || 0) / 100000,
+    category: scheme.assetClass || scheme.asset_class || 'Other'
   }));
 
   return (
-    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Risk vs Return Analysis</h3>
@@ -138,7 +137,7 @@ const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(204, 166, 149, 0.1)" />
             <XAxis 
               type="number" 
               dataKey="x" 
@@ -163,21 +162,21 @@ const RiskReturnScatter = memo(({ schemes }: { schemes: any[] }) => {
               cursor={{ strokeDasharray: '3 3' }}
               contentStyle={{ 
                 backgroundColor: 'rgb(24, 25, 27)', 
-                border: '1px solid rgba(0, 184, 153, 0.2)',
+                border: '1px solid rgba(204, 166, 149, 0.2)',
                 borderRadius: '12px',
                 fontSize: '12px',
                 color: 'white'
               }}
               formatter={(value: any, name: string) => [
-                name === 'x' ? `${value.toFixed(1)}%` : 
+                name === 'x' ? `${(value || 0).toFixed(1)}%` : 
                 name === 'y' ? (['', 'Very Low', 'Low', 'Moderate', 'High', 'Very High'][value] || value) :
-                `₹${value.toFixed(1)}L`,
+                `₹${(value || 0).toFixed(1)}L`,
                 name === 'x' ? 'Returns (XIRR)' : 
                 name === 'y' ? 'Risk Level' : 'Current Value'
               ]}
               labelFormatter={(label, payload) => payload[0]?.payload?.name || ''}
             />
-            <Scatter data={scatterData} fill="rgb(0, 184, 153)" />
+            <Scatter data={scatterData} fill="#cca695" />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
@@ -197,21 +196,21 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
         avgXIRR: 0
       };
     }
-    acc[category].value += scheme.currentValue;
+    acc[category].value += scheme.currentValue || scheme.current_value || 0;
     acc[category].count += 1;
-    acc[category].totalReturns += scheme.absoluteReturns;
-    acc[category].avgXIRR += scheme.xirr;
+    acc[category].totalReturns += scheme.absoluteReturns || scheme.absolute_returns || 0;
+    acc[category].avgXIRR += scheme.xirr || 0;
     return acc;
   }, {});
 
   const chartData = Object.values(categoryData).map((cat: any) => ({
     ...cat,
-    avgXIRR: cat.avgXIRR / cat.count,
+    avgXIRR: cat.count > 0 ? cat.avgXIRR / cat.count : 0,
     value: cat.value / 100000
   }));
 
   return (
-    <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+    <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl p-6 shadow-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Category Breakdown</h3>
@@ -240,8 +239,8 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
                 color: 'white'
               }}
               formatter={(value: any, name: string) => [
-                name === 'value' ? `₹${value.toFixed(1)}L` : 
-                name === 'avgXIRR' ? `${value.toFixed(1)}%` : value,
+                name === 'value' ? `₹${(value || 0).toFixed(1)}L` : 
+                name === 'avgXIRR' ? `${(value || 0).toFixed(1)}%` : value,
                 name === 'value' ? 'Investment Value' : 
                 name === 'avgXIRR' ? 'Average XIRR' : 'Fund Count'
               ]}
@@ -254,24 +253,35 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
   );
 });
 
-const formatNumber = (num: number): string => {
-  if (num >= 10000000) return `${(num / 10000000).toFixed(1)}Cr`;
-  if (num >= 100000) return `${(num / 100000).toFixed(1)}L`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
+const formatNumber = (num: any): string => {
+  // Handle undefined, null, or NaN values
+  if (num === undefined || num === null || num === '' || isNaN(num)) {
+    return '0';
+  }
+  
+  // Convert to number if it's a string
+  const validNum = typeof num === 'string' ? parseFloat(num) : Number(num);
+  
+  // Double-check for NaN after conversion
+  if (isNaN(validNum) || !isFinite(validNum)) {
+    return '0';
+  }
+  
+  // Handle negative numbers
+  const absNum = Math.abs(validNum);
+  const sign = validNum < 0 ? '-' : '';
+  
+  if (absNum >= 10000000) return `${sign}${(absNum / 10000000).toFixed(1)}Cr`;
+  if (absNum >= 100000) return `${sign}${(absNum / 100000).toFixed(1)}L`;
+  if (absNum >= 1000) return `${sign}${(absNum / 1000).toFixed(1)}K`;
+  return validNum.toString();
 };
 
 export default function Dashboard({ financialData }: Props) {
-  const [userProfile, setUserProfile] = useState(null);
-
-  const handleProfileUpdate = useCallback((profile: any) => {
-    setUserProfile(profile);
-    console.log('User profile updated:', profile);
-  }, []);
 
   if (!financialData) {
     return (
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-xl p-6 text-center shadow-lg">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-xl p-6 text-center shadow-lg">
         <div className="space-y-3">
           <div className="w-8 h-8 bg-[rgba(220,53,69,0.1)] rounded-lg flex items-center justify-center mx-auto">
             <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +294,7 @@ export default function Dashboard({ financialData }: Props) {
           </div>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-medium py-2 px-4 rounded-lg transition-all text-sm"
+            className="bg-[#cca695] hover:bg-[#b8956a] text-white font-medium py-2 px-4 rounded-lg transition-all text-sm"
           >
             Retry
           </button>
@@ -330,7 +340,7 @@ export default function Dashboard({ financialData }: Props) {
         <MetricCard
           title="Mutual Funds"
           value={summary.mutual_funds_formatted || '₹0'}
-          change={performanceMetrics.avg_xirr > 0 ? `${performanceMetrics.avg_xirr.toFixed(1)}% XIRR` : undefined}
+          change={performanceMetrics.avg_xirr > 0 ? `${(performanceMetrics.avg_xirr || 0).toFixed(1)}% XIRR` : undefined}
           changeType={performanceMetrics.avg_xirr > 0 ? 'positive' : 'neutral'}
           subtitle="Investments"
           icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
@@ -349,14 +359,8 @@ export default function Dashboard({ financialData }: Props) {
         />
       </div>
 
-      {/* Side by Side Investment Components */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Investment Profile */}
-        <UserRiskProfile onProfileUpdate={handleProfileUpdate} />
-        
-        {/* AI Investment Recommendations */}
-        <InvestmentRecommendationCard financialData={financialData} />
-      </div>
+      {/* Enhanced Analytics Section */}
+      <EnhancedAnalytics />
 
       {/* Stock Market Overview */}
       <StocksList />
@@ -373,8 +377,8 @@ export default function Dashboard({ financialData }: Props) {
 
       {/* Detailed Holdings Table */}
       {schemes.length > 0 && (
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-[rgba(0,184,153,0.2)]">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl overflow-hidden shadow-xl">
+          <div className="px-6 py-4 border-b border-[rgba(204,166,149,0.2)]">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-white">Mutual Fund Holdings</h3>
@@ -382,14 +386,14 @@ export default function Dashboard({ financialData }: Props) {
               </div>
               <div className="text-right text-sm font-medium text-gray-300">
                 <p>Total: {summary.mutual_funds_formatted}</p>
-                <p>Avg XIRR: {performanceMetrics.avg_xirr ? performanceMetrics.avg_xirr.toFixed(1) : '0'}%</p>
+                <p>Avg XIRR: {performanceMetrics.avg_xirr ? (performanceMetrics.avg_xirr || 0).toFixed(1) : '0'}%</p>
               </div>
             </div>
           </div>
           
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[rgba(0,184,153,0.05)]">
+              <thead className="bg-[rgba(24,25,27)] divide-y divide-[rgba(204,166,149,0.1)]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Fund Name</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Category</th>
@@ -400,9 +404,9 @@ export default function Dashboard({ financialData }: Props) {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Units</th>
                 </tr>
               </thead>
-              <tbody className="bg-[rgb(24,25,27)] divide-y divide-[rgba(0,184,153,0.1)]">
+              <tbody className="bg-[rgb(24,25,27)] divide-y divide-[rgba(204,166,149,0.1)]">
                 {schemes.map((scheme: any, index: number) => (
-                  <tr key={scheme.isin || index} className="hover:bg-[rgba(0,184,153,0.05)] border-b border-[rgba(0,184,153,0.1)]">
+                  <tr key={scheme.isin || index} className="hover:bg-[rgba(204,166,149,0.05)] border-b border-[rgba(204,166,149,0.1)]">
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-semibold text-white max-w-xs truncate">
@@ -412,28 +416,28 @@ export default function Dashboard({ financialData }: Props) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgba(204,166,149,0.1)] text-[#cca695] border border-[rgba(204,166,149,0.2)]">
                         {scheme.category?.replace(/_/g, ' ') || 'Other'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-white font-semibold">
-                      ₹{formatNumber(scheme.currentValue)}
+                      ₹{formatNumber(scheme.current_value || scheme.currentValue || 0)}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-white">
-                      ₹{formatNumber(scheme.investedValue)}
+                      ₹{formatNumber(scheme.invested_value || scheme.investedValue || 0)}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={scheme.absoluteReturns >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}>
-                        {scheme.absoluteReturns >= 0 ? '+' : ''}₹{formatNumber(Math.abs(scheme.absoluteReturns))}
+                      <span className={(scheme.absolute_returns || scheme.absoluteReturns || 0) >= 0 ? 'text-[#cca695]' : 'text-red-400'}>
+                        {(scheme.absolute_returns || scheme.absoluteReturns || 0) >= 0 ? '+' : ''}₹{formatNumber(Math.abs(scheme.absolute_returns || scheme.absoluteReturns || 0))}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={scheme.xirr >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}>
-                        {scheme.xirr >= 0 ? '+' : ''}{scheme.xirr.toFixed(1)}%
+                      <span className={(scheme.xirr || 0) >= 0 ? 'text-[#cca695]' : 'text-red-400'}>
+                        {(scheme.xirr || 0) >= 0 ? '+' : ''}{formatNumber(scheme.xirr || 0)}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-white">
-                      {scheme.units.toFixed(2)}
+                      {formatNumber(scheme.units || 0)}
                     </td>
                   </tr>
                 ))}

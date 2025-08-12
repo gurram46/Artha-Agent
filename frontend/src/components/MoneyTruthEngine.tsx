@@ -118,7 +118,7 @@ export default function MoneyTruthEngine({ financialData }: Props) {
     return (
       <div className="min-h-screen bg-[rgb(0,26,30)]">
         {/* Header with back button */}
-        <div className="sticky top-0 z-10 bg-[rgba(0,26,30,0.95)] backdrop-blur-sm border-b border-[rgba(0,184,153,0.2)]">
+        <div className="sticky top-0 z-10 bg-[rgba(0,26,30,0.95)] backdrop-blur-sm border-b border-[rgba(204,166,149,0.2)]">
           <div className={`${designSystem.layout.container} py-4`}>
             <div className="flex items-center space-x-4">
               <UnifiedButton
@@ -163,28 +163,28 @@ export default function MoneyTruthEngine({ financialData }: Props) {
     <div className="min-h-screen bg-[rgb(0,26,30)]">
       {/* Fi Money Hero Section */}
       <div className="relative overflow-hidden bg-[rgb(11,17,17)]">
-        <div className="absolute inset-0 bg-[rgba(0,184,153,0.05)]"></div>
+        <div className="absolute inset-0 bg-[rgba(204,166,149,0.05)]"></div>
         <div className={`relative ${designSystem.layout.container} py-20`}>
           <div className="text-center text-white">
             <div className="flex items-center justify-center space-x-6 mb-8">
               <div className="text-7xl">🤖</div>
               <div>
                 <h1 className="text-6xl font-black mb-3 text-white">Money Truth Engine</h1>
-                <p className="text-2xl text-[rgb(0,184,153)]">AI-powered analysis revealing hidden financial insights</p>
+                <p className="text-2xl text-[#cca695]">AI-powered analysis revealing hidden financial insights</p>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 max-w-5xl mx-auto">
-              <div className="text-center bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-6">
-                <div className="text-4xl font-black mb-3 text-[rgb(0,184,153)]">3</div>
+              <div className="text-center bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-2xl p-6">
+                <div className="text-4xl font-black mb-3 text-[#cca695]">3</div>
                 <div className="text-gray-300 font-semibold">Core AI Agents</div>
               </div>
-              <div className="text-center bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-6">
-                <div className="text-4xl font-black mb-3 text-[rgb(0,184,153)]">100%</div>
+              <div className="text-center bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-2xl p-6">
+                <div className="text-4xl font-black mb-3 text-[#cca695]">100%</div>
                 <div className="text-gray-300 font-semibold">AI-Driven Analysis</div>
               </div>
-              <div className="text-center bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-2xl p-6">
-                <div className="text-4xl font-black mb-3 text-[rgb(0,184,153)]">Real-Time</div>
+              <div className="text-center bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-2xl p-6">
+                <div className="text-4xl font-black mb-3 text-[#cca695]">Real-Time</div>
                 <div className="text-gray-300 font-semibold">Live Insights</div>
               </div>
             </div>
@@ -206,18 +206,18 @@ export default function MoneyTruthEngine({ financialData }: Props) {
           {agents.map((agent) => (
             <div
               key={agent.id}
-              className="group relative bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.5)] rounded-3xl p-8 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl"
+              className="group relative bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] hover:border-[rgba(204,166,149,0.5)] rounded-3xl p-8 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl"
               onClick={() => handleAgentClick(agent.id)}
             >
               {/* Fi Money Gradient overlay */}
-              <div className="absolute inset-0 bg-[rgba(0,184,153,0.02)] rounded-3xl"></div>
+              <div className="absolute inset-0 bg-[rgba(34,197,94,0.02)] rounded-3xl"></div>
               
               {/* Content */}
               <div className="relative">
                 {/* Icon and title */}
                 <div className="text-center mb-8">
-                  <div className="text-6xl mb-6 transform group-hover:scale-110 transition-transform duration-300">
-                    {agent.icon}
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#cca695] to-[#b8956a] rounded-2xl flex items-center justify-center shadow-lg mb-6 mx-auto transform group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-3xl">{agent.icon}</span>
                   </div>
                   <h3 className="text-2xl font-black text-white mb-3">{agent.title}</h3>
                   <p className="text-lg text-gray-300 mb-6">{agent.subtitle}</p>
@@ -230,13 +230,13 @@ export default function MoneyTruthEngine({ financialData }: Props) {
 
                 {/* Features */}
                 <div className="mb-8">
-                  <h4 className="text-sm font-bold text-[rgb(0,184,153)] uppercase tracking-wide mb-4">
+                  <h4 className="text-sm font-bold text-[#cca695] uppercase tracking-wide mb-4">
                     What you'll discover:
                   </h4>
                   <ul className="space-y-3">
                     {agent.features.map((feature, idx) => (
                       <li key={idx} className="text-sm text-gray-300 flex items-start">
-                        <span className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                        <span className="w-2 h-2 bg-[#cca695] rounded-full mr-3 mt-2 flex-shrink-0"></span>
                         {feature}
                       </li>
                     ))}
@@ -245,7 +245,7 @@ export default function MoneyTruthEngine({ financialData }: Props) {
 
                 {/* Action button */}
                 <button
-                  className="w-full bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform group-hover:scale-105 shadow-lg disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white px-8 py-4 rounded-xl hover:from-[#b8956a] hover:to-[#a6845d] transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50"
                   disabled={agent.isLoading}
                 >
                   {agent.isLoading ? (
@@ -262,7 +262,7 @@ export default function MoneyTruthEngine({ financialData }: Props) {
                 <div className="flex items-center justify-center mt-6 space-x-2">
                   <div className={`w-3 h-3 rounded-full ${
                     agent.isLoading ? 'bg-yellow-500 animate-pulse' : 
-                    agent.data ? 'bg-[rgb(0,184,153)]' : 'bg-gray-500'
+                    agent.data ? 'bg-[#cca695]' : 'bg-gray-500'
                   }`}></div>
                   <span className="text-sm text-gray-400 font-medium">
                     {agent.isLoading ? 'Analyzing' : agent.data ? 'Complete' : 'Ready'}
@@ -275,12 +275,12 @@ export default function MoneyTruthEngine({ financialData }: Props) {
 
         {/* Fi Money Quick Actions */}
         <div className="mt-20 text-center">
-          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 max-w-3xl mx-auto">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-3xl p-8 max-w-3xl mx-auto">
             <h3 className="text-3xl font-black text-white mb-6">Quick Actions</h3>
             <div className="flex flex-wrap justify-center gap-6">
               <button
                 onClick={() => agents.forEach(agent => agent.fetchFunction())}
-                className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg transform hover:scale-105"
+                className="bg-[#cca695] hover:bg-[#b8956a] text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg transform hover:scale-105"
               >
                 🚀 Run All Agents
               </button>

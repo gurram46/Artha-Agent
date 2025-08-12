@@ -432,14 +432,6 @@ const EnhancedAnalytics = () => {
         </div>
       </div>
 
-      {/* Data Source Indicator */}
-      <div className="flex items-center justify-center space-x-3 py-6">
-        <div className="flex items-center space-x-2 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-full px-4 py-2">
-          <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
-          <span className="text-sm font-semibold text-white">Live data from Artha AI</span>
-          <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
-        </div>
-      </div>
     </div>
   );
 };

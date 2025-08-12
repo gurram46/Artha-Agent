@@ -1,0 +1,26 @@
+{
+  "user_id": "1b45708dd3bc",
+  "personalInfo": {
+    "fullName": "aevf edf",
+    "email": "efc@sdfs.com",
+    "phoneNumber": "aesd",
+    "dateOfBirth": "2000-02-05",
+    "occupation": "asd"
+  },
+  "professionalInfo": {
+    "occupation": "asd",
+    "annualIncome": "0-3L",
+    "workExperience": null,
+    "industry": null
+  },
+  "investmentPreferences": {
+    "riskTolerance": "moderate",
+    "investmentGoals": [
+      "Retirement Planning"
+    ],
+    "investmentHorizon": null,
+    "preferredAssets": null
+  },
+  "created_at": "2025-08-11 20:09:01.935240",
+  "updated_at": "2025-08-11 21:55:48.094119"
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // Integration with Stock AI Agents backend - REAL DATA ONLY  
-const STOCK_AI_URL = process.env.STOCK_AI_URL || 'http://localhost:8003';
+const STOCK_AI_URL = process.env.STOCK_AI_URL || 'http://localhost:8000';
 
 // Helper function to call stock AI agents - NO FALLBACKS
 async function callStockAIAgent(endpoint: string, data: any) {
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
           } catch (error) {
             console.error('❌ Analysis failed:', error);
             sendMessage('log', `❌ Analysis failed: ${error.message}`);
-            sendMessage('log', '💡 Please ensure the backend server is running on port 8003');
+            sendMessage('log', '💡 Please ensure the backend server is running on port 8000');
             controller.close();
           }
         };

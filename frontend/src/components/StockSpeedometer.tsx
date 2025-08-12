@@ -121,7 +121,7 @@ export default function StockSpeedometer({
     setCurrentStep('Initializing AI Analysis...');
 
     try {
-      const response = await fetch('/api/stocks/recommendation', {
+      const response = await fetch('http://localhost:8000/api/stocks/recommendation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

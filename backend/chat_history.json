@@ -1,0 +1,70 @@
+{
+  "conv_1_20250806_155221": {
+    "id": "conv_1_20250806_155221",
+    "user_id": "demo_user_123",
+    "agent_mode": "research",
+    "created_at": "2025-08-06T15:52:21.086992",
+    "messages": [
+      {
+        "id": "msg_1_20250806_155221",
+        "type": "user",
+        "content": "I'm 30 years old and want to start investing for retirement. What should I consider?",
+        "created_at": "2025-08-06T15:52:21.088501",
+        "tokens_used": 20,
+        "metadata": {
+          "source": "web_interface",
+          "user_age": 30
+        }
+      },
+      {
+        "id": "msg_2_20250806_155221",
+        "type": "assistant",
+        "content": "Great question! At 30, you have a significant advantage with time on your side. Here are key considerations:\n\n**1. Emergency Fund First**\n- Build 3-6 months of expenses in a high-yield savings account\n- This provides financial security before investing\n\n**2. Retirement Account Strategy**\n- Maximize employer 401(k) match (free money!)\n- Consider Roth IRA for tax-free growth\n- Target 10-15% of income for retirement savings\n\n**3. Investment Allocation**\n- At 30, you can handle more risk for higher returns\n- Consider 80% stocks, 20% bonds\n- Diversify across domestic and international markets\n\n**4. Low-Cost Index Funds**\n- Start with broad market index funds (S&P 500)\n- Keep expense ratios under 0.2%\n- Avoid frequent trading\n\n**5. Automate Everything**\n- Set up automatic contributions\n- Dollar-cost averaging reduces timing risk\n- Increase contributions with salary raises\n\nWould you like me to elaborate on any of these strategies or discuss specific investment products?",
+        "created_at": "2025-08-06T15:52:21.089517",
+        "tokens_used": 180,
+        "metadata": {
+          "research_sources": 5,
+          "confidence_score": 0.95,
+          "agent_mode": "research"
+        }
+      }
+    ],
+    "is_active": true,
+    "is_favorite": true,
+    "total_tokens": 200
+  },
+  "conv_2_20250806_155221": {
+    "id": "conv_2_20250806_155221",
+    "user_id": "demo_user_123",
+    "agent_mode": "quick",
+    "created_at": "2025-08-06T15:52:21.091603",
+    "messages": [
+      {
+        "id": "msg_3_20250806_155221",
+        "type": "user",
+        "content": "What's your take on Apple stock (AAPL) right now?",
+        "created_at": "2025-08-06T15:52:21.100491",
+        "tokens_used": 12,
+        "metadata": {}
+      },
+      {
+        "id": "msg_4_20250806_155221",
+        "type": "assistant",
+        "content": "**Apple (AAPL) Quick Analysis:**\n\n**Strengths:**\n- Strong brand loyalty and ecosystem\n- Consistent revenue from services (App Store, iCloud)\n- Solid balance sheet with massive cash reserves\n- Innovation in AI and AR/VR spaces\n\n**Concerns:**\n- iPhone sales growth slowing in mature markets\n- Regulatory pressure in EU and other regions\n- High valuation compared to historical averages\n- Dependence on China for manufacturing and sales\n\n**Current Outlook:** Cautiously optimistic. Apple remains a quality company but may face headwinds. Consider it as part of a diversified tech allocation rather than a standalone bet.\n\n**Price Target:** $180-200 range seems reasonable based on current fundamentals.",
+        "created_at": "2025-08-06T15:52:21.101506",
+        "tokens_used": 95,
+        "metadata": {
+          "analysis_type": "quick",
+          "data_sources": [
+            "financial_statements",
+            "market_data"
+          ],
+          "last_updated": "2025-08-06T15:52:21.101506"
+        }
+      }
+    ],
+    "is_active": true,
+    "is_favorite": false,
+    "total_tokens": 107
+  }
+}

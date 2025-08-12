@@ -5,6 +5,7 @@ import { UnifiedButton } from './ui/UnifiedButton';
 import { Card } from './ui/card';
 import MCPDataService from '../services/mcpDataService';
 
+
 interface FiMoneyWebAuthProps {
   onAuthSuccess: () => void;
   onAuthError: (error: string) => void;
@@ -19,6 +20,8 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [pollingCount, setPollingCount] = useState(0);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
   const maxPollingCount = 60; // 5 minutes of polling (5s intervals)
   
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
@@ -68,6 +71,25 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
     setAuthError('');
     
     try {
+      // Preserve user signup data while clearing Fi Money session data
+      console.log('🧹 Clearing previous Fi Money session before new authentication...');
+      
+      // Preserve user signup data
+      const existingUserData = localStorage.getItem('userData');
+      console.log('💾 Preserving user signup data:', existingUserData ? 'Found' : 'None');
+      
+      // Logout from any existing Fi Money session
+      try {
+        await mcpService.logout();
+        console.log('✅ Previous Fi Money session cleared');
+      } catch (logoutError) {
+        console.log('⚠️ No previous session to clear or logout failed:', logoutError);
+      }
+      
+      // Clear only Fi Money related session data, preserve user profile
+      sessionStorage.removeItem('demoMode');
+      // Note: We're NOT clearing localStorage to preserve user signup data
+      
       const result = await mcpService.initiateWebAuthentication();
       
       if (result.success) {
@@ -108,6 +130,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Authentication initiation failed';
+      
       setAuthError(errorMsg);
       setAuthState('error');
       onAuthError(errorMsg);
@@ -118,45 +141,114 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
     setAuthState('polling');
     setPollingCount(0);
     
+    let currentPollingCount = 0;
+    
     pollingInterval.current = setInterval(async () => {
       try {
-        const status = await mcpService.checkAuthenticationStatus();
-        setPollingCount(prev => prev + 1);
+        // Increment and check polling count
+        currentPollingCount += 1;
+        setPollingCount(currentPollingCount);
         
-        if (status.authenticated) {
-          // Authentication successful!
-          setIsAuthenticated(true);
-          setSessionInfo(status);
-          setAuthState('success');
-          stopPolling();
-          closeAuthWindow();
-          onAuthSuccess();
-        } else if (pollingCount >= maxPollingCount) {
-          // Timeout after 5 minutes
+        console.log(`🔄 Polling attempt ${currentPollingCount}/${maxPollingCount}`);
+        
+        if (currentPollingCount > maxPollingCount) {
+          // Timeout after maximum attempts
+          console.log('⏰ Authentication polling timeout');
           setAuthError('Authentication timeout. Please try again.');
           setAuthState('error');
           stopPolling();
           closeAuthWindow();
           onAuthError('Authentication timeout');
+          return;
         }
-      } catch (error) {
-        console.error('Polling error:', error);
-        if (pollingCount >= maxPollingCount) {
-          setAuthError('Authentication check failed. Please try again.');
+        
+        // Always try completion endpoint first, then status if that fails
+        let status;
+        try {
+          console.log('🔄 Checking authentication completion...');
+          status = await mcpService.completeAuthentication();
+        } catch (completionError) {
+          console.log('⚠️ Completion check failed, trying status check...');
+          status = await mcpService.checkAuthenticationStatus();
+        }
+        
+        console.log('📊 Auth status result:', status);
+        
+        if (status.authenticated) {
+          // Authentication successful!
+          console.log('🎉 Fi Money authentication confirmed - calling onAuthSuccess');
+          setIsAuthenticated(true);
+          setSessionInfo(status);
+          setAuthState('success');
+          stopPolling();
+          closeAuthWindow();
+          setAuthError(''); // Clear any previous errors
+          
+          // Call onAuthSuccess to trigger parent component updates
+          onAuthSuccess();
+        } else if (status.message?.includes('expired')) {
+          console.log('⚠️ Session expired');
+          setAuthError('Session expired. Please try again.');
           setAuthState('error');
           stopPolling();
           closeAuthWindow();
+          onAuthError('Session expired');
+        } else if (status.message?.includes('timeout')) {
+          console.log('⚠️ Authentication timeout');
+          setAuthError('Authentication check timed out. Please try again.');
+          setAuthState('error');
+          stopPolling();
+          closeAuthWindow();
+          onAuthError('Authentication timeout');
+        } else if (status.message?.includes('error') || status.message?.includes('failed')) {
+          console.log('❌ Authentication failed:', status.message);
+          setAuthError(`Authentication failed: ${status.message}`);
+          setAuthState('error');
+          stopPolling();
+          closeAuthWindow();
+          onAuthError(status.message);
+        } else {
+          console.log('⏳ Authentication still pending...');
+        }
+      } catch (error) {
+        console.error('❌ Polling error:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Authentication check failed';
+        
+
+        
+        // Only fail after multiple consecutive errors or timeout
+        if (currentPollingCount >= maxPollingCount) {
+          console.log('❌ Max polling attempts reached with errors');
+          setAuthError(`${errorMsg}. Please try again.`);
+          setAuthState('error');
+          stopPolling();
+          closeAuthWindow();
+          onAuthError(errorMsg);
         }
       }
-    }, 5000); // Poll every 5 seconds
+    }, 3000); // Poll every 3 seconds (more frequent)
   };
 
   const handleManualCheck = async () => {
     try {
+      console.log('🔄 Manual authentication check requested');
       setAuthState('polling');
-      const status = await mcpService.checkAuthenticationStatus();
+      setAuthError('');
+      
+      // Try completion endpoint first for most accurate check
+      let status;
+      try {
+        console.log('🔄 Manual check: Trying completion endpoint...');
+        status = await mcpService.completeAuthentication();
+      } catch (completionError) {
+        console.log('⚠️ Manual check: Completion failed, trying status check...');
+        status = await mcpService.checkAuthenticationStatus();
+      }
+      
+      console.log('📊 Manual check result:', status);
       
       if (status.authenticated) {
+        console.log('🎉 Manual auth check successful - calling onAuthSuccess');
         setIsAuthenticated(true);
         setSessionInfo(status);
         setAuthState('success');
@@ -164,10 +256,12 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
         closeAuthWindow();
         onAuthSuccess();
       } else {
+        console.log('⏳ Authentication not yet complete');
         setAuthError('Authentication not yet complete. Please complete the process in the Fi Money window.');
         setAuthState('waiting');
       }
     } catch (error) {
+      console.error('❌ Manual check failed:', error);
       setAuthError('Failed to check authentication status');
       setAuthState('error');
     }
@@ -175,8 +269,50 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Starting Fi Money logout process (preserving user profile)...');
+      
+      // Preserve user signup data
+      const existingUserData = localStorage.getItem('userData');
+      console.log('💾 Preserving user signup data during logout:', existingUserData ? 'Found' : 'None');
+      
+      // Logout from Fi Money backend session
       await mcpService.logout();
+      console.log('✅ Fi Money backend session cleared');
+      
+      // Clear demo mode
       mcpService.setDemoMode(false);
+      
+      // Clear only Fi Money related session data, preserve user profile
+      console.log('🧹 Clearing Fi Money session data (preserving user profile)...');
+      sessionStorage.removeItem('demoMode');
+      // Note: We're NOT clearing localStorage to preserve user signup data
+      
+      // Reset only Fi Money authentication state
+      setIsAuthenticated(false);
+      setIsDemoMode(false);
+      setSessionInfo(null);
+      setAuthState('initial');
+      setLoginUrl('');
+      setSessionId('');
+      setAuthError('');
+      setPollingCount(0);
+      
+      // Stop any ongoing processes
+      stopPolling();
+      closeAuthWindow();
+      
+      console.log('✅ Fi Money logout successful - user profile preserved');
+      
+      // Notify parent component about logout
+      if (onAuthError) {
+        onAuthError('User logged out');
+      }
+      
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+      
+      // Even if logout fails, clear Fi Money data but preserve user profile
+      console.log('🧹 Clearing Fi Money data despite logout error (preserving user profile)...');
       sessionStorage.removeItem('demoMode');
       setIsAuthenticated(false);
       setIsDemoMode(false);
@@ -185,10 +321,9 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
       setLoginUrl('');
       setSessionId('');
       setAuthError('');
+      setPollingCount(0);
       stopPolling();
       closeAuthWindow();
-    } catch (error) {
-      console.error('Logout failed:', error);
     }
   };
 
@@ -224,6 +359,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
       });
       
       setAuthState('success');
+      console.log('🎉 Demo mode activated - calling onAuthSuccess');
       onAuthSuccess();
     } catch (error) {
       setAuthError('Failed to start demo mode');
@@ -231,6 +367,8 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
       onAuthError('Failed to start demo mode');
     }
   };
+
+
 
   if (authState === 'success' && isAuthenticated) {
     return (

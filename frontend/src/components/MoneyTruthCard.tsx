@@ -25,9 +25,9 @@ export default function MoneyTruthCard({
   const getCardStyle = () => {
     // Fi Money unified dark design for all card types
     return {
-      border: 'border-[rgba(0,184,153,0.2)]',
-      bg: 'bg-[rgb(24,25,27)]',
-      header: 'bg-[rgba(0,184,153,0.05)] border-[rgba(0,184,153,0.2)]'
+      border: 'border-[rgba(34,197,94,0.2)]',
+    background: 'bg-[rgb(24,25,27)]',
+    header: 'bg-[rgba(34,197,94,0.05)] border-[rgba(34,197,94,0.2)]'
     };
   };
 
@@ -104,20 +104,20 @@ export default function MoneyTruthCard({
             p: ({children}) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
             ul: ({children}) => <ul className="space-y-3 mb-6">{children}</ul>,
             li: ({children}) => (
-              <li className="flex items-start space-x-3 p-4 bg-[rgba(0,184,153,0.05)] rounded-xl border border-[rgba(0,184,153,0.1)]">
-                <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full mt-2 flex-shrink-0"></div>
+              <li className="flex items-start space-x-3 p-4 bg-[rgba(34,197,94,0.05)] rounded-xl border border-[rgba(34,197,94,0.1)]">
+                <div className="w-2 h-2 bg-[rgb(34,197,94)] rounded-full mt-2 flex-shrink-0"></div>
                 <div className="text-gray-300 leading-relaxed">{children}</div>
               </li>
             ),
             strong: ({children}) => (
-              <div className="p-4 bg-[rgba(0,184,153,0.1)] rounded-xl border border-[rgba(0,184,153,0.2)] mb-4 inline-block w-full">
+              <div className="p-4 bg-[rgba(34,197,94,0.1)] rounded-xl border border-[rgba(34,197,94,0.2)] mb-4 inline-block w-full">
                 <span className="font-bold text-white">{children}</span>
               </div>
             ),
             blockquote: ({children}) => (
-              <div className="p-4 bg-[rgba(0,184,153,0.1)] rounded-xl border border-[rgba(0,184,153,0.2)] mb-4">
+              <div className="p-4 bg-[rgba(34,197,94,0.1)] rounded-xl border border-[rgba(34,197,94,0.2)] mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-[rgb(0,184,153)] font-bold">💡 Insight:</span>
+                  <span className="text-[rgb(34,197,94)] font-bold">💡 Insight:</span>
                   <div className="text-gray-300 font-medium">{children}</div>
                 </div>
               </div>
@@ -147,7 +147,7 @@ export default function MoneyTruthCard({
           <p className="text-gray-400 text-sm mb-6">Click to uncover hidden insights about your money</p>
           <button 
             onClick={onRefresh}
-            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg transform hover:scale-105"
+            className="bg-[rgb(34,197,94)] hover:bg-[rgb(22,163,74)] text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg transform hover:scale-105"
           >
             🔍 Discover Money Truths
           </button>
@@ -218,7 +218,7 @@ export default function MoneyTruthCard({
           </div>
           <button 
             onClick={onRefresh}
-            className="bg-[rgb(0,184,153)] hover:bg-[rgb(0,164,133)] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg"
+            className="bg-[rgb(34,197,94)] hover:bg-[rgb(22,163,74)] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg"
           >
             🔄 Retry Analysis
           </button>
@@ -249,7 +249,7 @@ export default function MoneyTruthCard({
             <div className="flex items-center space-x-2">
               <div className={`w-3 h-3 rounded-full ${
                 isLoading ? 'bg-yellow-500 animate-pulse' : 
-                insights ? 'bg-[rgb(0,184,153)]' : 'bg-gray-500'
+                insights ? 'bg-[rgb(34,197,94)]' : 'bg-gray-500'
               }`}></div>
               <span className="text-sm text-gray-400 font-medium">
                 {isLoading ? 'Analyzing' : insights ? 'Complete' : 'Ready'}
@@ -258,7 +258,7 @@ export default function MoneyTruthCard({
             <button
               onClick={onRefresh}
               disabled={isLoading}
-              className="p-3 text-gray-400 hover:text-[rgb(0,184,153)] rounded-xl hover:bg-[rgba(0,184,153,0.1)] disabled:opacity-50 transition-all duration-300"
+              className="p-3 text-gray-400 hover:text-[rgb(34,197,94)] rounded-xl hover:bg-[rgba(34,197,94,0.1)] disabled:opacity-50 transition-all duration-300"
             >
               <svg className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

@@ -109,7 +109,7 @@ export default function StockDetailPage() {
 
     setRecommendationLoading(true);
     try {
-      const response = await fetch('/api/stocks/recommendation', {
+      const response = await fetch('http://localhost:8000/api/stocks/recommendation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

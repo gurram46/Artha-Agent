@@ -26,7 +26,7 @@ export default function LiveInsightsCard() {
 
   const connectWebSocket = () => {
     try {
-      wsRef.current = new WebSocket('ws://localhost:8003/ws/live-insights');
+      wsRef.current = new WebSocket('ws://localhost:8000/ws/live-insights');
       
       wsRef.current.onopen = () => {
         setIsConnected(true);

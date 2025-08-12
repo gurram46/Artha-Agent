@@ -1,7 +1,10 @@
 /**
  * Enhanced Financial Data Service - Fetches real financial data from backend API
  * This service connects to the Artha AI backend for live financial data
+ * Integrated with secure 24-hour cache system for persistent data storage
  */
+
+import CacheService from './cacheService';
 
 interface MCPAsset {
   netWorthAttribute: string;
@@ -78,10 +81,14 @@ class MCPDataService {
   private lastFetch: number = 0;
   private cacheDuration: number = 30000; // 30 seconds cache
   private isDemoMode: boolean = false;
+  private cacheService: CacheService;
+  private currentUserEmail: string | null = null;
 
   private constructor() {
     // Default to localhost backend, can be configured via environment
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8003';
+    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    this.cacheService = CacheService.getInstance();
+    console.log(`🔗 MCPDataService initialized with backend URL: ${this.backendUrl}`);
   }
 
   setDemoMode(enabled: boolean): void {
@@ -89,6 +96,39 @@ class MCPDataService {
     // Clear cache when switching modes
     this.cachedData = null;
     this.lastFetch = 0;
+  }
+
+  setUserEmail(email: string): void {
+    this.currentUserEmail = email;
+    console.log(`👤 User email set for cache operations: ${email}`);
+  }
+
+  async getCacheStatus(): Promise<{
+    enabled: boolean;
+    has_cache: boolean;
+    expires_at?: string;
+    time_remaining?: string;
+    cached_at?: string;
+    message: string;
+    warning?: string;
+  }> {
+    if (!this.currentUserEmail) {
+      return {
+        enabled: false,
+        has_cache: false,
+        message: 'User email not set for cache operations'
+      };
+    }
+
+    const status = await this.cacheService.checkCacheStatus(this.currentUserEmail);
+    
+    // Add expiry warning if applicable
+    const warning = this.cacheService.getCacheExpiryWarning(status.time_remaining);
+    
+    return {
+      ...status,
+      warning
+    };
   }
 
   static getInstance(): MCPDataService {
@@ -107,19 +147,43 @@ class MCPDataService {
     };
     error?: string;
     authRequired?: boolean;
+    fromCache?: boolean;
+    cacheExpiry?: string;
   }> {
     try {
       console.log(this.isDemoMode 
         ? '🎭 Fetching demo financial data...'
         : '🔄 Fetching real-time financial data from Fi Money MCP...');
 
-      // Check cache first
+      // Check secure cache first (if user email is set and not in demo mode)
+      if (!this.isDemoMode && this.currentUserEmail) {
+        console.log('🔍 Checking secure cache for financial data...');
+        const cacheResult = await this.cacheService.retrieveFinancialData(this.currentUserEmail);
+        
+        if (cacheResult.success && cacheResult.data) {
+          console.log('✅ Using secure cached financial data');
+          this.cachedData = cacheResult.data;
+          this.lastFetch = Date.now();
+          
+          const cacheStatus = await this.cacheService.checkCacheStatus(this.currentUserEmail);
+          
+          return {
+            success: true,
+            data: cacheResult.data.data,
+            fromCache: true,
+            cacheExpiry: cacheStatus.expires_at
+          };
+        }
+      }
+
+      // Check short-term memory cache
       const now = Date.now();
       if (this.cachedData && (now - this.lastFetch) < this.cacheDuration) {
-        console.log('✅ Using cached financial data');
+        console.log('✅ Using short-term cached financial data');
         return {
           success: true,
-          data: this.cachedData.data
+          data: this.cachedData.data,
+          fromCache: true
         };
       }
 
@@ -156,9 +220,25 @@ class MCPDataService {
         throw new Error(backendData.message || 'Fi Money MCP server error');
       }
 
-      // Cache the successful response
+      // Cache the successful response in memory
       this.cachedData = backendData;
       this.lastFetch = now;
+
+      // Store in secure cache (if user email is set and not in demo mode)
+      if (!this.isDemoMode && this.currentUserEmail) {
+        console.log('🔒 Storing data in secure cache...');
+        const cacheResult = await this.cacheService.storeFinancialData(
+          this.currentUserEmail,
+          backendData,
+          backendData.summary?.data_source || 'fi_mcp'
+        );
+        
+        if (cacheResult.success) {
+          console.log(`✅ Data cached securely for 24 hours`);
+        } else {
+          console.warn(`⚠️ Failed to cache data: ${cacheResult.message}`);
+        }
+      }
 
       console.log(this.isDemoMode 
         ? '✅ Successfully loaded demo data'
@@ -167,7 +247,8 @@ class MCPDataService {
 
       return {
         success: true,
-        data: backendData.data
+        data: backendData.data,
+        fromCache: false
       };
 
     } catch (error) {
@@ -192,6 +273,8 @@ class MCPDataService {
   }> {
     try {
       console.log('🌐 Initiating Fi Money web authentication...');
+      console.log(`🔗 Backend URL: ${this.backendUrl}`);
+      console.log(`🔗 Full URL: ${this.backendUrl}/api/fi-auth/initiate`);
       
       const response = await fetch(`${this.backendUrl}/api/fi-auth/initiate`, {
         method: 'POST',
@@ -201,11 +284,17 @@ class MCPDataService {
         signal: AbortSignal.timeout(10000)
       });
 
+      console.log(`📡 Response status: ${response.status}`);
+      console.log(`📡 Response ok: ${response.ok}`);
+
       if (!response.ok) {
-        throw new Error(`Authentication initiation failed: ${response.status}`);
+        const errorText = await response.text();
+        console.log(`❌ Response error text: ${errorText}`);
+        throw new Error(`Authentication initiation failed: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
+      console.log('📊 Authentication initiate result:', result);
       
       if (result.status === 'login_required') {
         console.log('🔗 Fi Money login URL received');
@@ -246,19 +335,27 @@ class MCPDataService {
     message?: string;
   }> {
     try {
+      console.log('🔍 Checking Fi Money authentication status...');
+      console.log(`🔗 Status URL: ${this.backendUrl}/api/fi-auth/status`);
+      
       const response = await fetch(`${this.backendUrl}/api/fi-auth/status`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(15000)
       });
 
+      console.log(`📡 Status response: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error(`Status check failed: ${response.status}`);
+        const errorText = await response.text();
+        console.log(`❌ Status error text: ${errorText}`);
+        throw new Error(`Status check failed: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
+      console.log('📊 Status check result:', result);
       
       if (result.status === 'success') {
         const authStatus = result.auth_status;
@@ -283,6 +380,57 @@ class MCPDataService {
     }
   }
 
+  async completeAuthentication(): Promise<{
+    authenticated: boolean;
+    expiresInMinutes?: number;
+    message?: string;
+  }> {
+    try {
+      console.log('🔄 Completing Fi Money authentication...');
+      console.log(`🔗 Complete URL: ${this.backendUrl}/api/fi-auth/complete`);
+      
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      console.log(`📡 Complete response: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`❌ Complete error text: ${errorText}`);
+        throw new Error(`Auth completion failed: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('📊 Complete result:', result);
+      
+      if (result.status === 'success') {
+        const authStatus = result.auth_status;
+        return {
+          authenticated: authStatus.authenticated || false,
+          expiresInMinutes: authStatus.expires_in_minutes,
+          message: authStatus.message
+        };
+      } else {
+        return {
+          authenticated: false,
+          message: result.message
+        };
+      }
+      
+    } catch (error) {
+      console.error('❌ Auth completion error:', error);
+      return {
+        authenticated: false,
+        message: 'Auth completion failed'
+      };
+    }
+  }
+
   async logout(): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${this.backendUrl}/api/fi-auth/logout`, {
@@ -290,14 +438,19 @@ class MCPDataService {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(15000)
       });
 
       const result = await response.json();
       
-      // Clear cache regardless of response
+      // Clear memory cache regardless of response
       this.cachedData = null;
       this.lastFetch = 0;
+      
+      // Clear secure cache if user email is set
+      if (this.currentUserEmail) {
+        await this.invalidateSecureCache();
+      }
       
       return {
         success: result.status === 'success',
@@ -311,6 +464,45 @@ class MCPDataService {
         message: 'Logout failed'
       };
     }
+  }
+
+  async invalidateSecureCache(): Promise<{ success: boolean; message: string }> {
+    if (!this.currentUserEmail) {
+      return {
+        success: false,
+        message: 'User email not set for cache operations'
+      };
+    }
+
+    const result = await this.cacheService.invalidateCache(this.currentUserEmail);
+    
+    // Also clear memory cache
+    this.cachedData = null;
+    this.lastFetch = 0;
+    
+    return result;
+  }
+
+  async handleCacheExpiry(): Promise<{
+    shouldReLogin: boolean;
+    message: string;
+    redirectUrl?: string;
+  }> {
+    console.log('⏰ Handling cache expiry - prompting for re-login');
+    
+    // Clear all cached data
+    this.cachedData = null;
+    this.lastFetch = 0;
+    
+    if (this.currentUserEmail) {
+      await this.cacheService.invalidateCache(this.currentUserEmail);
+    }
+    
+    return {
+      shouldReLogin: true,
+      message: 'Your session has expired. Please re-login to access your financial data.',
+      redirectUrl: '/auth' // Adjust based on your auth route
+    };
   }
 
   // New method to get additional portfolio insights from backend
@@ -381,10 +573,33 @@ class MCPDataService {
     }
   }
 
+  private parseCurrencyValue(currencyObj: any): number {
+    try {
+      const units = parseFloat(currencyObj?.units || '0');
+      const nanos = currencyObj?.nanos || 0;
+      return units + (nanos / 1_000_000_000);
+    } catch {
+      return 0;
+    }
+  }
+
+  private getMutualFundCategory(assetClass: string): string {
+    const categoryMap: { [key: string]: string } = {
+      'EQUITY': 'equity',
+      'DEBT': 'debt',
+      'HYBRID': 'hybrid',
+      'SOLUTION_ORIENTED': 'solution',
+      'OTHER': 'others'
+    };
+    return categoryMap[assetClass] || 'others';
+  }
+
   transformToPortfolioFormat(mcpData: {
     net_worth: MCPNetWorthResponse;
     credit_report: MCPCreditReport;
     epf_details: MCPEPFDetails;
+    mf_transactions?: any;
+    bank_transactions?: any;
   }) {
     try {
       const { net_worth, credit_report, epf_details } = mcpData;
@@ -394,7 +609,6 @@ class MCPDataService {
       // Calculate totals from real MCP data
       let totalAssets = 0;
       let totalLiabilities = 0;
-
       const assetBreakdown: { [key: string]: number } = {};
 
       // Process assets
@@ -402,7 +616,6 @@ class MCPDataService {
         const value = parseInt(asset.value.units) || 0;
         totalAssets += value;
         
-        // Map asset types to readable names
         const assetTypeMap: { [key: string]: string } = {
           'ASSET_TYPE_MUTUAL_FUND': 'Mutual Funds',
           'ASSET_TYPE_EPF': 'EPF',
@@ -423,12 +636,60 @@ class MCPDataService {
 
       const totalNetWorth = totalAssets - totalLiabilities;
 
-      // Get credit score from real data
+      // Get credit score
       let creditScore = 'N/A';
       if (credit_report.creditReports && credit_report.creditReports.length > 0) {
         const creditData = credit_report.creditReports[0].creditReportData;
         creditScore = creditData?.score?.bureauScore || 'N/A';
       }
+
+      // Extract mutual fund schemes from net worth data
+      const mutualFundSchemes: any[] = [];
+      const mfData = net_worth.mfSchemeAnalytics || {};
+      
+      if (mfData.schemeAnalytics && Array.isArray(mfData.schemeAnalytics)) {
+        mfData.schemeAnalytics.forEach((scheme: any) => {
+          const schemeDetail = scheme.schemeDetail || {};
+          const analytics = scheme.enrichedAnalytics?.analytics?.schemeDetails || {};
+          
+          const currentValue = this.parseCurrencyValue(analytics.currentValue || {});
+          const investedValue = this.parseCurrencyValue(analytics.investedValue || {});
+          const absoluteReturns = this.parseCurrencyValue(analytics.absoluteReturns || {});
+          
+          mutualFundSchemes.push({
+            name: schemeDetail.nameData?.longName || 'Unknown Fund',
+            amc: (schemeDetail.amc || '').replace(/_/g, ' '),
+            asset_class: schemeDetail.assetClass || '',
+            risk_level: schemeDetail.fundhouseDefinedRiskLevel || '',
+            current_value: currentValue,
+            invested_value: investedValue,
+            xirr: analytics.XIRR || 0,
+            absolute_returns: absoluteReturns,
+            returns_percentage: investedValue > 0 ? ((currentValue - investedValue) / investedValue * 100) : 0,
+            scheme_code: schemeDetail.schemeCode || '',
+            category: this.getMutualFundCategory(schemeDetail.assetClass || '')
+          });
+        });
+      }
+
+      // Extract bank accounts
+      const bankAccounts: any[] = [];
+      const accountDetails = net_worth.accountDetailsBulkResponse?.accountDetailsMap || {};
+      
+      Object.entries(accountDetails).forEach(([accountId, accountInfo]: [string, any]) => {
+        if (accountInfo.depositSummary) {
+          const depositInfo = accountInfo.depositSummary;
+          const accountData = accountInfo.accountDetails;
+          
+          bankAccounts.push({
+            bank: accountData.fipMeta?.displayName || 'Unknown Bank',
+            account_type: (depositInfo.depositAccountType || '').replace('DEPOSIT_ACCOUNT_TYPE_', ''),
+            balance: this.parseCurrencyValue(depositInfo.currentBalance || {}),
+            masked_number: accountData.maskedAccountNumber || '',
+            account_id: accountId
+          });
+        }
+      });
 
       // Create asset allocation array
       const assetAllocation = Object.entries(assetBreakdown)
@@ -444,8 +705,37 @@ class MCPDataService {
       const mutualFunds = assetBreakdown['Mutual Funds'] || 0;
       const savingsAccounts = assetBreakdown['Savings Accounts'] || 0;
       const epfBalance = assetBreakdown['EPF'] || 0;
-      const securities = assetBreakdown['Securities'] || 0;
-      const fixedDeposits = assetBreakdown['Fixed Deposits'] || 0;
+
+      // Calculate performance metrics from mutual fund data
+      let totalInvested = 0;
+      let totalCurrent = 0;
+      let totalGains = 0;
+      let avgXirr = 0;
+      let bestPerformer = 'N/A';
+      let worstPerformer = 'N/A';
+      let bestReturns = -Infinity;
+      let worstReturns = Infinity;
+
+      if (mutualFundSchemes.length > 0) {
+        mutualFundSchemes.forEach(scheme => {
+          totalInvested += scheme.invested_value;
+          totalCurrent += scheme.current_value;
+          totalGains += scheme.absolute_returns;
+          avgXirr += scheme.xirr;
+          
+          if (scheme.returns_percentage > bestReturns) {
+            bestReturns = scheme.returns_percentage;
+            bestPerformer = scheme.name;
+          }
+          
+          if (scheme.returns_percentage < worstReturns) {
+            worstReturns = scheme.returns_percentage;
+            worstPerformer = scheme.name;
+          }
+        });
+        
+        avgXirr = avgXirr / mutualFundSchemes.length;
+      }
 
       return {
         summary: {
@@ -453,8 +743,8 @@ class MCPDataService {
           total_net_worth_formatted: this.formatCurrency(totalNetWorth),
           mutual_funds: mutualFunds,
           mutual_funds_formatted: this.formatCurrency(mutualFunds),
-          liquid_funds: savingsAccounts + fixedDeposits,
-          liquid_funds_formatted: this.formatCurrency(savingsAccounts + fixedDeposits),
+          liquid_funds: savingsAccounts,
+          liquid_funds_formatted: this.formatCurrency(savingsAccounts),
           epf: epfBalance,
           epf_formatted: this.formatCurrency(epfBalance),
           credit_score: creditScore,
@@ -463,22 +753,16 @@ class MCPDataService {
         },
         data: {
           asset_allocation: assetAllocation,
-          mutual_fund_schemes: [], // Would need additional data for individual schemes
-          bank_accounts: [
-            {
-              account_type: "Savings Accounts",
-              balance: savingsAccounts,
-              bank_name: "Combined Accounts"
-            }
-          ],
+          mutual_fund_schemes: mutualFundSchemes,
+          bank_accounts: bankAccounts,
           performance_metrics: {
-            total_invested: totalAssets * 0.85, // Estimate
-            total_current: totalAssets,
-            total_gains: totalAssets * 0.15, // Estimate
-            total_gains_percentage: 15, // Estimate
-            avg_xirr: 0,
-            best_performer: "N/A",
-            worst_performer: "N/A"
+            total_invested: totalInvested || totalAssets * 0.85,
+            total_current: totalCurrent || totalAssets,
+            total_gains: totalGains || totalAssets * 0.15,
+            total_gains_percentage: totalInvested > 0 ? ((totalCurrent - totalInvested) / totalInvested * 100) : 15,
+            avg_xirr: avgXirr || 0,
+            best_performer: bestPerformer,
+            worst_performer: worstPerformer
           }
         },
         metadata: {
@@ -487,7 +771,9 @@ class MCPDataService {
           accuracy: "Real MCP response data structure",
           total_assets_inr: totalAssets,
           total_liabilities_inr: totalLiabilities,
-          net_worth_inr: totalNetWorth
+          net_worth_inr: totalNetWorth,
+          mutual_funds_count: mutualFundSchemes.length,
+          bank_accounts_count: bankAccounts.length
         }
       };
 

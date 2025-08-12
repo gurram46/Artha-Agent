@@ -9,8 +9,8 @@ interface UseStreamingChatOptions {
 
 export const useStreamingChat = (options: UseStreamingChatOptions = {}) => {
   const {
-    apiEndpoint = 'http://localhost:8003/query',
-    streamEndpoint = 'http://localhost:8003/api/deep-research',
+    apiEndpoint = 'http://localhost:8000/query',
+  streamEndpoint = 'http://localhost:8000/api/deep-research',
     config = {}
   } = options;
 

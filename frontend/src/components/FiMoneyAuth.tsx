@@ -42,7 +42,25 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
     }
   };
 
-  const handleConnectToFiMoney = () => {
+  const handleConnectToFiMoney = async () => {
+    console.log('🧹 Clearing previous Fi Money session before new authentication...');
+    
+    // Preserve user signup data while clearing Fi Money session data
+    const existingUserData = localStorage.getItem('userData');
+    console.log('💾 Preserving user signup data:', existingUserData ? 'Found' : 'None');
+    
+    // Logout from any existing Fi Money session
+    try {
+      await mcpService.logout();
+      console.log('✅ Previous Fi Money session cleared');
+    } catch (logoutError) {
+      console.log('⚠️ No previous session to clear or logout failed:', logoutError);
+    }
+    
+    // Clear only Fi Money related session data, preserve user profile
+    sessionStorage.removeItem('demoMode');
+    // Note: We're NOT clearing localStorage to preserve user signup data
+    
     setShowPasscodeInput(true);
     setAuthError('');
     setPasscode('');
@@ -84,15 +102,51 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Starting Fi Money logout process (preserving user profile)...');
+      
+      // Preserve user signup data
+      const existingUserData = localStorage.getItem('userData');
+      console.log('💾 Preserving user signup data during logout:', existingUserData ? 'Found' : 'None');
+      
+      // Logout from Fi Money backend session
       await mcpService.logout();
+      console.log('✅ Fi Money backend session cleared');
+      
+      // Clear demo mode
+      mcpService.setDemoMode(false);
+      
+      // Clear only Fi Money related session data, preserve user profile
+      console.log('🧹 Clearing Fi Money session data (preserving user profile)...');
+      sessionStorage.removeItem('demoMode');
+      // Note: We're NOT clearing localStorage to preserve user signup data
+      
+      // Reset only Fi Money authentication state
       setIsAuthenticated(false);
       setSessionInfo(null);
       setShowPasscodeInput(false);
       setPhoneNumber('');
       setPasscode('');
       setAuthError('');
+      
+      console.log('✅ Fi Money logout successful - user profile preserved');
+      
+      // Notify parent component about logout
+      if (onAuthError) {
+        onAuthError('User logged out');
+      }
+      
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('❌ Logout failed:', error);
+      
+      // Even if logout fails, clear Fi Money data but preserve user profile
+      console.log('🧹 Clearing Fi Money data despite logout error (preserving user profile)...');
+      sessionStorage.removeItem('demoMode');
+      setIsAuthenticated(false);
+      setSessionInfo(null);
+      setShowPasscodeInput(false);
+      setPhoneNumber('');
+      setPasscode('');
+      setAuthError('');
     }
   };
 
@@ -230,7 +284,7 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
           </p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-lg p-6">
           <h4 className="font-medium text-blue-800 mb-2">What you'll get:</h4>
           <ul className="text-sm text-blue-700 space-y-1">
             <li>• Real-time net worth and asset allocation</li>

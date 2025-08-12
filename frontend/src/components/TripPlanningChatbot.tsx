@@ -45,7 +45,7 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
   const initializeChatbot = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8003/api/trip-planning/chat', {
+      const response = await fetch('http://localhost:8000/api/trip-planning/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: 'start', mode: 'research', demo_mode: isDemoMode })
@@ -93,7 +93,7 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8003/api/trip-planning/chat', {
+      const response = await fetch('http://localhost:8000/api/trip-planning/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -154,12 +154,12 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="border-b border-[rgba(0,184,153,0.2)] px-6 py-4 bg-gradient-to-r from-[rgba(0,26,30,0.95)] to-[rgba(24,25,27,0.95)] backdrop-blur-xl">
+        <div className="border-b border-[rgba(34,197,94,0.2)] px-6 py-4 bg-gradient-to-r from-[rgba(0,26,30,0.95)] to-[rgba(24,25,27,0.95)] backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-2xl flex items-center justify-center shadow-lg">
                 <span className="text-white text-xl">🧳</span>
               </div>
               <div>
@@ -282,7 +282,7 @@ export default function TripPlanningChatbot({ onClose }: TripPlanningChatbotProp
               className={`p-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform ${
                 !currentMessage.trim() || isLoading
                   ? 'bg-[rgba(156,163,175,0.2)] text-gray-500 cursor-not-allowed border border-[rgba(156,163,175,0.2)]'
-                  : 'bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] hover:scale-105 active:scale-95'
+                  : 'bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] text-white hover:from-[rgb(22,163,74)] hover:to-[rgb(16,143,64)] hover:scale-105 active:scale-95'
               }`}
             >
               {isLoading ? (

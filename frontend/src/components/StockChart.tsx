@@ -129,14 +129,14 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
             <div className="space-y-2">
               <div className="flex items-center space-x-4">
                 <h2 className="text-3xl font-bold text-white">{stockData.name}</h2>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] border border-[rgba(34,197,94,0.2)]">
                   {stockData.sector}
                 </span>
               </div>
               <p className="text-lg text-gray-300">{stockData.symbol}</p>
               <div className="flex items-baseline space-x-4">
                 <h3 className="text-4xl font-bold text-white">{formatPrice(stockData.currentPrice)}</h3>
-                <div className={`flex items-center space-x-2 ${stockData.change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <div className={`flex items-center space-x-2 ${stockData.change >= 0 ? 'text-[rgb(34,197,94)]' : 'text-red-600'}`}>
                   <span className="text-xl font-semibold">
                     {stockData.change >= 0 ? '+' : ''}{formatPrice(stockData.change)} 
                     ({stockData.changePercent >= 0 ? '+' : ''}{stockData.changePercent.toFixed(2)}%)

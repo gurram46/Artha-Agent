@@ -128,7 +128,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingHealth(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/portfolio-health?demo=${isDemoMode}`, {
+      const response = await fetch(`http://localhost:8000/api/portfolio-health?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -161,7 +161,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingRisk(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/risk-assessment?demo=${isDemoMode}`, {
+      const response = await fetch(`http://localhost:8000/api/risk-assessment?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -193,7 +193,7 @@ export function FinancialInsightsProvider({ children }: { children: React.ReactN
 
     setIsLoadingTrip(true);
     try {
-      const response = await fetch(`http://localhost:8003/api/trip-planning?demo=${isDemoMode}`, {
+      const response = await fetch(`http://localhost:8000/api/trip-planning?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });

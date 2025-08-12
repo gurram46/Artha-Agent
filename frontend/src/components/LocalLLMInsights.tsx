@@ -30,7 +30,7 @@ interface MetricCardProps {
 }
 
 const MetricCard = ({ title, value, subtitle, icon, color }: MetricCardProps) => (
-  <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 group hover:border-[rgba(0,184,153,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
+  <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 group hover:border-[rgba(34,197,94,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl">
     <div className="flex items-center justify-between mb-4">
       <div>
         <p className="text-sm font-semibold text-gray-300 mb-1">{title}</p>
@@ -105,7 +105,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
       const demoMode = sessionStorage.getItem('demoMode') === 'true';
       setIsDemoMode(demoMode);
       
-      const response = await fetch('http://localhost:8003/api/local-llm/prepare', {
+      const response = await fetch('http://localhost:8000/api/local-llm/prepare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -159,7 +159,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
   if (!isAuthenticated) {
     return (
       <div className={`space-y-6 ${className}`}>
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl shadow-xl p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <Brain className="w-8 h-8 text-white" />
@@ -179,7 +179,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
         />
         
         {error && (
-          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(220,53,69,0.05)] border border-[rgba(220,53,69,0.3)]">
+          <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl shadow-xl p-4 bg-[rgba(220,53,69,0.05)] border border-[rgba(220,53,69,0.3)]">
             <div className="flex items-center gap-2">
               <WifiOff className="w-5 h-5 text-red-600" />
               <p className="text-sm font-medium text-red-700">{error}</p>
@@ -193,7 +193,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
   return (
     <div className={`space-y-8 ${className}`}>
       {/* Header Section */}
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl p-6">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl shadow-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">

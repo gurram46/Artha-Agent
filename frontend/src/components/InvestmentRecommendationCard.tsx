@@ -32,7 +32,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     setIsAnalyzing(true);
     try {
       // Call AI Investment System API endpoint
-      const response = await fetch(`http://localhost:8003/api/ai-investment-recommendations?demo=${isDemoMode}`, {
+      const response = await fetch(`http://localhost:8000/api/ai-investment-recommendations?demo=${isDemoMode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,7 +48,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       
       if (data.status === 'success') {
         // Get personalized recommendation using AI chat system
-        const chatResponse = await fetch('http://localhost:8003/api/ai-investment-recommendations/chat', {
+        const chatResponse = await fetch('http://localhost:8000/api/ai-investment-recommendations/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -89,7 +89,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     if (!recommendation?.personalized_plan) return;
     
     try {
-      const response = await fetch('/api/ai-investment-recommendations/broker-plan', {
+      const response = await fetch('http://localhost:8000/api/ai-investment-recommendations/broker-plan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
     if (!brokerPlan) return;
     
     try {
-      const response = await fetch('/api/ai-investment-recommendations/execute', {
+      const response = await fetch('http://localhost:8000/api/ai-investment-recommendations/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
 
   if (showForm) {
     return (
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">📈 Investment Agent</h3>
@@ -238,7 +238,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
           <button
             onClick={handleGetRecommendation}
             disabled={isAnalyzing}
-            className="w-full bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white px-6 py-4 rounded-xl hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] transition-all disabled:opacity-50 font-medium flex items-center justify-center"
+            className="w-full bg-gradient-to-r from-[rgb(34,197,94)] to-[rgb(22,163,74)] text-white px-6 py-4 rounded-xl hover:from-[rgb(22,163,74)] hover:to-[rgb(21,128,61)] transition-all disabled:opacity-50 font-medium flex items-center justify-center"
           >
             {isAnalyzing ? (
               <>

@@ -140,12 +140,12 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
   const currentRisk = getCurrentRiskOption();
 
   return (
-    <div className="bg-[rgb(24,25,27)] rounded-xl border border-[rgba(0,184,153,0.2)] shadow-lg">
+    <div className="bg-[rgb(24,25,27)] rounded-xl border border-[rgba(34,197,94,0.2)] shadow-lg">
       {/* Always Visible Header */}
-      <div className="px-4 py-3 border-b border-[rgba(0,184,153,0.2)]">
+      <div className="px-4 py-3 border-b border-[rgba(34,197,94,0.2)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-lg flex items-center justify-center">
               <span className="text-lg">⚖️</span>
             </div>
             <div>
@@ -162,7 +162,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 onClick={saveProfile}
-                className="px-3 py-1 bg-[rgb(0,184,153)] text-white rounded-md text-xs font-medium hover:bg-[rgb(0,164,133)] transition-colors"
+                className="px-3 py-1 bg-[rgb(34,197,94)] text-white rounded-md text-xs font-medium hover:bg-[rgb(22,163,74)] transition-colors"
               >
                 Save
               </motion.button>
@@ -186,14 +186,14 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       className={`
                         relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.riskTolerance === option.id 
-                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          ? 'border-[rgb(34,197,94)] bg-[rgba(34,197,94,0.1)]' 
                           : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
                         <div className="text-xl mb-1">{option.icon}</div>
-                        <h5 className={`text-xs font-medium mb-1 ${profile.riskTolerance === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.riskTolerance === option.id ? 'text-[rgb(34,197,94)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-xs text-gray-500">{option.description}</p>
@@ -201,7 +201,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       {profile.riskTolerance === option.id && (
                         <motion.div
                           layoutId="risk-selected"
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(34,197,94)] rounded-full flex items-center justify-center"
                         >
                           <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -226,14 +226,14 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       className={`
                         relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.investmentHorizon === option.id 
-                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          ? 'border-[rgb(34,197,94)] bg-[rgba(34,197,94,0.1)]' 
                           : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
                         <div className="text-xl mb-1">{option.icon}</div>
-                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentHorizon === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentHorizon === option.id ? 'text-[rgb(34,197,94)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-xs text-gray-500">{option.duration}</p>
@@ -241,7 +241,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       {profile.investmentHorizon === option.id && (
                         <motion.div
                           layoutId="horizon-selected"
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(34,197,94)] rounded-full flex items-center justify-center"
                         >
                           <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -266,14 +266,14 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       className={`
                         relative p-3 rounded-lg border cursor-pointer transition-all duration-200
                         ${profile.investmentGoal === option.id 
-                          ? 'border-[rgb(0,184,153)] bg-[rgba(0,184,153,0.1)]' 
+                          ? 'border-[rgb(34,197,94)] bg-[rgba(34,197,94,0.1)]' 
                           : 'border-gray-600 hover:border-gray-500'
                         }
                       `}
                     >
                       <div className="text-center">
                         <div className="text-xl mb-1">{option.icon}</div>
-                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentGoal === option.id ? 'text-[rgb(0,184,153)]' : 'text-white'}`}>
+                        <h5 className={`text-xs font-medium mb-1 ${profile.investmentGoal === option.id ? 'text-[rgb(34,197,94)]' : 'text-white'}`}>
                           {option.label}
                         </h5>
                         <p className="text-xs text-gray-500">{option.description}</p>
@@ -281,7 +281,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                       {profile.investmentGoal === option.id && (
                         <motion.div
                           layoutId="goal-selected"
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(0,184,153)] rounded-full flex items-center justify-center"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-[rgb(34,197,94)] rounded-full flex items-center justify-center"
                         >
                           <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -307,7 +307,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                         step="1000"
                         value={profile.monthlyInvestment}
                         onChange={(e) => updateProfile({ monthlyInvestment: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-[rgba(0,184,153,0.2)] rounded-lg appearance-none cursor-pointer"
+                        className="w-full h-2 bg-[rgba(34,197,94,0.2)] rounded-lg appearance-none cursor-pointer"
                         style={{
                           WebkitAppearance: 'none',
                           MozAppearance: 'none',
@@ -317,7 +317,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                     <span className="text-xs text-gray-400">₹1L</span>
                   </div>
                   <div className="text-center">
-                    <span className="text-lg font-bold text-[rgb(0,184,153)]">
+                    <span className="text-lg font-bold text-[rgb(34,197,94)]">
                       ₹{profile.monthlyInvestment.toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-gray-400 ml-1">per month</span>
@@ -335,7 +335,7 @@ export default function UserRiskProfile({ onProfileUpdate, initialProfile }: Use
                   className={`
                     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${hasChanges 
-                      ? 'bg-[rgb(0,184,153)] text-white hover:bg-[rgb(0,164,133)]' 
+                      ? 'bg-[rgb(34,197,94)] text-white hover:bg-[rgb(22,163,74)]' 
                       : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     }
                   `}

@@ -3,17 +3,27 @@ FastAPI server to expose Artha-Agent backend to Next.js frontend
 Enhanced with MoneyTruthEngine and AI-driven insights
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+try:
+    from fastapi.middleware.base import BaseHTTPMiddleware
+except ImportError:
+    # Fallback for older FastAPI versions
+    from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 import asyncio
 import logging
 import sys
 import os
 import json
+import time
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +33,7 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from main import ArthaAIChatbot
-from core.fi_mcp.production_client import get_user_financial_data, initiate_fi_authentication, check_authentication_status, logout_user
+from core.fi_mcp.production_client import get_user_financial_data, initiate_fi_authentication, authenticate_with_passcode, check_authentication_status, logout_user
 from core.money_truth_engine import MoneyTruthEngine
 from core.local_llm_processor import compress_for_local_llm, prepare_local_llm_request
 from core.local_llm_client import get_local_llm_client, cleanup_local_llm_client
@@ -34,17 +44,226 @@ from agents.quick_agent.quick_response import QuickResponseAgent
 from agents.stock_agents.stock_analyst import get_stock_analyst
 from google import genai
 from config.settings import config
+from models.user_models import save_user_profile, get_user_profile, get_user_profile_by_email, create_user_id_from_email
+
+# Import cache services
+try:
+    from services.cache_service import cache_service
+    from services.scheduler_service import scheduler_service
+    from database.config import create_tables, test_connection
+    CACHE_ENABLED = True
+    logger.info("✅ Cache services imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Cache services not available: {e}")
+    CACHE_ENABLED = False
+
+# Import API endpoint routers
+try:
+    from api.chat_endpoints import router as chat_router
+    CHAT_ENABLED = True
+    logger.info("✅ Chat endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Chat endpoints not available: {e}")
+    CHAT_ENABLED = False
+
+try:
+    from api.auth_endpoints import router as auth_router
+    AUTH_ENABLED = True
+    logger.info("✅ Authentication endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Authentication endpoints not available: {e}")
+    AUTH_ENABLED = False
+
+try:
+    from api.user_endpoints import router as user_router
+    USER_ENABLED = True
+    logger.info("✅ User management endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ User management endpoints not available: {e}")
+    USER_ENABLED = False
+
+try:
+    from api.portfolio_endpoints import router as portfolio_router
+    PORTFOLIO_ENABLED = True
+    logger.info("✅ Portfolio analytics endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Portfolio analytics endpoints not available: {e}")
+    PORTFOLIO_ENABLED = False
+
+try:
+    from api.pdf_upload_endpoints import router as pdf_router
+    PDF_ENABLED = True
+    logger.info("✅ PDF upload endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ PDF upload endpoints not available: {e}")
+    PDF_ENABLED = False
+
+try:
+    from api.session_endpoints import router as session_router
+    SESSION_ENABLED = True
+    logger.info("✅ Session management endpoints imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Session management endpoints not available: {e}")
+    SESSION_ENABLED = False
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers to all responses"""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        
+        # Content Security Policy
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "connect-src 'self' ws: wss:; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+        response.headers["Content-Security-Policy"] = csp
+        
+        # HTTPS enforcement in production
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        
+        return response
 
 app = FastAPI(title="Artha AI Backend API - Enhanced", version="2.0.0")
 
-# Enable CORS for Next.js frontend
+# Import and add comprehensive security middleware
+# RE-ENABLED WITH MODIFIED CSP FOR FRONTEND COMPATIBILITY
+try:
+    from middleware.security_middleware import SecurityMiddleware
+    app.add_middleware(SecurityMiddleware)
+    logger.info("✅ Comprehensive security middleware enabled with frontend-compatible CSP")
+except ImportError as e:
+    logger.warning(f"⚠️ Security middleware not available: {e}")
+    # Fallback to basic security headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+# Enable CORS for Next.js frontend with environment-based configuration
+# Default development origins (only used if ALLOWED_ORIGINS is not set)
+default_dev_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001", 
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "https://localhost:3000",
+    "https://localhost:3001",
+    "https://localhost:3002",
+    "https://localhost:3003",
+    "https://localhost:3004"
+]
+
+# Get allowed origins from environment variable
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    # Production: Use only environment-specified origins
+    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    logger.info(f"✅ Using production CORS origins from environment: {allowed_origins}")
+else:
+    # Development: Use default localhost origins
+    allowed_origins = default_dev_origins
+    logger.info("⚠️ Using development CORS origins. Set ALLOWED_ORIGINS environment variable for production.")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3002", "http://localhost:3001"],  # Next.js dev server on different ports
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Added PATCH method
+    allow_headers=[
+        "Content-Type", 
+        "Authorization", 
+        "Accept", 
+        "Origin", 
+        "X-Requested-With",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Methods",
+        "Cache-Control",
+        "Pragma"
+    ],
+    expose_headers=["X-Total-Count", "Access-Control-Allow-Origin"],
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
+
+# Include routers if available
+if CHAT_ENABLED:
+    app.include_router(chat_router)
+    logger.info("✅ Chat endpoints registered successfully")
+
+if AUTH_ENABLED:
+    app.include_router(auth_router)
+    logger.info("✅ Authentication endpoints registered successfully")
+
+if USER_ENABLED:
+    app.include_router(user_router)
+    logger.info("✅ User management endpoints registered successfully")
+
+if PORTFOLIO_ENABLED:
+    app.include_router(portfolio_router)
+    logger.info("✅ Portfolio analytics endpoints registered successfully")
+
+if PDF_ENABLED:
+    app.include_router(pdf_router)
+    logger.info("✅ PDF upload endpoints registered successfully")
+
+if SESSION_ENABLED:
+    app.include_router(session_router)
+    logger.info("✅ Session management endpoints registered successfully")
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    global CACHE_ENABLED
+    
+    # Initialize cache system if enabled
+    if CACHE_ENABLED:
+        try:
+            # Create database tables if they don't exist
+            if create_tables():
+                logger.info("✅ Database tables created/verified")
+            
+            # Start scheduler for cache cleanup
+            scheduler_service.start_scheduler()
+            logger.info("✅ Cache cleanup scheduler started")
+            
+            # Run initial cleanup
+            await scheduler_service.cleanup_expired_cache()
+            
+            logger.info("✅ Secure cache system initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize cache system: {e}")
+            CACHE_ENABLED = False
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    # Stop scheduler
+    if CACHE_ENABLED:
+        try:
+            scheduler_service.stop_scheduler()
+            logger.info("✅ Cache cleanup scheduler stopped")
+        except Exception as e:
+            logger.error(f"❌ Failed to stop scheduler: {e}")
+    
+    # Cleanup LLM client
+    try:
+        await cleanup_local_llm_client()
+    except:
+        pass
 
 # Initialize chatbot and enhanced components
 chatbot = None
@@ -62,6 +281,7 @@ class QueryRequest(BaseModel):
     query: str
     mode: str = "research"  # "quick" or "research"
     demo_mode: bool = False  # Support demo mode
+    user_data: Optional[Dict[str, Any]] = None  # User profile data from signup form
 
 class TripChatRequest(BaseModel):
     query: str
@@ -92,6 +312,328 @@ class LocalLLMRequest(BaseModel):
     query: str = "Give me financial insights"
     use_compressed: bool = True
     demo_mode: bool = False
+
+class UserDataRequest(BaseModel):
+    user_data: Dict[str, Any]
+
+class UserDataResponse(BaseModel):
+    user_id: str
+    message: str
+    success: bool
+
+class UserLookupRequest(BaseModel):
+    email: str
+
+def is_simple_greeting(query: str) -> bool:
+    """Check if the query is a simple greeting that doesn't require financial analysis"""
+    greeting_patterns = [
+        "hi", "hello", "hey", "namaste", "good morning", "good afternoon", 
+        "good evening", "how are you", "what's up", "whats up", "sup",
+        "greetings", "hola", "bonjour", "salaam", "salaam aleikum",
+        "how do you do", "nice to meet you", "pleasure to meet you"
+    ]
+    query_lower = query.lower().strip()
+    
+    # Check for exact matches or very short greetings
+    if query_lower in greeting_patterns:
+        return True
+    
+    # Check for greetings with punctuation
+    query_clean = query_lower.replace("!", "").replace("?", "").replace(".", "").replace(",", "").strip()
+    if query_clean in greeting_patterns:
+        return True
+    
+    # Check if it's a very short query (likely a greeting)
+    if len(query_clean.split()) <= 2 and any(pattern in query_clean for pattern in greeting_patterns):
+        return True
+    
+    return False
+
+async def stream_non_financial_response(response_type: str, response_data: dict, mode: str = "quick"):
+    """Helper function to stream non-financial responses (greetings, user-specific, general)"""
+    newline = "\n"
+    
+    if mode == "quick":
+        # Quick mode styling
+        if response_type == "greeting":
+            header = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}👋 Friendly greeting detected'
+        elif response_type == "user_specific":
+            header = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}🚀 Personal information retrieved from profile'
+        else:  # general
+            header = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}💬 General conversation mode'
+        
+        yield f"data: {json.dumps({'type': 'log', 'content': header})}\n\n"
+        await asyncio.sleep(0.1)
+    else:
+        # Research mode styling
+        separator_line = "━" * 30
+        
+        header = f'🚀 **ARTHA AI SYSTEM ACTIVATED**{newline}{separator_line}'
+        yield f"data: {json.dumps({'type': 'log', 'content': header})}\n\n"
+        await asyncio.sleep(0.2)
+        
+        if response_type == "greeting":
+            status = f'👋 **GREETING DETECTED**: Friendly conversation mode activated{newline}✅ Ready for natural conversation'
+        elif response_type == "user_specific":
+            status = f'👤 **PERSONAL DATA RETRIEVAL**: Accessing user profile...{newline}✅ Personal information found and verified'
+        else:  # general
+            status = f'💬 **GENERAL QUERY DETECTED**: Non-financial conversation mode{newline}✅ Ready for general assistance'
+        
+        yield f"data: {json.dumps({'type': 'log', 'content': status})}\n\n"
+        await asyncio.sleep(0.2)
+        
+        response_separator = "━" * 50
+        stream_header = f'{newline}{response_separator}{newline}✨ **AI RESPONSE STREAMING LIVE** ✨{newline}{response_separator}{newline}'
+        yield f"data: {json.dumps({'type': 'log', 'content': stream_header})}\n\n"
+        await asyncio.sleep(0.2)
+    
+    # Stream the response content
+    response_text = response_data.get('response', 'No response available') if isinstance(response_data, dict) else str(response_data)
+    for chunk in response_text.split():
+        yield f"data: {json.dumps({'type': 'content', 'content': chunk + ' '})}\n\n"
+        await asyncio.sleep(0.02)
+    
+    yield f"data: [DONE]\n\n"
+
+def is_financial_query(query: str) -> bool:
+    """Check if the query is actually about financial topics"""
+    financial_keywords = [
+        # Investment related
+        "invest", "investment", "portfolio", "stocks", "shares", "mutual fund", "sip", "equity",
+        "bonds", "fixed deposit", "fd", "ppf", "nps", "elss", "etf", "gold", "real estate",
+        
+        # Banking and loans
+        "loan", "emi", "credit", "debt", "mortgage", "personal loan", "home loan", "car loan",
+        "bank", "savings", "account", "interest rate", "credit score", "credit card",
+        
+        # Financial planning
+        "budget", "expense", "income", "salary", "tax", "insurance", "retirement", "pension",
+        "emergency fund", "financial planning", "wealth", "money", "finance", "financial",
+        
+        # Market related
+        "market", "nifty", "sensex", "trading", "broker", "demat", "dividend", "returns",
+        "profit", "loss", "risk", "volatility", "inflation", "economy", "economic",
+        
+        # Specific amounts or financial terms
+        "rupees", "₹", "lakh", "crore", "thousand", "amount", "cost", "price", "value",
+        "worth", "afford", "buy", "sell", "purchase", "payment", "pay"
+    ]
+    
+    query_lower = query.lower()
+    
+    # Check for financial keywords
+    if any(keyword in query_lower for keyword in financial_keywords):
+        return True
+    
+    # Check for financial question patterns
+    financial_patterns = [
+        "should i invest", "how to invest", "where to invest", "what to invest",
+        "how much should i", "can i afford", "is it good to", "should i buy",
+        "how to save", "how to plan", "what is the best", "which is better",
+        "how to calculate", "what are the returns", "how much will i get"
+    ]
+    
+    if any(pattern in query_lower for pattern in financial_patterns):
+        return True
+    
+    return False
+
+def is_user_specific_question(query: str) -> bool:
+    """Check if the query is asking for user-specific information"""
+    user_keywords = [
+        "my name", "what is my name", "do you know my name", "who am i",
+        "my age", "how old am i", "my email", "my phone", "my occupation",
+        "my income", "my goals", "my risk tolerance", "about me"
+    ]
+    query_lower = query.lower()
+    return any(keyword in query_lower for keyword in user_keywords)
+
+def get_stored_user_data(user_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Get stored user data from backend, fallback to request data"""
+    if not user_data:
+        return {}
+    
+    # Try to get email from the user_data to lookup stored profile
+    email = user_data.get('personalInfo', {}).get('email')
+    if email:
+        try:
+            stored_data = get_user_profile_by_email(email)
+            if stored_data:
+                logger.info(f"✅ Retrieved stored user data for: {email}")
+                return stored_data
+        except Exception as e:
+            logger.warning(f"⚠️ Could not retrieve stored data for {email}: {e}")
+    
+    # Fallback to the data from the request
+    logger.info("📝 Using user data from request (not stored)")
+    return user_data
+
+def handle_general_query(query: str, user_data: Dict[str, Any] = None) -> dict:
+    """Handle general non-financial queries with helpful responses"""
+    # Get user's name if available
+    user_name = ""
+    if user_data:
+        stored_user_data = get_stored_user_data(user_data)
+        name = stored_user_data.get('personalInfo', {}).get('fullName')
+        if not name:
+            first_name = stored_user_data.get('firstName', stored_user_data.get('personalInfo', {}).get('firstName', ''))
+            if first_name:
+                user_name = f" {first_name}"
+    
+    # Generate a helpful general response
+    response = f"""Hi{user_name}! I'm Artha AI, your financial assistant. 
+
+I'm here to help you with:
+• **Investment advice** - stocks, mutual funds, SIPs, portfolio planning
+• **Financial planning** - budgeting, goal setting, retirement planning  
+• **Banking queries** - loans, credit cards, savings accounts
+• **Market analysis** - stock research, market trends, economic insights
+• **Risk assessment** - insurance, emergency funds, financial protection
+
+Feel free to ask me anything about your finances, investments, or money management. I can analyze your financial data and provide personalized recommendations!
+
+What would you like to know about?"""
+    
+    return {
+        "response": response,
+        "sources_count": 0,
+        "general_query": True
+    }
+
+def handle_simple_greeting(query: str, user_data: Dict[str, Any] = None) -> dict:
+    """Handle simple greetings with a friendly, conversational response"""
+    # Get user's name if available
+    user_name = "there"
+    if user_data:
+        stored_user_data = get_stored_user_data(user_data)
+        name = stored_user_data.get('personalInfo', {}).get('fullName')
+        if not name:
+            first_name = stored_user_data.get('firstName', stored_user_data.get('personalInfo', {}).get('firstName', ''))
+            if first_name:
+                user_name = first_name
+    
+    # Generate a friendly greeting response
+    greeting_responses = [
+        f"Hello {user_name}! 👋 How can I help you today?",
+        f"Hi {user_name}! Great to see you. What would you like to know about?",
+        f"Hey {user_name}! I'm here to help with any questions you have.",
+        f"Namaste {user_name}! What can I assist you with today?",
+        f"Hello {user_name}! Feel free to ask me anything - whether it's about finances, investments, or just general questions."
+    ]
+    
+    import random
+    response = random.choice(greeting_responses)
+    
+    return {
+        "response": response,
+        "sources_count": 0,
+        "greeting": True
+    }
+
+def handle_user_specific_question(query: str, user_data: Dict[str, Any]) -> dict:
+    """Handle user-specific questions using stored user data"""
+    # Get stored user data (with fallback to request data)
+    stored_user_data = get_stored_user_data(user_data)
+    query_lower = query.lower()
+    
+    # Name-related questions
+    if any(keyword in query_lower for keyword in ["my name", "what is my name", "do you know my name", "who am i"]):
+        # Try to get fullName first, then construct from firstName and lastName
+        name = stored_user_data.get('personalInfo', {}).get('fullName')
+        if not name:
+            first_name = stored_user_data.get('firstName', stored_user_data.get('personalInfo', {}).get('firstName', ''))
+            last_name = stored_user_data.get('lastName', stored_user_data.get('personalInfo', {}).get('lastName', ''))
+            if first_name and last_name:
+                name = f"{first_name} {last_name}"
+            elif first_name:
+                name = first_name
+            else:
+                name = 'User'
+        response = f"Yes, I know your name! You're {name}."
+    
+    # Age-related questions
+    elif any(keyword in query_lower for keyword in ["my age", "how old am i"]):
+        dob = stored_user_data.get('personalInfo', {}).get('dateOfBirth', '')
+        if dob:
+            from datetime import datetime
+            try:
+                birth_date = datetime.strptime(dob, '%Y-%m-%d')
+                age = datetime.now().year - birth_date.year
+                response = f"Based on your date of birth ({dob}), you are {age} years old."
+            except:
+                response = f"I have your date of birth as {dob}, but I'm having trouble calculating your exact age."
+        else:
+            response = "I don't have your date of birth in your profile."
+    
+    # Contact information
+    elif "my email" in query_lower:
+        email = stored_user_data.get('personalInfo', {}).get('email', 'Not provided')
+        response = f"Your email address is: {email}"
+    
+    elif "my phone" in query_lower:
+        phone = stored_user_data.get('personalInfo', {}).get('phoneNumber', 'Not provided')
+        response = f"Your phone number is: {phone}"
+    
+    # Professional information
+    elif "my occupation" in query_lower:
+        occupation = stored_user_data.get('professionalInfo', {}).get('occupation', 'Not specified')
+        response = f"Your occupation is: {occupation}"
+    
+    elif "my income" in query_lower:
+        income = stored_user_data.get('professionalInfo', {}).get('annualIncome', 'Not specified')
+        response = f"Your annual income is: ₹{income}"
+    
+    # Investment preferences
+    elif "my goals" in query_lower or "my goal" in query_lower:
+        goals = stored_user_data.get('investmentPreferences', {}).get('investmentGoals', [])
+        if goals:
+            goals_text = ", ".join(goals)
+            response = f"Your investment goals are: {goals_text}"
+        else:
+            response = "You haven't specified your investment goals yet."
+    
+    elif "my risk tolerance" in query_lower:
+        risk_tolerance = stored_user_data.get('investmentPreferences', {}).get('riskTolerance', 'Not specified')
+        response = f"Your risk tolerance is: {risk_tolerance}"
+    
+    # General about me
+    elif "about me" in query_lower:
+        # Try to get fullName first, then construct from firstName and lastName
+        name = stored_user_data.get('personalInfo', {}).get('fullName')
+        if not name:
+            first_name = stored_user_data.get('firstName', stored_user_data.get('personalInfo', {}).get('firstName', ''))
+            last_name = stored_user_data.get('lastName', stored_user_data.get('personalInfo', {}).get('lastName', ''))
+            if first_name and last_name:
+                name = f"{first_name} {last_name}"
+            elif first_name:
+                name = first_name
+            else:
+                name = 'User'
+        
+        occupation = stored_user_data.get('professionalInfo', {}).get('occupation', 'Not specified')
+        income = stored_user_data.get('professionalInfo', {}).get('annualIncome', 'Not specified')
+        risk_tolerance = stored_user_data.get('investmentPreferences', {}).get('riskTolerance', 'Not specified')
+        
+        response = f"""Here's what I know about you:
+        
+**Personal Information:**
+- Name: {name}
+- Occupation: {occupation}
+- Annual Income: ₹{income}
+
+**Investment Profile:**
+- Risk Tolerance: {risk_tolerance}
+
+This information helps me provide personalized financial advice!"""
+    
+    else:
+        response = "I have your profile information, but I'm not sure what specific detail you're asking about. Could you be more specific?"
+    
+    return {
+        "response": response,
+        "sources_count": 0,
+        "user_specific": True
+    }
 
 async def get_financial_data_with_demo_support(demo_mode: bool = False):
     """
@@ -206,29 +748,231 @@ async def health_check():
         }
     }
 
+# User Data Management Endpoints
+@app.post("/api/user/save", response_model=UserDataResponse)
+async def save_user_data(request: UserDataRequest):
+    """Save user profile data to backend storage"""
+    try:
+        user_id = save_user_profile(request.user_data)
+        logger.info(f"✅ User profile saved successfully: {user_id}")
+        
+        return UserDataResponse(
+            user_id=user_id,
+            message="User profile saved successfully",
+            success=True
+        )
+    except Exception as e:
+        logger.error(f"❌ Failed to save user profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save user data: {str(e)}")
+
+@app.get("/api/user/{user_id}")
+async def get_user_data(user_id: str):
+    """Get user profile data by user ID"""
+    try:
+        user_data = get_user_profile(user_id)
+        if user_data:
+            return {
+                "status": "success",
+                "user_data": user_data,
+                "message": "User profile retrieved successfully"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="User profile not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to retrieve user profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve user data: {str(e)}")
+
+@app.post("/api/user/lookup")
+async def lookup_user_by_email(request: UserLookupRequest):
+    """Lookup user profile by email address"""
+    try:
+        user_data = get_user_profile_by_email(request.email)
+        if user_data:
+            user_id = create_user_id_from_email(request.email)
+            return {
+                "status": "success",
+                "user_id": user_id,
+                "user_data": user_data,
+                "message": "User profile found"
+            }
+        else:
+            return {
+                "status": "not_found",
+                "message": "No user profile found for this email"
+            }
+    except Exception as e:
+        logger.error(f"❌ Failed to lookup user by email: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to lookup user: {str(e)}")
+
+# Secure Cache System Endpoints
+class CacheStatusResponse(BaseModel):
+    enabled: bool
+    has_cache: bool
+    expires_at: Optional[str] = None
+    time_remaining: Optional[str] = None
+    cached_at: Optional[str] = None
+    message: str
+
+class CacheDataRequest(BaseModel):
+    email: str
+    financial_data: Dict[str, Any]
+    data_source: str = "fi_mcp"
+
+@app.get("/api/cache/status")
+async def get_cache_status(email: str):
+    """Check if user has valid cached financial data"""
+    if not CACHE_ENABLED:
+        return CacheStatusResponse(
+            enabled=False,
+            has_cache=False,
+            message="Secure cache system is not enabled"
+        )
+    
+    try:
+        status = cache_service.is_cache_available(email)
+        return CacheStatusResponse(
+            enabled=True,
+            has_cache=status.get("has_cache", False),
+            expires_at=status.get("expires_at"),
+            time_remaining=status.get("time_remaining"),
+            cached_at=status.get("cached_at"),
+            message="Cache status retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"❌ Failed to check cache status: {e}")
+        return CacheStatusResponse(
+            enabled=True,
+            has_cache=False,
+            message=f"Error checking cache status: {str(e)}"
+        )
+
+@app.post("/api/cache/store")
+async def store_financial_data(request: CacheDataRequest):
+    """Store financial data in secure cache with 24-hour expiration"""
+    if not CACHE_ENABLED:
+        raise HTTPException(status_code=400, detail="Secure cache system is not enabled")
+    
+    try:
+        success = cache_service.cache_financial_data(
+            request.email,
+            request.financial_data,
+            request.data_source
+        )
+        
+        if success:
+            return {
+                "status": "success",
+                "message": "Financial data cached successfully",
+                "expires_in": "24 hours"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to cache financial data")
+    except Exception as e:
+        logger.error(f"❌ Failed to store data in cache: {e}")
+        raise HTTPException(status_code=500, detail=f"Cache error: {str(e)}")
+
+@app.get("/api/cache/retrieve")
+async def retrieve_financial_data(email: str):
+    """Retrieve cached financial data if available"""
+    if not CACHE_ENABLED:
+        raise HTTPException(status_code=400, detail="Secure cache system is not enabled")
+    
+    try:
+        data = cache_service.get_cached_financial_data(email)
+        
+        if data:
+            return {
+                "status": "success",
+                "data": data,
+                "message": "Retrieved cached financial data",
+                "from_cache": True
+            }
+        else:
+            return {
+                "status": "not_found",
+                "message": "No valid cached data found",
+                "from_cache": False
+            }
+    except Exception as e:
+        logger.error(f"❌ Failed to retrieve cached data: {e}")
+        raise HTTPException(status_code=500, detail=f"Cache retrieval error: {str(e)}")
+
+@app.delete("/api/cache/invalidate")
+async def invalidate_cache(email: str):
+    """Manually invalidate user's cached financial data"""
+    if not CACHE_ENABLED:
+        raise HTTPException(status_code=400, detail="Secure cache system is not enabled")
+    
+    try:
+        success = cache_service.invalidate_user_cache(email)
+        
+        if success:
+            return {
+                "status": "success",
+                "message": "Cache invalidated successfully"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to invalidate cache")
+    except Exception as e:
+        logger.error(f"❌ Failed to invalidate cache: {e}")
+        raise HTTPException(status_code=500, detail=f"Cache invalidation error: {str(e)}")
+
+@app.get("/api/cache/system-status")
+async def get_cache_system_status():
+    """Get status of the cache system and scheduler"""
+    if not CACHE_ENABLED:
+        return {
+            "enabled": False,
+            "message": "Secure cache system is not enabled"
+        }
+    
+    try:
+        # Test database connection
+        db_status = test_connection()
+        
+        # Get scheduler status
+        scheduler_status = scheduler_service.get_job_status()
+        
+        return {
+            "enabled": True,
+            "database_connected": db_status,
+            "scheduler": scheduler_status,
+            "message": "Cache system is operational" if db_status else "Database connection issue"
+        }
+    except Exception as e:
+        logger.error(f"❌ Failed to get cache system status: {e}")
+        return {
+            "enabled": True,
+            "status": "error",
+            "message": f"Error checking system status: {str(e)}"
+        }
+
 @app.post("/api/fi-auth/initiate")
 async def fi_money_initiate_auth():
     """Initiate Fi Money web-based authentication flow"""
     try:
         result = await initiate_fi_authentication()
         
-        if result["success"]:
-            if result.get("login_required"):
-                return {
-                    "status": "login_required",
-                    "login_url": result["login_url"],
-                    "session_id": result["session_id"],
-                    "message": result["message"]
-                }
-            else:
-                return {
-                    "status": "already_authenticated",
-                    "message": result["message"]
-                }
+        # The result now directly contains the status
+        if result.get("status") == "login_required":
+            return {
+                "status": "login_required",
+                "login_url": result.get("login_url"),
+                "session_id": result.get("session_id"),
+                "message": result.get("message", "Please complete authentication in browser")
+            }
+        elif result.get("status") == "already_authenticated":
+            return {
+                "status": "already_authenticated",
+                "session_id": result.get("session_id"),
+                "message": result.get("message", "Already authenticated")
+            }
         else:
             return {
                 "status": "error",
-                "message": result.get("error", "Failed to initiate authentication")
+                "message": result.get("message", "Failed to initiate authentication")
             }
             
     except Exception as e:
@@ -242,7 +986,9 @@ async def fi_money_initiate_auth():
 async def fi_auth_status():
     """Check Fi Money authentication status"""
     try:
+        logger.info("🔍 Checking Fi Money authentication status...")
         status = await check_authentication_status()
+        logger.info(f"🔍 Auth status result: {status.get('authenticated', False)}")
         return {
             "status": "success",
             "auth_status": status
@@ -384,6 +1130,125 @@ async def analyze_with_local_llm(request: LocalLLMRequest):
         logger.error(f"Local LLM analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
+@app.post("/api/fi-auth/complete")
+async def fi_auth_complete():
+    """Force check and complete Fi Money authentication"""
+    try:
+        logger.info("🔄 Fi Money authentication completion requested...")
+        # Force a fresh authentication status check
+        status = await check_authentication_status()
+        
+        # Add detailed logging for debugging
+        logger.info(f"🔍 Complete auth status details: {status}")
+        
+        # Also log the authentication check process
+        logger.info(f"🔍 Auth status authenticated: {status.get('authenticated', 'N/A')}")
+        logger.info(f"🔍 Auth status message: {status.get('message', 'No message')}")
+        
+        if status.get("authenticated"):
+            logger.info("✅ Authentication completion successful!")
+            return {
+                "status": "success",
+                "auth_status": status,
+                "message": "Authentication completed successfully"
+            }
+        else:
+            logger.info(f"⏳ Authentication still pending: {status.get('message', 'No message')}")
+            return {
+                "status": "pending",
+                "auth_status": status,
+                "message": "Authentication still pending"
+            }
+    except Exception as e:
+        logging.error(f"Auth completion check failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@app.get("/api/fi-auth/debug")
+async def fi_auth_debug():
+    """Debug endpoint to check Fi Money MCP connection"""
+    try:
+        from core.fi_mcp.production_client import get_fi_client
+        client = await get_fi_client()
+        
+        debug_info = {
+            "fi_mcp_url": client.mcp_url,
+            "session_exists": client.session is not None
+        }
+        
+        if client.session:
+            debug_info.update({
+                "session_id": client.session.session_id,
+                "authenticated": client.session.authenticated,
+                "expired": client.session.is_expired(),
+                "passcode_set": client.session.passcode is not None,
+                "passcode_prefix": client.session.passcode[:15] + "..." if client.session.passcode and len(client.session.passcode) > 15 else client.session.passcode,
+                "expires_at": client.session.expires_at,
+                "time_remaining": client.session.expires_at - time.time() if client.session else None
+            })
+            
+            # Also test a direct call to Fi Money MCP
+            try:
+                import aiohttp
+                import json
+                
+                async with client.get_http_session() as http_session:
+                    payload = {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "fetch_net_worth",
+                            "arguments": {}
+                        }
+                    }
+                    
+                    headers = {
+                        "Mcp-Session-Id": client.session.session_id,
+                        "Content-Type": "application/json"
+                    }
+                    
+                    async with http_session.post(
+                        client.mcp_url,
+                        json=payload,
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
+                        
+                        response_text = await response.text()
+                        debug_info["mcp_test"] = {
+                            "status": response.status,
+                            "response_preview": response_text[:200] + "..." if len(response_text) > 200 else response_text
+                        }
+                        
+                        if response.status == 200:
+                            try:
+                                result = await response.json()
+                                if 'result' in result and 'content' in result['result']:
+                                    content = result['result']['content'][0]['text']
+                                    content_data = json.loads(content)
+                                    debug_info["mcp_test"]["parsed_status"] = content_data.get('status')
+                                    debug_info["mcp_test"]["parsed_message"] = content_data.get('message', 'No message')
+                            except Exception as parse_error:
+                                debug_info["mcp_test"]["parse_error"] = str(parse_error)
+                        
+            except Exception as mcp_error:
+                debug_info["mcp_test"] = {"error": str(mcp_error)}
+                
+        else:
+            debug_info["message"] = "No active Fi Money session"
+            
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"Debug check failed: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 @app.post("/api/fi-auth/logout")
 async def fi_logout():
     """Logout from Fi Money"""
@@ -500,6 +1365,27 @@ async def stream_quick_response(request: QueryRequest):
         try:
             newline = "\n"
             
+            # Check for simple greetings first (highest priority)
+            if is_simple_greeting(request.query):
+                response = handle_simple_greeting(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("greeting", response, "quick"):
+                    yield chunk
+                return
+            
+            # Check if this is a user-specific question
+            if request.user_data and is_user_specific_question(request.query):
+                response = handle_user_specific_question(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("user_specific", response, "quick"):
+                    yield chunk
+                return
+            
+            # Check if this is a non-financial query
+            if not is_financial_query(request.query):
+                response = handle_general_query(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("general", response, "quick"):
+                    yield chunk
+                return
+            
             # Quick mode activation
             quick_content = f'⚡ **QUICK RESPONSE MODE ACTIVATED**{newline}🚀 Single agent with Google Search grounding'
             yield f"data: {json.dumps({'type': 'log', 'content': quick_content})}\n\n"
@@ -566,6 +1452,27 @@ async def stream_research_response(request: QueryRequest):
     
     async def generate_stream():
         try:
+            # Check for simple greetings first (highest priority)
+            if is_simple_greeting(request.query):
+                response = handle_simple_greeting(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("greeting", response, "research"):
+                    yield chunk
+                return
+            
+            # Check if this is a user-specific question
+            if request.user_data and is_user_specific_question(request.query):
+                response = handle_user_specific_question(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("user_specific", response, "research"):
+                    yield chunk
+                return
+            
+            # Check if this is a non-financial query
+            if not is_financial_query(request.query):
+                response = handle_general_query(request.query, request.user_data)
+                async for chunk in stream_non_financial_response("general", response, "research"):
+                    yield chunk
+                return
+            
             # Start streaming with impressive logs
             separator_line = "━" * 30
             newline = "\n"
@@ -742,7 +1649,7 @@ async def process_query(request: QueryRequest):
         
         # Capture the response by modifying the process method
         # We'll create a custom method for API use
-        response_data = await process_query_for_api(request.query, request.demo_mode)
+        response_data = await process_query_for_api(request.query, request.demo_mode, request.user_data)
         
         processing_time = time.time() - start_time
         
@@ -757,9 +1664,21 @@ async def process_query(request: QueryRequest):
         logging.error(f"Query processing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Query processing failed: {str(e)}")
 
-async def process_query_for_api(user_query: str, demo_mode: bool = False) -> dict:
+async def process_query_for_api(user_query: str, demo_mode: bool = False, user_data: Dict[str, Any] = None) -> dict:
     """Custom query processing for API responses"""
     try:
+        # Check for simple greetings first (highest priority)
+        if is_simple_greeting(user_query):
+            return handle_simple_greeting(user_query, user_data)
+        
+        # Check for user-specific questions
+        if user_data and is_user_specific_question(user_query):
+            return handle_user_specific_question(user_query, user_data)
+        
+        # Check if this is actually a financial query
+        if not is_financial_query(user_query):
+            return handle_general_query(user_query, user_data)
+        
         # Get financial data (with demo mode support)
         logger.info(f"🔍 Demo mode detected: {demo_mode}")
         financial_data = await get_financial_data_with_demo_support(demo_mode)
@@ -808,6 +1727,62 @@ async def process_query_for_api(user_query: str, demo_mode: bool = False) -> dic
             "response": f"I apologize, but I encountered an error processing your request: {str(e)}",
             "sources_count": 0
         }
+
+def is_duplicate_financial_content(new_content: str, existing_content: str) -> bool:
+    """
+    Detect duplicate financial content patterns like repeated market data
+    """
+    if not new_content or not existing_content:
+        return False
+    
+    # Check for specific financial patterns that shouldn't repeat
+    financial_patterns = [
+        "The Indian markets",
+        "Nifty 50 at",
+        "Sensex at", 
+        "SBI offers FD rates",
+        "Reserve Bank of India",
+        "RBI has kept the repo rate",
+        "RBI repo rate",
+        "current repo rate",
+        "interest rates",
+        "FD rates at",
+        "SBI FD",
+        "ICICI Bank",
+        "HDFC Bank",
+        "Axis Bank"
+    ]
+    
+    for pattern in financial_patterns:
+        if pattern in new_content and pattern in existing_content:
+            logging.warning(f"🚫 Detected duplicate financial pattern: {pattern}")
+            return True
+    
+    # Check if the new content is substantially similar to existing content (more strict)
+    if len(new_content) > 30 and new_content.strip() in existing_content:
+        logging.warning(f"🚫 Detected duplicate content block: {new_content[:50]}...")
+        return True
+    
+    # Check for repeated sentences (more precise matching)
+    if len(new_content) > 30:
+        new_sentences = [s.strip() for s in new_content.split('.') if len(s.strip()) > 15]
+        existing_sentences = [s.strip() for s in existing_content.split('.') if len(s.strip()) > 15]
+        
+        for new_sentence in new_sentences:
+            for existing_sentence in existing_sentences:
+                # Check if sentences are very similar (exact match or 90% overlap for longer sentences)
+                if len(new_sentence) > 30 and len(existing_sentence) > 30:
+                    # For longer sentences, check if one contains the other almost entirely
+                    if (new_sentence in existing_sentence and len(new_sentence) > len(existing_sentence) * 0.9) or \
+                       (existing_sentence in new_sentence and len(existing_sentence) > len(new_sentence) * 0.9):
+                        logging.warning(f"🚫 Detected duplicate sentence: {new_sentence[:40]}...")
+                        return True
+                elif len(new_sentence) <= 30 and new_sentence == existing_sentence:
+                    # For shorter sentences, require exact match
+                    logging.warning(f"🚫 Detected exact duplicate sentence: {new_sentence[:40]}...")
+                    return True
+        
+    return False
 
 async def stream_unified_response_from_gemini(user_query: str, financial_data, agent_outputs: dict):
     """Stream unified response directly from Gemini AI generation"""
@@ -881,19 +1856,34 @@ Provide a clear, personalized answer (max 300 words) with specific recommendatio
         
         from google.genai import types
         
-        # Use Gemini's async streaming API
+        # Use Gemini's async streaming API (SINGLE CALL TO PREVENT DUPLICATES)
         response_stream = await chatbot.analyst.gemini_client.aio.models.generate_content_stream(
             model="gemini-2.5-flash",
             contents=unified_prompt,
-            config=types.GenerateContentConfig(temperature=0.4)
+            config=types.GenerateContentConfig(temperature=0.4, max_output_tokens=500)
         )
         
-        # Stream chunks as they arrive from Gemini
+        # Stream chunks as they arrive from Gemini (WITH DUPLICATE DETECTION)
+        streamed_content = ""
+        chunk_count = 0
+        max_chunks = 50  # Limit chunks to prevent endless streaming
+        
         async for chunk in response_stream:
-            if chunk.text:
-                logging.info(f"📤 Streaming chunk: {len(chunk.text)} chars")
-                yield chunk.text
+            if chunk.text and chunk_count < max_chunks:
+                # Check for duplicate content patterns
+                new_content = chunk.text
                 
+                # Advanced duplicate detection for financial content
+                if not is_duplicate_financial_content(new_content, streamed_content):
+                    streamed_content += new_content
+                    chunk_count += 1
+                    logging.info(f"📤 Streaming chunk {chunk_count}: {len(new_content)} chars")
+                    yield new_content
+                else:
+                    logging.warning(f"🚫 Skipped duplicate financial content: {new_content[:50]}...")
+            elif chunk_count >= max_chunks:
+                logging.info(f"🛑 Stopped streaming at {max_chunks} chunks to prevent excessive output")
+                break
         logging.info("✅ Gemini streaming complete")
         
     except Exception as e:
@@ -1479,6 +2469,103 @@ async def get_trip_planning(demo: bool = False):
         logging.error(f"Trip planning analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Trip planning analysis failed: {str(e)}")
 
+# PDF GENERATION ENDPOINTS
+# ============================================================================
+
+@app.post("/api/generate-pdf/financial-analysis")
+async def generate_financial_analysis_pdf(demo: bool = False):
+    """Generate comprehensive financial analysis PDF report"""
+    try:
+        logger.info("📄 Generating financial analysis PDF report...")
+        
+        # Get user's financial data
+        financial_data = await get_financial_data_with_demo_support(demo_mode=demo)
+        
+        # Prepare analysis data (could be extended with more AI analysis)
+        analysis_data = {
+            'summary': f"Based on your financial profile, you have a net worth of ₹{financial_data.net_worth.get('netWorthResponse', {}).get('totalNetWorthValue', {}).get('units', '0')}. This report provides a comprehensive analysis of your financial position and recommendations for optimization.",
+            'risk_analysis': {
+                'overall_risk': 'Moderate',
+                'recommendations': [
+                    'Consider diversifying your mutual fund portfolio',
+                    'Build emergency fund equal to 6 months of expenses', 
+                    'Review insurance coverage for adequate protection'
+                ]
+            },
+            'investment_recommendations': [
+                {
+                    'title': 'Equity Diversification',
+                    'description': 'Increase equity exposure through diversified mutual funds',
+                    'expected_return': '12-15% annually'
+                },
+                {
+                    'title': 'Fixed Income Allocation', 
+                    'description': 'Maintain 20-30% allocation to fixed income securities',
+                    'expected_return': '6-8% annually'
+                }
+            ]
+        }
+        
+        # Generate PDF
+        from services.pdf_service import get_pdf_service
+        pdf_service = get_pdf_service()
+        
+        pdf_bytes = pdf_service.generate_financial_analysis_report(analysis_data, financial_data.__dict__)
+        
+        # Generate filename
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        filename = f"artha_financial_analysis_{timestamp}.pdf"
+        
+        def generate_pdf():
+            yield pdf_bytes
+        
+        return StreamingResponse(
+            generate_pdf(),
+            media_type='application/pdf',
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to generate financial analysis PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+@app.get("/api/pdf/status")
+async def get_pdf_service_status():
+    """Get PDF generation service status and capabilities"""
+    try:
+        return {
+            "status": "active",
+            "service": "Artha AI PDF Generation Service",
+            "capabilities": [
+                "Portfolio analysis reports",
+                "Chat conversation exports",
+                "Financial analysis reports",
+                "Custom branded PDFs",
+                "Charts and graphs integration"
+            ],
+            "supported_formats": [
+                "Portfolio Reports",
+                "Chat Conversations", 
+                "Financial Analysis",
+                "Investment Recommendations"
+            ],
+            "features": [
+                "Professional styling with Artha branding",
+                "Automated chart generation",
+                "Comprehensive financial metrics",
+                "Export chat conversations",
+                "Multi-page detailed reports"
+            ],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ PDF service status check failed: {e}")
+        return {
+            "status": "error",
+            "message": "PDF service status check failed"
+        }
+
 @app.post("/api/trip-planning/chat")
 async def trip_planning_chat(request: TripChatRequest):
     """Interactive chat with trip planning agent with conversation memory"""
@@ -1604,6 +2691,21 @@ async def trip_planning_chat(request: TripChatRequest):
 # ============================================================================
 # AI INVESTMENT SYSTEM API ENDPOINTS  
 # ============================================================================
+
+@app.post("/api/investment-recommendations")
+async def get_investment_recommendations(request: dict, demo: bool = False):
+    """Legacy investment recommendations endpoint - redirects to AI system
+    
+    This endpoint provides backward compatibility for existing clients
+    while leveraging the new AI multi-agent system
+    """
+    try:
+        # Redirect to the AI investment recommendations with the same parameters
+        return await get_ai_investment_recommendations(request, demo)
+        
+    except Exception as e:
+        logger.error(f"❌ Investment recommendations failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Investment recommendations failed: {str(e)}")
 
 @app.post("/api/ai-investment-recommendations")
 async def get_ai_investment_recommendations(request: dict, demo: bool = False):
@@ -1957,6 +3059,125 @@ async def stock_health_check():
             "last_check": datetime.now().isoformat()
         }
 
+# Transaction History API endpoint
+@app.get("/api/transaction-history")
+async def get_transaction_history(demo: bool = False, limit: int = 50):
+    """Get user's transaction history - both bank and credit card transactions"""
+    try:
+        # If demo mode is requested, use sample data
+        if demo:
+            logger.info("📊 Loading demo transaction history")
+            from core.fi_mcp.real_client import RealFiMCPClient
+            
+            client = RealFiMCPClient()
+            bank_transactions = await client.fetch_bank_transactions()
+            mf_transactions = await client.fetch_mf_transactions()
+            
+            # Combine and format transactions
+            all_transactions = []
+            
+            # Add bank transactions
+            if bank_transactions and 'transactions' in bank_transactions:
+                for txn in bank_transactions['transactions']:
+                    all_transactions.append({
+                        **txn,
+                        'source': 'bank',
+                        'type': 'bank_transaction'
+                    })
+            
+            # Add mutual fund transactions
+            if mf_transactions and 'transactions' in mf_transactions:
+                for txn in mf_transactions['transactions']:
+                    all_transactions.append({
+                        **txn,
+                        'source': 'mutual_fund',
+                        'type': 'mf_transaction'
+                    })
+            
+            # Sort by date (most recent first)
+            all_transactions.sort(key=lambda x: x.get('transactionDate', ''), reverse=True)
+            
+            # Apply limit
+            limited_transactions = all_transactions[:limit]
+            
+            return {
+                "status": "success",
+                "data": {
+                    "transactions": limited_transactions,
+                    "total_count": len(all_transactions),
+                    "bank_transactions": bank_transactions.get('transactions', []) if bank_transactions else [],
+                    "mf_transactions": mf_transactions.get('transactions', []) if mf_transactions else []
+                },
+                "is_demo": True,
+                "message": f"Demo transaction history loaded - {len(limited_transactions)} transactions"
+            }
+        
+        # Check authentication first for real data
+        auth_status = await check_authentication_status()
+        if not auth_status.get('authenticated', False):
+            return {
+                "status": "unauthenticated",
+                "message": "Please authenticate with Fi Money first",
+                "auth_required": True
+            }
+        
+        # Fetch real-time transaction data from Fi Money
+        financial_data = await get_financial_data_with_demo_support(demo_mode=False)
+        
+        # Combine and format transactions
+        all_transactions = []
+        
+        # Add bank transactions
+        if hasattr(financial_data, 'bank_transactions') and financial_data.bank_transactions:
+            bank_txns = financial_data.bank_transactions if isinstance(financial_data.bank_transactions, list) else financial_data.bank_transactions.get('transactions', [])
+            for txn in bank_txns:
+                all_transactions.append({
+                    **txn,
+                    'source': 'bank',
+                    'type': 'bank_transaction'
+                })
+        
+        # Add mutual fund transactions
+        if hasattr(financial_data, 'mf_transactions') and financial_data.mf_transactions:
+            mf_txns = financial_data.mf_transactions if isinstance(financial_data.mf_transactions, list) else financial_data.mf_transactions.get('transactions', [])
+            for txn in mf_txns:
+                all_transactions.append({
+                    **txn,
+                    'source': 'mutual_fund',
+                    'type': 'mf_transaction'
+                })
+        
+        # Sort by date (most recent first)
+        all_transactions.sort(key=lambda x: x.get('transactionDate', ''), reverse=True)
+        
+        # Apply limit
+        limited_transactions = all_transactions[:limit]
+        
+        return {
+            "status": "success",
+            "data": {
+                "transactions": limited_transactions,
+                "total_count": len(all_transactions),
+                "bank_transactions": financial_data.bank_transactions if hasattr(financial_data, 'bank_transactions') else [],
+                "mf_transactions": financial_data.mf_transactions if hasattr(financial_data, 'mf_transactions') else []
+            },
+            "summary": {
+                "total_transactions": len(all_transactions),
+                "bank_transactions_count": len(financial_data.bank_transactions) if hasattr(financial_data, 'bank_transactions') and financial_data.bank_transactions else 0,
+                "mf_transactions_count": len(financial_data.mf_transactions) if hasattr(financial_data, 'mf_transactions') and financial_data.mf_transactions else 0,
+                "data_source": "Fi Money MCP Server (Real-time)"
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Transaction history fetch failed: {e}")
+        return {
+            "status": "error",
+            "message": f"Failed to fetch transaction history: {str(e)}",
+            "data": None,
+            "auth_required": "Session expired" in str(e) or "Not authenticated" in str(e)
+        }
+
 # WebSocket endpoint for real-time AI insights
 @app.websocket("/ws/live-insights")
 async def websocket_live_insights(websocket: WebSocket):
@@ -2024,4 +3245,44 @@ async def websocket_live_insights(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8003)
+    import os
+    import sys
+    from pathlib import Path
+    
+    # Check for HTTPS configuration
+    ssl_keyfile = None
+    ssl_certfile = None
+    use_https = os.getenv("USE_HTTPS", "false").lower() == "true"
+    
+    if use_https:
+        # Look for SSL certificates
+        cert_dir = Path("../certs")
+        if not cert_dir.exists():
+            cert_dir = Path("./certs")
+        
+        key_file = cert_dir / "localhost.key"
+        cert_file = cert_dir / "localhost.crt"
+        
+        if key_file.exists() and cert_file.exists():
+            ssl_keyfile = str(key_file)
+            ssl_certfile = str(cert_file)
+            print(f"🔒 HTTPS enabled with certificates from {cert_dir}")
+            print(f"🚀 Server will start at: https://localhost:8000")
+        else:
+            print(f"⚠️ HTTPS requested but certificates not found in {cert_dir}")
+            print("📝 Run generate-ssl-certs.ps1 or generate-ssl-certs.sh to create certificates")
+            print("🔄 Falling back to HTTP...")
+            use_https = False
+    
+    if not use_https:
+        print("🚀 Server will start at: http://localhost:8000")
+    
+    # Start the server
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        ssl_keyfile=ssl_keyfile,
+        ssl_certfile=ssl_certfile,
+        reload=False  # Disable reload in production
+    )

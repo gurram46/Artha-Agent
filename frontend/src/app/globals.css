@@ -1,56 +1,56 @@
 @import "tailwindcss";
 
-/* Dark Investment Platform Design System - Artha AI */
+/* Artha AI Design System - New Color Scheme */
 :root {
-  /* Primary Dark Core Colors */
-  --background: rgb(0, 26, 30);
+  /* Primary Core Colors - #cca695 and Black Theme */
+  --background: #000000;
   --foreground: #ffffff;
-  --surface: rgb(24, 25, 27);
-  --surface-secondary: rgb(30, 32, 34);
-  --surface-elevated: rgb(34, 36, 38);
-  --border: rgba(0, 184, 153, 0.2);
-  --border-light: rgba(0, 184, 153, 0.1);
-  --border-hover: rgba(0, 184, 153, 0.5);
+  --surface: #1a1a1a;
+  --surface-secondary: #2a2a2a;
+  --surface-elevated: #333333;
+  --border: rgba(204, 166, 149, 0.2);
+  --border-light: rgba(204, 166, 149, 0.1);
+  --border-hover: rgba(204, 166, 149, 0.5);
   
-  /* Dark Text Hierarchy */
+  /* Text Hierarchy */
   --text-primary: #ffffff;
   --text-secondary: #e5e7eb;
   --text-tertiary: #d1d5db;
   --text-muted: #9ca3af;
   --text-placeholder: #6b7280;
   
-  /* Fi Money Brand Colors */
-  --primary: rgb(0, 184, 153);
-  --primary-hover: rgb(0, 164, 133);
-  --primary-light: rgba(0, 184, 153, 0.1);
-  --primary-gradient: linear-gradient(135deg, rgb(0, 184, 153) 0%, rgb(0, 164, 133) 100%);
+  /* Brand Colors - #cca695 Theme */
+  --primary: #cca695;
+  --primary-hover: #b8956a;
+  --primary-light: rgba(204, 166, 149, 0.1);
+  --primary-gradient: linear-gradient(135deg, #cca695 0%, #b8956a 100%);
   
-  /* Dark Accent Colors */
+  /* Accent Colors */
   --accent-blue: #3b82f6;
   --accent-purple: #8b5cf6;
-  --accent-green: rgb(0, 184, 153);
+  --accent-green: #cca695;
   --accent-orange: #f59e0b;
   
-  /* Dark Status Colors */
-  --success: rgb(0, 184, 153);
-  --success-light: rgba(0, 184, 153, 0.1);
+  /* Status Colors */
+  --success: #cca695;
+  --success-light: rgba(204, 166, 149, 0.1);
   --warning: #f59e0b;
   --warning-light: rgba(245, 158, 11, 0.1);
   --danger: #ef4444;
   --danger-light: rgba(239, 68, 68, 0.1);
   
-  /* Dark Shadows */
+  /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
   
-  /* Dark Gradients */
-  --gradient-primary: linear-gradient(135deg, rgb(0, 184, 153) 0%, rgb(0, 164, 133) 100%);
-  --gradient-success: linear-gradient(135deg, rgb(0, 184, 153) 0%, rgb(0, 164, 133) 100%);
-  --gradient-card: linear-gradient(145deg, rgb(24, 25, 27) 0%, rgb(30, 32, 34) 100%);
-  --gradient-overlay: linear-gradient(135deg, rgba(0, 26, 30, 0.95) 0%, rgba(24, 25, 27, 0.95) 100%);
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #cca695 0%, #b8956a 100%);
+  --gradient-success: linear-gradient(135deg, #cca695 0%, #b8956a 100%);
+  --gradient-card: linear-gradient(145deg, #1a1a1a 0%, #2a2a2a 100%);
+  --gradient-overlay: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
 }
 
 @theme inline {
@@ -73,10 +73,10 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Fi Money Dark Theme Cards */
+/* Artha AI Cards - New Color Scheme */
 .clean-card {
-  background: rgb(24, 25, 27);
-  border: 1px solid rgba(0, 184, 153, 0.2);
+  background: #1a1a1a;
+  border: 1px solid rgba(204, 166, 149, 0.2);
   border-radius: 24px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,13 +86,13 @@ body {
 .clean-card:hover {
   box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.2), 0 15px 15px -5px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
-  border-color: rgba(0, 184, 153, 0.5);
+  border-color: rgba(204, 166, 149, 0.5);
 }
 
-/* Fi Money Metric Cards */
+/* Artha AI Metric Cards */
 .metric-card {
-  background: rgb(24, 25, 27);
-  border: 1px solid rgba(0, 184, 153, 0.2);
+  background: #1a1a1a;
+  border: 1px solid rgba(204, 166, 149, 0.2);
   border-radius: 24px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -107,18 +107,18 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(135deg, rgb(0, 184, 153) 0%, rgb(0, 164, 133) 100%);
+  background: linear-gradient(135deg, #cca695 0%, #b8956a 100%);
 }
 
 .metric-card:hover {
   box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.2), 0 15px 15px -5px rgba(0, 0, 0, 0.08);
   transform: translateY(-4px);
-  border-color: rgba(0, 184, 153, 0.5);
+  border-color: rgba(204, 166, 149, 0.5);
 }
 
-/* Fi Money Premium Buttons */
+/* Artha AI Premium Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, rgb(0, 184, 153) 0%, rgb(0, 164, 133) 100%);
+  background: linear-gradient(135deg, #cca695 0%, #b8956a 100%);
   color: white;
   border: none;
   border-radius: 16px;
@@ -149,7 +149,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, rgb(0, 164, 133) 0%, rgb(0, 144, 113) 100%);
+  background: linear-gradient(135deg, #b8956a 0%, #a6845e 100%);
   transform: translateY(-2px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
@@ -215,8 +215,14 @@ body {
 
 /* Modern Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0; 
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInFromTop {
@@ -239,12 +245,125 @@ body {
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 184, 153, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 184, 153, 0.6);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.animate-fade-in.delay-300 {
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
+}
+
+.animate-fade-in.delay-500 {
+  animation-delay: 0.5s;
+  animation-fill-mode: both;
+}
+
+.animate-fade-in.delay-700 {
+  animation-delay: 0.7s;
+  animation-fill-mode: both;
 }
 
 .animate-in {
   animation: slideInFromTop 0.3s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+.bg-gradient-animated {
+  background: linear-gradient(-45deg, rgb(0,184,153), rgb(0,164,133), rgb(0,144,113), rgb(0,184,153));
+  background-size: 400% 400%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* Enhanced Button Hover Effects */
+.btn-modern {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-modern:hover::before {
+  left: 100%;
+}
+
+/* Glass Morphism Effect */
+.glass {
+  background: rgba(24, 25, 27, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 184, 153, 0.18);
+}
+
+/* Neon Glow Effect */
+.neon-glow {
+  box-shadow: 
+    0 0 5px rgba(0, 184, 153, 0.5),
+    0 0 10px rgba(0, 184, 153, 0.5),
+    0 0 15px rgba(0, 184, 153, 0.5),
+    0 0 20px rgba(0, 184, 153, 0.5);
 }
 
 .slide-in-from-top-2 {

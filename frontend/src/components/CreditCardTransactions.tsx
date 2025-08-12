@@ -69,36 +69,50 @@ export default function CreditCardTransactions({ financialData }: CreditCardTran
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    const loadTransactions = async () => {
+    const fetchTransactions = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
         // Check if we're in demo mode
         const demoMode = sessionStorage.getItem('demoMode') === 'true';
+        const backendUrl = 'http://localhost:8000';
         
         if (demoMode) {
-          // Load from demo data
-          const response = await fetch('/financial-data?demo=true');
+          // In demo mode, fetch from the new transaction history endpoint
+          const response = await fetch(`${backendUrl}/api/transaction-history?demo=true&limit=50`);
           const data = await response.json();
           
-          if (data.success && data.data?.bank_transactions?.transactions) {
-            setTransactions(data.data.bank_transactions.transactions);
+          if (data.status === 'success' && data.data) {
+            // Use the combined transactions from the new endpoint
+            const allTransactions = data.data.transactions || [];
+            setTransactions(allTransactions);
+          } else {
+            setTransactions([]);
           }
         } else {
-          // For real mode, would fetch from actual API
-          // For now, we'll use the demo data structure
-          if (financialData?.bank_transactions?.transactions) {
-            setTransactions(financialData.bank_transactions.transactions);
+          // In real mode, use the new transaction history endpoint
+          const response = await fetch(`${backendUrl}/api/transaction-history?limit=50`);
+          const data = await response.json();
+          
+          if (data.status === 'success' && data.data) {
+            const allTransactions = data.data.transactions || [];
+            setTransactions(allTransactions);
+          } else if (data.auth_required) {
+            // Handle authentication required case
+            console.warn('Authentication required for transaction history');
+            setTransactions([]);
+          } else {
+            setTransactions([]);
           }
         }
       } catch (error) {
-        console.error('Error loading transactions:', error);
+        console.error('Error fetching transactions:', error);
+        setTransactions([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadTransactions();
+    fetchTransactions();
   }, [financialData]);
 
   if (isLoading) {
@@ -211,6 +225,15 @@ export default function CreditCardTransactions({ financialData }: CreditCardTran
             <p className="text-2xl font-bold text-[rgb(0,184,153)]">****5432</p>
             <p className="text-xs text-gray-400 font-medium">Card Number</p>
           </div>
+        </div>
+      </div>
+
+      {/* Data Source Indicator */}
+      <div className="flex items-center justify-center space-x-3 pt-6">
+        <div className="flex items-center space-x-2 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-full px-4 py-2">
+          <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
+          <span className="text-sm font-semibold text-white">Live data from Artha AI</span>
+          <div className="w-2 h-2 bg-[rgb(0,184,153)] rounded-full animate-pulse"></div>
         </div>
       </div>
     </div>

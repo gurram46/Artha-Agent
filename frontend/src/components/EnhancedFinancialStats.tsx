@@ -220,9 +220,18 @@ const EnhancedFinancialStats = () => {
 
       {/* Live Data Indicator */}
       <div className={`flex items-center justify-center space-x-2 ${designSystem.typography.body.small}`}>
-        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-        <span>Live data from backend API</span>
-        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-lg p-6">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span>Live data from backend API</span>
+          <div className="bg-[rgba(204,166,149,0.05)] rounded-lg p-4 mb-6">
+            <div className="text-[#cca695] font-semibold">
+              <div className="text-2xl font-bold text-[#cca695]">
+                <div className="text-2xl font-bold text-[#cca695]">
+                  <div className="bg-[#cca695] h-2 rounded-full transition-all duration-300" style={{ width: `${item.percentage}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   );

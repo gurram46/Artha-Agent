@@ -185,5 +185,6 @@ async def test_all_approaches():
         else:
             print("\n⚠️ ALL VERSIONS FAILED!")
 
-if __name__ == "__main__":
-    asyncio.run(test_all_approaches())
+# Disabled to prevent interference with main server
+# if __name__ == "__main__":
+#     asyncio.run(test_all_approaches())

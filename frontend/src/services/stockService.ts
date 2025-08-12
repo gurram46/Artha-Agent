@@ -163,7 +163,7 @@ class StockService {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(15000) // 15 second timeout
+        signal: AbortSignal.timeout(30000) // Increased to 30 seconds
       });
 
       if (!response.ok) {
@@ -219,7 +219,8 @@ class StockService {
         if (this.cachedData.length > 0) {
           return this.cachedData;
         }
-        throw new Error('No cached data available on server');
+        // Return empty array instead of throwing error on server side
+        return [];
       }
 
       // Load from storage first if cache is empty
@@ -238,13 +239,18 @@ class StockService {
         return this.cachedData.length > 0 ? this.cachedData : [];
       }
 
-      // Try to get fresh data
-      const realData = await this.getTopIndianStocksFromProxy();
-      
-      if (realData && realData.length > 0) {
-        this.cachedData = realData;
-        this.lastFetchTime = Date.now();
-        return realData;
+      // Try to get fresh data with timeout handling
+      try {
+        const realData = await this.getTopIndianStocksFromProxy();
+        
+        if (realData && realData.length > 0) {
+          this.cachedData = realData;
+          this.lastFetchTime = Date.now();
+          return realData;
+        }
+      } catch (fetchError) {
+        console.warn('⚠️ Failed to fetch fresh data, using fallback:', fetchError);
+        // Continue to fallback options below
       }
       
       // If no real data and we have cached data, return it
@@ -253,8 +259,18 @@ class StockService {
         return this.cachedData;
       }
       
-      // If no data at all, throw error
-      throw new Error('No stock data available from proxy API');
+      // Try loading from storage as last resort
+      if (this.isClient) {
+        this.loadFromStorage();
+        if (this.cachedData.length > 0) {
+          console.log('📱 Loaded stock data from storage as fallback');
+          return this.cachedData;
+        }
+      }
+      
+      // Return empty array instead of throwing error to prevent blocking UI
+      console.warn('⚠️ No stock data available, returning empty array');
+      return [];
       
     } catch (error) {
       console.error('❌ Failed to fetch top stocks:', error);
@@ -274,8 +290,9 @@ class StockService {
         }
       }
       
-      // No fallback to sample data - throw error
-      throw new Error(`Stock data unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Return empty array instead of throwing error to prevent blocking UI
+      console.warn('⚠️ All fallbacks failed, returning empty array');
+      return [];
     }
   }
 
@@ -296,7 +313,7 @@ class StockService {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(20000) // Increased to 20 seconds
       });
 
       if (!response.ok) {

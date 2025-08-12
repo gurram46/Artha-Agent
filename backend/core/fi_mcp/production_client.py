@@ -123,6 +123,17 @@ class FiMoneyMCPClient:
             import uuid
             session_id = f"mcp-session-{uuid.uuid4()}"
             
+            # Create session with temporary passcode
+            expires_at = time.time() + (30 * 60)  # 30 minutes
+            self.session = FiAuthSession(
+                session_id=session_id,
+                passcode="pending_web_auth",  # Temporary passcode for web auth
+                authenticated=False,
+                expires_at=expires_at
+            )
+            
+            logger.info(f"🔐 Initiating Fi Money web authentication with session: {session_id}")
+            
             # Make initial request to get login URL
             async with self.get_http_session() as http_session:
                 test_payload = {
@@ -143,11 +154,12 @@ class FiMoneyMCPClient:
                 async with http_session.post(
                     self.mcp_url,
                     json=test_payload,
-                    headers=headers
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=10)
                 ) as response:
                     
                     response_text = await response.text()
-                    logger.info(f"Fi Money MCP Initial Response: {response.status}")
+                    logger.debug(f"MCP Response: {response_text}")
                     
                     if response.status == 200:
                         try:
@@ -160,82 +172,169 @@ class FiMoneyMCPClient:
                                 
                                 if content_data.get('status') == 'login_required':
                                     login_url = content_data.get('login_url')
-                                    
-                                    # Store pending session
-                                    expires_at = time.time() + (30 * 60)  # 30 minutes
-                                    self.session = FiAuthSession(
-                                        session_id=session_id,
-                                        passcode="",  # Will be set after web auth
-                                        authenticated=False,
-                                        expires_at=expires_at
-                                    )
-                                    
-                                    logger.info(f"🌐 Fi Money web authentication required")
-                                    logger.info(f"🔗 Login URL: {login_url}")
+                                    logger.info(f"🌐 Login URL obtained: {login_url}")
                                     
                                     return {
-                                        "success": True,
-                                        "login_required": True,
+                                        "status": "login_required",
                                         "login_url": login_url,
                                         "session_id": session_id,
-                                        "message": "Please authenticate via Fi Money web interface"
+                                        "message": "Please complete authentication in the browser"
                                     }
-                                else:
-                                    # Already authenticated somehow
-                                    self.session = FiAuthSession(
-                                        session_id=session_id,
-                                        passcode="authenticated",
-                                        authenticated=True,
-                                        expires_at=time.time() + (30 * 60)
-                                    )
+                                
+                                elif content_data.get('status') == 'success':
+                                    # Already authenticated!
+                                    self.session.authenticated = True
+                                    self.session.passcode = "web_authenticated"
+                                    logger.info("✅ Already authenticated with Fi Money!")
                                     
                                     return {
-                                        "success": True,
-                                        "login_required": False,
+                                        "status": "already_authenticated",
+                                        "session_id": session_id,
                                         "message": "Already authenticated with Fi Money"
                                     }
                             
                         except (json.JSONDecodeError, KeyError) as e:
-                            logger.error(f"❌ Failed to parse Fi Money response: {e}")
+                            logger.error(f"Failed to parse MCP response: {e}")
+                            self.session = None  # Clear invalid session
                             return {
-                                "success": False,
-                                "error": "Invalid response format from Fi Money MCP"
+                                "status": "error",
+                                "message": f"Failed to parse authentication response: {str(e)}"
                             }
                     
                     else:
-                        logger.error(f"❌ Fi Money MCP error: {response.status} - {response_text}")
+                        logger.error(f"MCP request failed with status: {response.status}")
+                        self.session = None  # Clear invalid session
                         return {
-                            "success": False,
-                            "error": f"Fi Money MCP server error: {response.status}"
+                            "status": "error",
+                            "message": f"Authentication request failed: {response.status}"
                         }
                         
         except asyncio.TimeoutError:
-            logger.error("❌ Timeout connecting to Fi Money MCP server")
+            logger.error("❌ Authentication initiation timeout")
+            self.session = None  # Clear invalid session
             return {
-                "success": False,
-                "error": "Timeout connecting to Fi Money MCP server"
+                "status": "error",
+                "message": "Authentication request timed out"
             }
         except Exception as e:
-            logger.error(f"❌ Fi Money MCP connection error: {e}")
+            logger.error(f"❌ Authentication initiation error: {e}")
+            self.session = None  # Clear invalid session
             return {
-                "success": False,
-                "error": f"Connection error: {str(e)}"
+                "status": "error",
+                "message": f"Authentication error: {str(e)}"
             }
     
-    async def check_authentication_status(self) -> Dict[str, Any]:
+    async def authenticate_with_passcode(self, passcode: str) -> Dict[str, Any]:
         """
-        Check if web authentication has been completed
+        Authenticate with Fi Money using a passcode
+        This method is referenced by error messages but was missing
         """
-        if not self.session:
-            return {
-                "authenticated": False,
-                "message": "No active session"
-            }
-        
         try:
-            # Test if authentication is complete by making a data request
+            import uuid
+            session_id = f"mcp-session-{uuid.uuid4()}"
+            
+            # Create session with passcode
+            expires_at = time.time() + (30 * 60)  # 30 minutes
+            self.session = FiAuthSession(
+                session_id=session_id,
+                passcode=passcode,
+                authenticated=True,
+                expires_at=expires_at
+            )
+            
+            # Test the authentication by making a simple call
+            test_result = await self._test_authentication()
+            
+            if test_result["success"]:
+                logger.info("✅ Fi Money passcode authentication successful!")
+                return {
+                    "success": True,
+                    "session_id": session_id,
+                    "message": "Successfully authenticated with Fi Money"
+                }
+            else:
+                self.session = None
+                return {
+                    "success": False,
+                    "message": test_result.get("error", "Authentication failed")
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Passcode authentication error: {e}")
+            self.session = None
+            return {
+                "success": False,
+                "message": f"Authentication error: {str(e)}"
+            }
+    
+    async def _test_authentication(self) -> Dict[str, Any]:
+        """Test if current session is valid by making a simple MCP call"""
+        try:
             async with self.get_http_session() as http_session:
                 test_payload = {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "fetch_net_worth",
+                        "arguments": {}
+                    }
+                }
+                
+                headers = {
+                    "Mcp-Session-Id": self.session.session_id,
+                    "Authorization": f"Bearer {self.session.passcode}",
+                    "Content-Type": "application/json"
+                }
+                
+                async with http_session.post(
+                    self.mcp_url,
+                    json=test_payload,
+                    headers=headers
+                ) as response:
+                    
+                    if response.status == 200:
+                        return {"success": True}
+                    else:
+                        return {"success": False, "error": f"HTTP {response.status}"}
+                        
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def check_authentication_status(self) -> Dict[str, Any]:
+        """
+        Check current authentication status with Fi Money MCP server
+        """
+        try:
+            if not self.session:
+                return {
+                    "authenticated": False,
+                    "message": "No active session. Please initiate web authentication via /api/fi-auth/initiate"
+                }
+            
+            # Check if session has expired
+            if self.session.is_expired():
+                logger.warning("⚠️ Session has expired")
+                self.session.authenticated = False
+                return {
+                    "authenticated": False,
+                    "message": "Session expired. Please re-authenticate via web authentication"
+                }
+            
+            # Return early if already authenticated
+            if self.session.authenticated:
+                return {
+                    "authenticated": True,
+                    "session_id": self.session.session_id,
+                    "expires_in_minutes": max(0, (self.session.expires_at - time.time()) / 60),
+                    "message": "Successfully authenticated with Fi Money"
+                }
+            
+            # For web authentication, try to check status with Fi Money MCP server
+            logger.info(f"🔍 Checking authentication status for session: {self.session.session_id}")
+            
+            async with self.get_http_session() as http_session:
+                payload = {
                     "jsonrpc": "2.0",
                     "id": 1,
                     "method": "tools/call",
@@ -252,31 +351,34 @@ class FiMoneyMCPClient:
                 
                 async with http_session.post(
                     self.mcp_url,
-                    json=test_payload,
-                    headers=headers
+                    json=payload,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=10)
                 ) as response:
                     
                     response_text = await response.text()
+                    logger.debug(f"Auth check response ({response.status}): {response_text}")
                     
                     if response.status == 200:
                         try:
                             result = await response.json()
+                            logger.info(f"🔍 MCP Response structure: {result}")
                             
-                            # Check if still requires login
                             if 'result' in result and 'content' in result['result']:
                                 content = result['result']['content'][0]['text']
                                 content_data = json.loads(content)
+                                logger.info(f"🔍 Content data keys: {list(content_data.keys())}")
                                 
-                                if content_data.get('status') == 'login_required':
-                                    return {
-                                        "authenticated": False,
-                                        "login_url": content_data.get('login_url'),
-                                        "message": "Authentication still required"
-                                    }
-                                else:
-                                    # Authentication successful!
+                                # Check if we have actual financial data (indicates successful authentication)
+                                has_net_worth = 'netWorthResponse' in content_data
+                                has_accounts = 'accountDetailsBulkResponse' in content_data
+                                
+                                if has_net_worth or has_accounts:
+                                    # Authentication successful - we received real financial data!
                                     self.session.authenticated = True
-                                    logger.info("✅ Fi Money web authentication completed!")
+                                    if self.session.passcode == "pending_web_auth":
+                                        self.session.passcode = "web_authenticated"  # Set proper passcode
+                                    logger.info("✅ Fi Money authentication confirmed - received real financial data!")
                                     
                                     return {
                                         "authenticated": True,
@@ -284,39 +386,60 @@ class FiMoneyMCPClient:
                                         "expires_in_minutes": max(0, (self.session.expires_at - time.time()) / 60),
                                         "message": "Successfully authenticated with Fi Money"
                                     }
+                                
+                                elif content_data.get('status') == 'login_required':
+                                    return {
+                                        "authenticated": False,
+                                        "message": "Authentication still pending. Please complete the process in Fi Money"
+                                    }
+                                
+                                else:
+                                    logger.warning(f"⚠️ Unexpected response format: {content_data}")
+                                    return {
+                                        "authenticated": False,
+                                        "message": content_data.get('message', 'Authentication status unknown')
+                                    }
                             
-                        except (json.JSONDecodeError, KeyError):
-                            # If we can't parse the response but got 200, assume success
-                            self.session.authenticated = True
+                        except (json.JSONDecodeError, KeyError) as e:
+                            logger.error(f"Failed to parse authentication status: {e}")
                             return {
-                                "authenticated": True,
-                                "session_id": self.session.session_id,
-                                "message": "Authentication successful"
+                                "authenticated": False,
+                                "message": "Failed to parse authentication status"
                             }
                     
                     else:
+                        logger.error(f"Authentication status check failed: {response.status}")
                         return {
                             "authenticated": False,
                             "message": f"Authentication check failed: {response.status}"
                         }
                         
+        except asyncio.TimeoutError:
+            logger.error("❌ Authentication status check timeout")
+            return {
+                "authenticated": False,
+                "message": "Authentication status check timed out"
+            }
         except Exception as e:
             logger.error(f"❌ Authentication status check error: {e}")
             return {
                 "authenticated": False,
-                "message": f"Status check error: {str(e)}"
+                "message": f"Authentication check error: {str(e)}"
             }
     
     def _ensure_authenticated(self):
-        """Ensure we have a valid authenticated session"""
+        """Ensure we have an authenticated session"""
         if not self.session:
-            raise Exception("Not authenticated. Call authenticate_with_passcode() first.")
+            raise Exception("Not authenticated. Please initiate web authentication first via /api/fi-auth/initiate endpoint.")
         
+        # Check expiration first, then clear authentication if expired
         if self.session.is_expired():
-            raise Exception("Session expired. Please authenticate again with a new passcode.")
+            logger.warning("🕐 Session expired, clearing authentication")
+            self.session.authenticated = False
+            raise Exception("Session expired. Please authenticate again via web authentication.")
         
-        if not self.session.is_valid():
-            raise Exception("Invalid session. Please authenticate again.")
+        if not self.session.authenticated:
+            raise Exception("Not authenticated. Please complete authentication first.")
     
     async def _make_mcp_call(self, tool_name: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Make authenticated MCP API call"""
@@ -511,6 +634,11 @@ async def initiate_fi_authentication() -> Dict[str, Any]:
     """Initiate Fi Money web authentication and return login URL"""
     client = await get_fi_client()
     return await client.initiate_web_authentication()
+
+async def authenticate_with_passcode(passcode: str) -> Dict[str, Any]:
+    """Authenticate with Fi Money using a passcode"""
+    client = await get_fi_client()
+    return await client.authenticate_with_passcode(passcode)
 
 async def check_authentication_status() -> Dict[str, Any]:
     """Check current authentication status"""

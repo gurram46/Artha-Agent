@@ -208,8 +208,13 @@ PORT=8000
 DEBUG=true
 LOG_LEVEL=INFO
 
-# Database (if using)
-DATABASE_URL=sqlite:///./artha.db
+# Database (PostgreSQL)
+DATABASE_URL=postgresql://artha_user:artha_secure_2024@localhost:5433/artha_cache_db
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=artha_cache_db
+DB_USER=artha_user
+DB_PASSWORD=artha_secure_2024
 
 # External APIs
 ANGEL_ONE_API_KEY=your_angel_one_key

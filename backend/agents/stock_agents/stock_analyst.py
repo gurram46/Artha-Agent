@@ -707,5 +707,6 @@ async def test_stock_agent():
         print(f"❌ Test failed: {e}")
 
 
-if __name__ == "__main__":
-    asyncio.run(test_stock_agent())
+# Disabled to prevent interference with main server
+# if __name__ == "__main__":
+#     asyncio.run(test_stock_agent())

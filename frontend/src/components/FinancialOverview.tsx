@@ -166,13 +166,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
       {/* Main Financial Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Net Worth */}
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(34,197,94,0.5)] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-300 mb-1">Net Worth</p>
               <p className="text-xs text-gray-400 font-medium">Assets vs Liabilities</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -185,13 +185,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         </div>
 
         {/* Portfolio Returns */}
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(34,197,94,0.5)] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-300 mb-1">Portfolio Returns</p>
               <p className="text-xs text-gray-400 font-medium">Avg XIRR across {overviewData.fundCount} funds</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
@@ -200,7 +200,7 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
           <h3 className="text-3xl font-bold text-white tracking-tight mb-2">{overviewData.avgXIRR.toFixed(1)}%</h3>
           <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
             overviewData.avgXIRR > 12 
-              ? 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]' 
+              ? 'bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] border border-[rgba(34,197,94,0.2)]' 
               : overviewData.avgXIRR > 8
               ? 'bg-[rgba(245,158,11,0.1)] text-yellow-400 border border-[rgba(245,158,11,0.2)]'
               : 'bg-[rgba(220,53,69,0.1)] text-red-400 border border-[rgba(220,53,69,0.2)]'
@@ -239,13 +239,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         </div>
 
         {/* EPF Balance */}
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(0,184,153,0.5)] transition-all duration-300">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl hover:border-[rgba(34,197,94,0.5)] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-semibold text-gray-300 mb-1">EPF Balance</p>
-              <p className="text-xs text-gray-400 font-medium">Retirement Fund</p>
+              <p className="text-xs text-gray-400 font-medium">Employee Provident Fund</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -254,14 +254,14 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
           <h3 className="text-3xl font-bold text-white tracking-tight mb-2">
             ₹{overviewData.epfBalance ? (parseInt(overviewData.epfBalance) / 100000).toFixed(2) : '0'}L
           </h3>
-          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]">
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] border border-[rgba(34,197,94,0.2)]">
             Active
           </div>
         </div>
       </div>
 
       {/* Asset Allocation */}
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">Asset Allocation</h3>
@@ -271,7 +271,7 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {overviewData.assetAllocation.map((asset: any, index: number) => (
-            <div key={index} className="bg-[rgba(0,184,153,0.05)] border border-[rgba(0,184,153,0.1)] rounded-2xl p-4">
+            <div key={index} className="bg-[rgba(34,197,94,0.05)] border border-[rgba(34,197,94,0.1)] rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className={`w-4 h-4 rounded-full ${
                   asset.type.includes('MUTUAL FUND') ? 'bg-blue-500' :
@@ -282,14 +282,14 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
                 <span className="text-lg font-bold text-white">{asset.percentage.toFixed(1)}%</span>
               </div>
               <h4 className="text-sm font-semibold text-white mb-1">{asset.type}</h4>
-              <p className="text-lg font-bold text-[rgb(0,184,153)]">{asset.formatted}</p>
+              <p className="text-lg font-bold text-[rgb(34,197,94)]">{asset.formatted}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Investment Performance */}
-      <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+      <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">Investment Performance</h3>
@@ -308,13 +308,13 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-400 mb-2">Total Returns</p>
-            <p className={`text-2xl font-bold ${overviewData.totalReturns >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}`}>
+            <p className={`text-2xl font-bold ${overviewData.totalReturns >= 0 ? 'text-[rgb(34,197,94)]' : 'text-red-400'}`}>
               {overviewData.totalReturns >= 0 ? '+' : ''}₹{(overviewData.totalReturns / 100000).toFixed(1)}L
             </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-400 mb-2">Return Percentage</p>
-            <p className={`text-2xl font-bold ${overviewData.totalReturns >= 0 ? 'text-[rgb(0,184,153)]' : 'text-red-400'}`}>
+            <p className={`text-2xl font-bold ${overviewData.totalReturns >= 0 ? 'text-[rgb(34,197,94)]' : 'text-red-400'}`}>
               {overviewData.totalReturns >= 0 ? '+' : ''}{overviewData.totalInvested > 0 ? ((overviewData.totalReturns / overviewData.totalInvested) * 100).toFixed(2) : '0.00'}%
             </p>
           </div>
@@ -341,10 +341,10 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
                     {overviewData.topPerformers[0].schemeDetail?.nameData?.longName}
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] px-2 py-1 rounded border border-[rgba(0,184,153,0.2)]">
+                    <span className="text-xs bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] px-2 py-1 rounded border border-[rgba(34,197,94,0.2)]">
                       {overviewData.topPerformers[0].schemeDetail?.assetClass}
                     </span>
-                    <span className="text-lg font-bold text-[rgb(0,184,153)]">
+                    <span className="text-lg font-bold text-[rgb(34,197,94)]">
                       +{overviewData.topPerformers[0].enrichedAnalytics.analytics.schemeDetails.XIRR.toFixed(1)}%
                     </span>
                   </div>
@@ -383,7 +383,7 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
         </div>
 
         {/* Additional EPF Details */}
-        <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
+        <div className="bg-[rgb(24,25,27)] border border-[rgba(34,197,94,0.2)] rounded-3xl p-6 shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-white mb-1">EPF Balance</h3>
@@ -392,10 +392,10 @@ export default function FinancialOverview({ financialData }: FinancialOverviewPr
           </div>
           
           <div className="text-center">
-            <p className="text-4xl font-bold text-[rgb(0,184,153)] mb-4">
+            <p className="text-4xl font-bold text-[rgb(34,197,94)] mb-4">
               ₹{overviewData.epfBalance ? (parseInt(overviewData.epfBalance) / 100000).toFixed(2) : '0'}L
             </p>
-            <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border border-[rgba(0,184,153,0.2)]">
+            <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] border border-[rgba(34,197,94,0.2)]">
               Active Contribution
             </div>
           </div>

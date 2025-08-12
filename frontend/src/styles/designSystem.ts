@@ -1,20 +1,20 @@
 // Fi Money Design System for Artha AI
 
 export const designSystem = {
-  // Dark Theme Color Palette - Artha AI
+  // Artha AI Color Palette - #cca695 and Black Theme
   colors: {
-    // Primary Dark Background Colors
+    // Primary Background Colors
     primary: {
-      darkest: 'rgb(0, 26, 30)',         // Main background
-      dark: 'rgb(24, 25, 27)',           // Card/surface background
-      darker: 'rgb(30, 32, 34)',         // Secondary surface
-      elevated: 'rgb(34, 36, 38)',       // Elevated surface
-      overlay: 'rgba(0, 26, 30, 0.95)',  // Dark overlay
+      darkest: '#000000',                 // Main background
+      dark: '#1a1a1a',                   // Card/surface background
+      darker: '#2a2a2a',                 // Secondary surface
+      elevated: '#333333',               // Elevated surface
+      overlay: 'rgba(0, 0, 0, 0.95)',    // Dark overlay
       transparent: 'rgba(0, 0, 0, 0)',   // Transparent
       blur: 'rgba(26, 26, 26, 0.95)'     // Backdrop blur background
     },
     
-    // Text Colors for Dark Theme
+    // Text Colors
     text: {
       primary: '#ffffff',       // Primary white text
       secondary: '#e5e7eb',     // Secondary gray text
@@ -23,23 +23,23 @@ export const designSystem = {
       placeholder: '#6b7280'    // Placeholder text
     },
     
-    // Fi Money Accent Colors
+    // Artha AI Accent Colors - #cca695 Theme
     accent: {
-      green: 'rgb(0, 184, 153)',         // Fi Money signature green
-      greenHover: 'rgb(0, 164, 133)',    // Green hover state
-      greenLight: 'rgba(0, 184, 153, 0.1)', // Light green background
-      greenBorder: 'rgba(0, 184, 153, 0.2)', // Green border
-      greenBorderHover: 'rgba(0, 184, 153, 0.5)' // Green border hover
+      green: '#cca695',                   // Artha AI signature color
+      greenHover: '#b8956a',              // Color hover state
+      greenLight: 'rgba(204, 166, 149, 0.1)', // Light background
+      greenBorder: 'rgba(204, 166, 149, 0.2)', // Border
+      greenBorderHover: 'rgba(204, 166, 149, 0.5)' // Border hover
     },
     
-    // Status Colors for Dark Theme
-    success: 'rgb(0, 184, 153)',
-    successLight: 'rgba(0, 184, 153, 0.1)',
+    // Status Colors
+    success: '#cca695',
+    successLight: 'rgba(204, 166, 149, 0.1)',
     warning: '#f59e0b',
     warningLight: 'rgba(245, 158, 11, 0.1)',
     error: '#ef4444',
     errorLight: 'rgba(239, 68, 68, 0.1)',
-    info: 'rgb(0, 184, 153)'
+    info: '#cca695'
   },
 
   // Typography (Fi Money Style)
@@ -116,45 +116,45 @@ export const designSystem = {
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
   },
 
-  // Dark Theme Component Styles
+  // Artha AI Component Styles - New Color Scheme
   components: {
-    // Card Component - Consistent Dark Style
+    // Card Component - #cca695 Theme
     card: {
-      base: 'bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl shadow-xl hover:shadow-2xl hover:border-[rgba(0,184,153,0.5)] transition-all duration-300',
-      elevated: 'bg-[rgb(30,32,34)] border border-[rgba(0,184,153,0.3)] rounded-3xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] transition-all duration-300',
+      base: 'bg-[#1a1a1a] border border-[rgba(204,166,149,0.2)] rounded-3xl shadow-xl hover:shadow-2xl hover:border-[rgba(204,166,149,0.5)] transition-all duration-300',
+      elevated: 'bg-[#2a2a2a] border border-[rgba(204,166,149,0.3)] rounded-3xl shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] transition-all duration-300',
       padding: 'p-6',
-      header: 'pb-4 border-b border-[rgba(0,184,153,0.2)]',
+      header: 'pb-4 border-b border-[rgba(204,166,149,0.2)]',
       content: 'space-y-4'
     },
     
-    // Button Component - Dark Theme
+    // Button Component - #cca695 Theme
     button: {
-      base: 'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(0,26,30)] rounded-2xl shadow-lg',
+      base: 'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#000000] rounded-2xl shadow-lg',
       sizes: {
         sm: 'px-4 py-2 text-sm',
         md: 'px-6 py-3 text-sm',
         lg: 'px-8 py-4 text-base'
       },
       variants: {
-        primary: 'bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] hover:from-[rgb(0,164,133)] hover:to-[rgb(0,144,113)] text-white focus:ring-[rgb(0,184,153)] shadow-lg hover:shadow-xl transform hover:scale-105',
-        secondary: 'bg-[rgb(30,32,34)] hover:bg-[rgb(34,36,38)] text-white focus:ring-[rgba(0,184,153,0.5)] border border-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.5)]',
-        ghost: 'bg-transparent hover:bg-[rgba(0,184,153,0.1)] text-gray-300 hover:text-white border border-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.5)]',
+        primary: 'bg-gradient-to-r from-[#cca695] to-[#b8956a] hover:from-[#b8956a] hover:to-[#a6845e] text-white focus:ring-[#cca695] shadow-lg hover:shadow-xl transform hover:scale-105',
+    secondary: 'bg-[#2a2a2a] hover:bg-[#333333] text-white focus:ring-[rgba(204,166,149,0.5)] border border-[rgba(204,166,149,0.2)] hover:border-[rgba(204,166,149,0.5)]',
+    ghost: 'bg-transparent hover:bg-[rgba(204,166,149,0.1)] text-gray-300 hover:text-white border border-[rgba(204,166,149,0.2)] hover:border-[rgba(204,166,149,0.5)]',
         danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white focus:ring-red-500'
       }
     },
     
-    // Input Component - Dark Theme
+    // Input Component - #cca695 Theme
     input: {
-      base: 'w-full px-4 py-3 bg-[rgb(30,32,34)] border border-[rgba(0,184,153,0.2)] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] transition-all duration-300',
-      textarea: 'w-full px-4 py-3 bg-[rgb(30,32,34)] border border-[rgba(0,184,153,0.2)] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] transition-all duration-300 resize-none'
+      base: 'w-full px-4 py-3 bg-[#2a2a2a] border border-[rgba(204,166,149,0.2)] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cca695] focus:border-[#cca695] transition-all duration-300',
+    textarea: 'w-full px-4 py-3 bg-[#2a2a2a] border border-[rgba(204,166,149,0.2)] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cca695] focus:border-[#cca695] transition-all duration-300 resize-none'
     },
     
-    // Badge Component - Dark Theme
+    // Badge Component - #cca695 Theme
     badge: {
       base: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border',
       variants: {
-        primary: 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border-[rgba(0,184,153,0.2)]',
-        success: 'bg-[rgba(0,184,153,0.1)] text-[rgb(0,184,153)] border-[rgba(0,184,153,0.2)]',
+        primary: 'bg-[rgba(204,166,149,0.1)] text-[#cca695] border-[rgba(204,166,149,0.2)]',
+    success: 'bg-[rgba(204,166,149,0.1)] text-[#cca695] border-[rgba(204,166,149,0.2)]',
         warning: 'bg-[rgba(245,158,11,0.1)] text-yellow-400 border-[rgba(245,158,11,0.2)]',
         error: 'bg-[rgba(239,68,68,0.1)] text-red-400 border-[rgba(239,68,68,0.2)]',
         neutral: 'bg-[rgba(156,163,175,0.1)] text-gray-400 border-[rgba(156,163,175,0.2)]'
