@@ -136,7 +136,7 @@ class BaseFinancialAgent(ABC):
                 
                 if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
                     metadata = candidate.grounding_metadata
-                    logger.info(f"{self.name}: ✅ Grounding metadata found!")
+                    logger.info(f"{self.name}: Grounding metadata found!")
                     
                     # Extract webSearchQueries as per documentation
                     if hasattr(metadata, 'web_search_queries') and metadata.web_search_queries:
@@ -156,7 +156,7 @@ class BaseFinancialAgent(ABC):
                                 sources.append(source)
                         
                         result['sources'] = sources
-                        logger.info(f"{self.name}: ✅ Retrieved {len(sources)} sources from grounding")
+                        logger.info(f"{self.name}: Retrieved {len(sources)} sources from grounding")
                     
                     # Extract groundingSupports as per documentation
                     if hasattr(metadata, 'grounding_supports') and metadata.grounding_supports:
@@ -179,7 +179,7 @@ class BaseFinancialAgent(ABC):
             # Add source count to findings
             if result['sources']:
                 source_count = len(result['sources'])
-                result['findings'] += f"\n\n📊 **Live Market Sources**: {source_count} verified web sources"
+                result['findings'] += f"\n\n**Live Market Sources**: {source_count} verified web sources"
                 
                 # Add source list
                 source_list = "\n".join([f"• {s['title']}" for s in result['sources'][:3]])
@@ -483,10 +483,10 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
         personality_enhancements = {
             'analyst': {
                 'openings': [
-                    "🕵️ Financial detective mode: ACTIVATED! Here's what I found...",
-                    "🔥 Your numbers just revealed something INCREDIBLE!",
-                    "💎 I've uncovered fascinating insights in your financial data!",
-                    "📊 Detective work complete! Your financial story is amazing..."
+                    "Financial detective mode: ACTIVATED! Here's what I found...",
+            "Your numbers just revealed something INCREDIBLE!",
+            "I've uncovered fascinating insights in your financial data!",
+            "Detective work complete! Your financial story is amazing..."
                 ],
                 'conclusions': [
                     "The data is crystal clear - you've got solid potential!",
@@ -496,10 +496,10 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
             },
             'research': {
                 'openings': [
-                    "🎯 Strategy radar: LOCKED ON TARGET!",
-                    "💡 I've discovered the PERFECT strategy for you!",
-                    "🚀 Opportunity hunter mode: Amazing findings ahead!",
-                    "💎 Strategic mastermind activated! Here's your winning plan..."
+                    "Strategy radar: LOCKED ON TARGET!",
+            "I've discovered the PERFECT strategy for you!",
+            "Opportunity hunter mode: Amazing findings ahead!",
+            "Strategic mastermind activated! Here's your winning plan..."
                 ],
                 'conclusions': [
                     "This strategy is absolutely BRILLIANT for your situation!",
@@ -509,10 +509,10 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
             },
             'risk': {
                 'openings': [
-                    "🛡️ Risk radar: ACTIVE MONITORING!",
-                    "⚠️ ALERT: Critical financial threats detected!",
-                    "🚨 Financial guardian mode: Protection analysis ready!",
-                    "🔍 Security scan complete! Urgent safeguards needed..."
+                    "Risk radar: ACTIVE MONITORING!",
+            "ALERT: Critical financial threats detected!",
+            "Financial guardian mode: Protection analysis ready!",
+            "Security scan complete! Urgent safeguards needed..."
                 ],
                 'conclusions': [
                     "SECURE your financial future with these protections!",
@@ -533,7 +533,7 @@ IMPORTANT: Use Google Search to find current, accurate information about market 
         
         # Add confident conclusion
         conclusion = random.choice(agent_personality['conclusions'])
-        enhanced_response += f"\n\n🎯 **{conclusion}**"
+        enhanced_response += f"\n\n**{conclusion}**"
         
         # Trim response if too long
         return self._trim_response_length(enhanced_response)

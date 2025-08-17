@@ -147,7 +147,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-[rgba(0,184,153,0.1)] rounded-lg transition-colors"
+                className="p-2 hover:bg-[rgba(204,166,149,0.1)] rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -166,8 +166,8 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                 onClick={() => setTimeRange(range)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === range
-                    ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
-                    : 'bg-[rgba(0,184,153,0.1)] text-gray-300 hover:bg-[rgba(0,184,153,0.2)] hover:text-white border border-[rgba(0,184,153,0.2)]'
+                    ? 'bg-[#cca695] text-white shadow-lg'
+                    : 'bg-[rgba(204,166,149,0.1)] text-gray-300 hover:bg-[rgba(204,166,149,0.2)] hover:text-white border border-[rgba(204,166,149,0.2)]'
                 }`}
               >
                 {range}
@@ -179,8 +179,8 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
               onClick={() => setChartType('line')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 chartType === 'line'
-                  ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
-                  : 'bg-[rgba(0,184,153,0.1)] text-gray-300 hover:bg-[rgba(0,184,153,0.2)] hover:text-white border border-[rgba(0,184,153,0.2)]'
+                  ? 'bg-[#cca695] text-white shadow-lg'
+                  : 'bg-[rgba(204,166,149,0.1)] text-gray-300 hover:bg-[rgba(204,166,149,0.2)] hover:text-white border border-[rgba(204,166,149,0.2)]'
               }`}
             >
               Line
@@ -189,8 +189,8 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
               onClick={() => setChartType('area')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 chartType === 'area'
-                  ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
-                  : 'bg-[rgba(0,184,153,0.1)] text-gray-300 hover:bg-[rgba(0,184,153,0.2)] hover:text-white border border-[rgba(0,184,153,0.2)]'
+                  ? 'bg-[#cca695] text-white shadow-lg'
+                  : 'bg-[rgba(204,166,149,0.1)] text-gray-300 hover:bg-[rgba(204,166,149,0.2)] hover:text-white border border-[rgba(204,166,149,0.2)]'
               }`}
             >
               Area
@@ -199,7 +199,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
         </div>
 
         {/* Chart */}
-        <div className="bg-gradient-to-br from-black to-[rgb(30,32,34)] border border-[rgba(0,184,153,0.1)] rounded-2xl p-6 mb-6">
+        <div className="bg-gradient-to-br from-black to-[rgb(30,32,34)] border border-[rgba(204,166,149,0.1)] rounded-2xl p-6 mb-6">
           <div className="h-80">
             {error ? (
               <div className="flex items-center justify-center h-full">
@@ -212,7 +212,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                   <p className="text-red-400 font-medium">{error}</p>
                   <button
                     onClick={loadChartData}
-                    className="px-4 py-2 bg-[rgb(0,184,153)] text-white rounded-lg hover:bg-[rgb(0,164,133)] transition-colors"
+                    className="px-4 py-2 bg-[#cca695] text-white rounded-lg hover:bg-[#b8956a] transition-colors"
                   >
                     Retry
                   </button>
@@ -222,7 +222,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'line' ? (
                   <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(204, 166, 149, 0.1)" />
                     <XAxis 
                       dataKey="time" 
                       stroke="#9ca3af" 
@@ -239,7 +239,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgb(24, 25, 27)',
-                        border: '1px solid rgba(0, 184, 153, 0.2)',
+                        border: '1px solid rgba(204, 166, 149, 0.2)',
                         borderRadius: '12px',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
                         color: 'white'
@@ -250,15 +250,15 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                     <Line 
                       type="monotone" 
                       dataKey="price" 
-                      stroke="rgb(0, 184, 153)" 
+                      stroke="#cca695" 
                       strokeWidth={3} 
                       dot={false}
-                      activeDot={{ r: 6, fill: 'rgb(0, 184, 153)' }}
+                      activeDot={{ r: 6, fill: '#cca695' }}
                     />
                   </LineChart>
                 ) : (
                   <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(204, 166, 149, 0.1)" />
                     <XAxis 
                       dataKey="time" 
                       stroke="#9ca3af" 
@@ -275,7 +275,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgb(24, 25, 27)',
-                        border: '1px solid rgba(0, 184, 153, 0.2)',
+                        border: '1px solid rgba(204, 166, 149, 0.2)',
                         borderRadius: '12px',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
                         color: 'white'
@@ -286,14 +286,14 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
                     <Area 
                       type="monotone" 
                       dataKey="price" 
-                      stroke="rgb(0, 184, 153)" 
+                      stroke="#cca695" 
                       fill="url(#colorPrice)"
                       strokeWidth={3}
                     />
                     <defs>
                       <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="rgb(0, 184, 153)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="rgb(0, 184, 153)" stopOpacity={0.05}/>
+                        <stop offset="5%" stopColor="#cca695" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#cca695" stopOpacity={0.05}/>
                       </linearGradient>
                     </defs>
                   </AreaChart>
@@ -302,7 +302,7 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-4">
-                  <div className="w-12 h-12 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl flex items-center justify-center mx-auto">
+                  <div className="w-12 h-12 bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-xl flex items-center justify-center mx-auto">
                     <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -317,21 +317,21 @@ export default function StockChart({ symbol, onClose, embedded = false }: StockC
         {/* Data Summary */}
         {chartData.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(0,184,153,0.2)]">
+            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(204,166,149,0.2)]">
               <p className="text-sm text-slate-600 mb-1">Data Points</p>
               <p className="text-lg font-bold text-slate-900">{chartData.length}</p>
             </div>
-            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(0,184,153,0.2)]">
+            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(204,166,149,0.2)]">
               <p className="text-sm text-slate-600 mb-1">Range</p>
               <p className="text-lg font-bold text-slate-900">{timeRange}</p>
             </div>
-            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(0,184,153,0.2)]">
+            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(204,166,149,0.2)]">
               <p className="text-sm text-slate-600 mb-1">Min Price</p>
               <p className="text-lg font-bold text-slate-900">
                 {formatPrice(Math.min(...chartData.map(d => d.price)))}
               </p>
             </div>
-            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(0,184,153,0.2)]">
+            <div className="bg-[rgb(30,32,34)] rounded-xl p-4 border border-[rgba(204,166,149,0.2)]">
               <p className="text-sm text-slate-600 mb-1">Max Price</p>
               <p className="text-lg font-bold text-slate-900">
                 {formatPrice(Math.max(...chartData.map(d => d.price)))}

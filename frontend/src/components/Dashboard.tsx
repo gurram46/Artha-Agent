@@ -221,7 +221,7 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 184, 153, 0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(204, 166, 149, 0.1)" />
             <XAxis type="number" stroke="#9ca3af" fontSize={12} />
             <YAxis 
               type="category" 
@@ -233,7 +233,7 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'rgb(24, 25, 27)', 
-                border: '1px solid rgba(0, 184, 153, 0.2)',
+                border: '1px solid rgba(204, 166, 149, 0.2)',
                 borderRadius: '12px',
                 fontSize: '12px',
                 color: 'white'
@@ -245,7 +245,7 @@ const MutualFundBreakdown = memo(({ schemes }: { schemes: any[] }) => {
                 name === 'avgXIRR' ? 'Average XIRR' : 'Fund Count'
               ]}
             />
-            <Bar dataKey="value" fill="rgb(0, 184, 153)" />
+            <Bar dataKey="value" fill="#cca695" />
           </BarChart>
         </ResponsiveContainer>
       </div>

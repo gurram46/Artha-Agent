@@ -246,7 +246,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
                 AI Analyzing...
               </>
             ) : (
-              '🤖 Get AI Investment Plan'
+              'Get AI Investment Plan'
             )}
           </button>
         </div>
@@ -259,7 +259,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">🎯 AI Investment Plan</h3>
+            <h3 className="text-xl font-bold text-white mb-1">AI Investment Plan</h3>
             <p className="text-sm text-gray-300">Multi-Agent AI Analysis Complete</p>
           </div>
           <button
@@ -323,12 +323,12 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
               <h5 className="text-white font-semibold text-lg mb-4">Choose Your Broker</h5>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { id: 'angel_one', name: 'Angel One', emoji: '📈', desc: 'Zero brokerage delivery', color: 'from-orange-500 to-orange-600', features: ['Zero Delivery', 'Real-time Data', 'Research'] },
-                  { id: 'zerodha', name: 'Zerodha Kite', emoji: '🔷', desc: 'Advanced trading platform', color: 'from-blue-500 to-blue-600', features: ['Kite Platform', 'Low Brokerage', 'Education'] },
-                  { id: 'groww', name: 'Groww', emoji: '🌱', desc: 'Beginner-friendly', color: 'from-green-500 to-green-600', features: ['Simple UI', 'Zero AMC', 'Goal Based'] },
-                  { id: 'upstox', name: 'Upstox', emoji: '⚡', desc: 'Professional tools', color: 'from-purple-500 to-purple-600', features: ['Pro Platform', 'Research', 'Charts'] },
-                  { id: 'iifl', name: 'IIFL Securities', emoji: '🏛️', desc: 'Full-service broker', color: 'from-indigo-500 to-indigo-600', features: ['Advisory', 'Research', 'Wealth Mgmt'] },
-                  { id: 'paytm_money', name: 'Paytm Money', emoji: '💰', desc: 'Digital-first experience', color: 'from-gray-500 to-gray-600', features: ['Zero Delivery', 'Digital KYC', 'UPI'] }
+                  { id: 'angel_one', name: 'Angel One', emoji: 'Chart', desc: 'Zero brokerage delivery', color: 'from-orange-500 to-orange-600', features: ['Zero Delivery', 'Real-time Data', 'Research'] },
+                  { id: 'zerodha', name: 'Zerodha Kite', emoji: 'Diamond', desc: 'Advanced trading platform', color: 'from-blue-500 to-blue-600', features: ['Kite Platform', 'Low Brokerage', 'Education'] },
+                  { id: 'groww', name: 'Groww', emoji: 'Plant', desc: 'Beginner-friendly', color: 'from-[#cca695] to-[#b8956a]', features: ['Simple UI', 'Zero AMC', 'Goal Based'] },
+                  { id: 'upstox', name: 'Upstox', emoji: 'Lightning', desc: 'Professional tools', color: 'from-purple-500 to-purple-600', features: ['Pro Platform', 'Research', 'Charts'] },
+                  { id: 'iifl', name: 'IIFL Securities', emoji: 'Building', desc: 'Full-service broker', color: 'from-indigo-500 to-indigo-600', features: ['Advisory', 'Research', 'Wealth Mgmt'] },
+                  { id: 'paytm_money', name: 'Paytm Money', emoji: 'Money', desc: 'Digital-first experience', color: 'from-gray-500 to-gray-600', features: ['Zero Delivery', 'Digital KYC', 'UPI'] }
                 ].map((broker) => (
                   <div
                     key={broker.id}
@@ -346,7 +346,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
                     )}
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`w-10 h-10 bg-gradient-to-r ${broker.color} rounded-lg flex items-center justify-center`}>
-                        <span className="text-xl">{broker.emoji}</span>
+                        <span className="text-xs font-semibold">{broker.emoji}</span>
                       </div>
                       <div>
                         <h6 className="text-white font-semibold text-sm">{broker.name}</h6>
@@ -378,7 +378,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
               {brokerPlan && (
                 <button
                   onClick={executeInvestments}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white px-6 py-4 rounded-xl hover:from-[#b8956a] hover:to-[#a6845e] transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-lg"
                 >
                   <span>🚀</span>
                   Execute Now
@@ -435,7 +435,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
             </button>
             <button
               onClick={() => openInvestmentPlatform('groww')}
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all text-sm font-medium"
+              className="bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white px-4 py-3 rounded-xl hover:from-[#b8956a] hover:to-[#a6845e] transition-all text-sm font-medium"
             >
               🌱 Groww
             </button>
@@ -443,7 +443,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
               onClick={() => openInvestmentPlatform('upstox')}
               className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all text-sm font-medium"
             >
-              ⚡ Upstox
+              Lightning Upstox
             </button>
             <button
               onClick={() => openInvestmentPlatform('iifl')}
@@ -482,11 +482,11 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <p className="text-xl font-bold text-[rgb(0,184,153)]">🤖</p>
+            <p className="text-xl font-bold text-[rgb(0,184,153)]">AI</p>
             <p className="text-xs text-gray-300 font-medium">4-Agent AI</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-bold text-[rgb(0,184,153)]">📊</p>
+            <p className="text-xl font-bold text-[rgb(0,184,153)]">Chart</p>
             <p className="text-xs text-gray-300 font-medium">Real Data</p>
           </div>
           <div className="text-center">
@@ -497,7 +497,7 @@ export default function InvestmentRecommendationCard({ financialData }: Investme
 
         <div className="space-y-4 border-t border-[rgba(0,184,153,0.2)] pt-4">
           <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl p-3">
-            <h4 className="text-xs font-bold text-white mb-2">🎯 AI Features:</h4>
+            <h4 className="text-xs font-bold text-white mb-2">AI Features:</h4>
             <ul className="text-xs text-gray-300 space-y-1">
               <li>• Multi-agent analysis (Data, Trading, Execution, Risk)</li>
               <li>• Specific Indian stocks, ETFs, and mutual fund recommendations</li>

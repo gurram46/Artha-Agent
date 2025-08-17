@@ -58,15 +58,15 @@ class CacheService {
       const result: CacheStatus = await response.json();
       
       if (result.has_cache) {
-        console.log(`✅ Valid cache found for ${email}, expires: ${result.expires_at}`);
+        console.log(`Valid cache found for ${email}, expires: ${result.expires_at}`);
       } else {
-        console.log(`❌ No valid cache found for ${email}`);
+        console.log(`No valid cache found for ${email}`);
       }
 
       return result;
 
     } catch (error) {
-      console.error('❌ Cache status check error:', error);
+      console.error('Cache status check error:', error);
       return {
         enabled: false,
         has_cache: false,
@@ -78,13 +78,13 @@ class CacheService {
   /**
    * Store financial data in secure cache with 24-hour expiration
    */
-  async storeFinancialData(email: string, financialData: any, dataSource: string = 'fi_mcp'): Promise<{
+  async storeFinancialData(email: string, financialData: any, dataSource: string = 'artha_ai'): Promise<{
     success: boolean;
     message: string;
     expires_in?: string;
   }> {
     try {
-      console.log(`🔒 Storing financial data in secure cache for ${email}...`);
+      console.log(`Storing financial data in secure cache for ${email}...`);
 
       const response = await fetch(`${this.backendUrl}/api/cache/store`, {
         method: 'POST',
@@ -106,7 +106,7 @@ class CacheService {
 
       const result = await response.json();
       
-      console.log(`✅ Financial data cached successfully for ${email}`);
+      console.log(`Financial data cached successfully for ${email}`);
       return {
         success: true,
         message: result.message,
@@ -114,7 +114,7 @@ class CacheService {
       };
 
     } catch (error) {
-      console.error('❌ Cache storage error:', error);
+      console.error('Cache storage error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Cache storage failed'
@@ -132,7 +132,7 @@ class CacheService {
     from_cache: boolean;
   }> {
     try {
-      console.log(`🔍 Retrieving cached financial data for ${email}...`);
+      console.log(`Retrieving cached financial data for ${email}...`);
 
       const response = await fetch(`${this.backendUrl}/api/cache/retrieve?email=${encodeURIComponent(email)}`, {
         method: 'GET',
@@ -150,7 +150,7 @@ class CacheService {
       const result = await response.json();
       
       if (result.status === 'success') {
-        console.log(`✅ Retrieved cached financial data for ${email}`);
+        console.log(`Retrieved cached financial data for ${email}`);
         return {
           success: true,
           data: result.data,
@@ -158,7 +158,7 @@ class CacheService {
           from_cache: true
         };
       } else {
-        console.log(`❌ No cached data found for ${email}`);
+        console.log(`No cached data found for ${email}`);
         return {
           success: false,
           message: result.message,
@@ -167,7 +167,7 @@ class CacheService {
       }
 
     } catch (error) {
-      console.error('❌ Cache retrieval error:', error);
+      console.error('Cache retrieval error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Cache retrieval failed',
@@ -184,7 +184,7 @@ class CacheService {
     message: string;
   }> {
     try {
-      console.log(`🗑️ Invalidating cache for ${email}...`);
+      console.log(`Invalidating cache for ${email}...`);
 
       const response = await fetch(`${this.backendUrl}/api/cache/invalidate?email=${encodeURIComponent(email)}`, {
         method: 'DELETE',
@@ -201,14 +201,14 @@ class CacheService {
 
       const result = await response.json();
       
-      console.log(`✅ Cache invalidated for ${email}`);
+      console.log(`Cache invalidated for ${email}`);
       return {
         success: true,
         message: result.message
       };
 
     } catch (error) {
-      console.error('❌ Cache invalidation error:', error);
+      console.error('Cache invalidation error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Cache invalidation failed'
@@ -236,15 +236,15 @@ class CacheService {
       const result: CacheSystemStatus = await response.json();
       
       if (result.enabled && result.database_connected) {
-        console.log('✅ Cache system is operational');
+        console.log('Cache system is operational');
       } else {
-        console.warn('⚠️ Cache system has issues:', result.message);
+        console.warn('Cache system has issues:', result.message);
       }
 
       return result;
 
     } catch (error) {
-      console.error('❌ System status check error:', error);
+      console.error('System status check error:', error);
       return {
         enabled: false,
         message: error instanceof Error ? error.message : 'System status check failed'

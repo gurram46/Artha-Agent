@@ -69,7 +69,7 @@ class StockService {
     try {
       // Prevent concurrent fetches
       if (this.fetchInProgress) {
-        console.log('🔄 Fetch already in progress, skipping...');
+        console.log('Fetch already in progress, skipping...');
         return;
       }
 
@@ -96,17 +96,17 @@ class StockService {
         }
         
         this.notifySubscribers();
-        console.log(`✅ Updated ${realData.length} stocks from proxy API`);
+        console.log(`Updated ${realData.length} stocks from proxy API`);
       } else {
-        console.warn('⚠️ No data received from proxy API');
+        console.warn('No data received from proxy API');
         throw new Error('Proxy API returned no data');
       }
     } catch (error) {
-      console.error('❌ Failed to fetch real-time data from proxy:', error);
+      console.error('Failed to fetch real-time data from proxy:', error);
       
       // If rate limited, stop polling for a while
       if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
-        console.warn('⚠️ Rate limited - stopping polling temporarily');
+        console.warn('Rate limited - stopping polling temporarily');
         if (this.priceUpdateInterval) {
           clearInterval(this.priceUpdateInterval);
           this.priceUpdateInterval = null;
@@ -140,7 +140,7 @@ class StockService {
           this.cachedData = data;
           this.lastFetchTime = timestamp;
           this.notifySubscribers();
-          console.log('📱 Loaded stock data from storage');
+          console.log('Loaded stock data from storage');
         }
       }
     } catch (error) {
@@ -150,7 +150,7 @@ class StockService {
 
   private async getTopIndianStocksFromProxy(): Promise<StockData[]> {
     try {
-      console.log('🔄 Fetching real-time data for top 10 Indian stocks from proxy...');
+      console.log('Fetching real-time data for top 10 Indian stocks from proxy...');
 
       // Only make fetch calls from client side
       if (!this.isClient) {
@@ -168,7 +168,7 @@ class StockService {
 
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn('⚠️ Rate limit exceeded, using cached data if available');
+          console.warn('Rate limit exceeded, using cached data if available');
           throw new Error('Rate limit exceeded. Using cached data.');
         }
         throw new Error(`Proxy API returned ${response.status} ${response.statusText}`);
@@ -180,11 +180,11 @@ class StockService {
         throw new Error(result.error || 'Invalid response from proxy API');
       }
 
-      console.log(`✅ Successfully fetched ${result.data.length} stocks from proxy (${result.source})`);
+      console.log(`Successfully fetched ${result.data.length} stocks from proxy (${result.source})`);
       return result.data;
 
     } catch (error) {
-      console.error('❌ Error fetching stocks from proxy:', error);
+      console.error('Error fetching stocks from proxy:', error);
       throw error;
     }
   }
@@ -235,7 +235,7 @@ class StockService {
 
       // Prevent concurrent calls
       if (this.fetchInProgress) {
-        console.log('🔄 Fetch already in progress, returning cached data');
+        console.log('Fetch already in progress, returning cached data');
         return this.cachedData.length > 0 ? this.cachedData : [];
       }
 
@@ -249,13 +249,13 @@ class StockService {
           return realData;
         }
       } catch (fetchError) {
-        console.warn('⚠️ Failed to fetch fresh data, using fallback:', fetchError);
+        console.warn('Failed to fetch fresh data, using fallback:', fetchError);
         // Continue to fallback options below
       }
       
       // If no real data and we have cached data, return it
       if (this.cachedData.length > 0) {
-        console.log('⚠️ Using cached stock data');
+        console.log('Using cached stock data');
         return this.cachedData;
       }
       
@@ -263,21 +263,21 @@ class StockService {
       if (this.isClient) {
         this.loadFromStorage();
         if (this.cachedData.length > 0) {
-          console.log('📱 Loaded stock data from storage as fallback');
+          console.log('Loaded stock data from storage as fallback');
           return this.cachedData;
         }
       }
       
       // Return empty array instead of throwing error to prevent blocking UI
-      console.warn('⚠️ No stock data available, returning empty array');
+      console.warn('No stock data available, returning empty array');
       return [];
       
     } catch (error) {
-      console.error('❌ Failed to fetch top stocks:', error);
+      console.error('Failed to fetch top stocks:', error);
       
       // Return cached data if available
       if (this.cachedData.length > 0) {
-        console.log('⚠️ Error occurred, using cached data');
+        console.log('Error occurred, using cached data');
         return this.cachedData;
       }
       
@@ -285,20 +285,20 @@ class StockService {
       if (this.isClient) {
         this.loadFromStorage();
         if (this.cachedData.length > 0) {
-          console.log('📱 Loaded stock data from storage as fallback');
+          console.log('Loaded stock data from storage as fallback');
           return this.cachedData;
         }
       }
       
       // Return empty array instead of throwing error to prevent blocking UI
-      console.warn('⚠️ All fallbacks failed, returning empty array');
+      console.warn('All fallbacks failed, returning empty array');
       return [];
     }
   }
 
   async getStockDetails(symbol: string): Promise<StockData | null> {
     try {
-      console.log(`🔄 Fetching details for ${symbol} from proxy...`);
+      console.log(`Fetching details for ${symbol} from proxy...`);
       
       // Only make fetch calls from client side
       if (!this.isClient) {
@@ -326,18 +326,18 @@ class StockService {
         throw new Error(result.error || `No data for ${symbol}`);
       }
 
-      console.log(`✅ Successfully fetched details for ${symbol}`);
+      console.log(`Successfully fetched details for ${symbol}`);
       return result.data;
       
     } catch (error) {
-      console.error(`❌ Failed to fetch stock details for ${symbol}:`, error);
+      console.error(`Failed to fetch stock details for ${symbol}:`, error);
       return null;
     }
   }
 
   async getStockChartData(symbol: string, timeRange: string): Promise<ChartData[]> {
     try {
-      console.log(`🔄 Fetching chart data for ${symbol} (${timeRange}) from proxy...`);
+      console.log(`Fetching chart data for ${symbol} (${timeRange}) from proxy...`);
       
       // Only make fetch calls from client side
       if (!this.isClient) {
@@ -363,11 +363,11 @@ class StockService {
         throw new Error(result.error || 'No chart data available');
       }
       
-      console.log(`✅ Received ${result.data.length} chart data points for ${symbol}`);
+      console.log(`Received ${result.data.length} chart data points for ${symbol}`);
       return result.data;
       
     } catch (error) {
-      console.error(`❌ Failed to fetch chart data for ${symbol}:`, error);
+      console.error(`Failed to fetch chart data for ${symbol}:`, error);
       throw new Error(`Chart data unavailable for ${symbol}: ${error.message}`);
     }
   }

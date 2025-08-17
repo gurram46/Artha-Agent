@@ -149,7 +149,7 @@ export default function AIInsightCard({
             <div className="flex items-center space-x-1">
               <div className={`w-2 h-2 rounded-full ${
                 isLoading ? 'bg-yellow-500 animate-pulse' : 
-                insights ? 'bg-green-500' : 'bg-gray-400'
+                insights ? 'bg-[#cca695]' : 'bg-gray-400'
               }`}></div>
               <span className="text-xs text-gray-500">
                 {isLoading ? 'Analyzing' : insights ? 'Ready' : 'Idle'}

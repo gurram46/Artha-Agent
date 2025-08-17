@@ -372,10 +372,10 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   if (authState === 'success' && isAuthenticated) {
     return (
-      <Card className="p-6 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.3)] bg-black">
+      <Card className="p-6 bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.3)] bg-black">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className={`w-3 h-3 ${isDemoMode ? 'bg-yellow-400' : 'bg-[rgb(0,184,153)]'} rounded-full animate-pulse`}></div>
+            <div className={`w-3 h-3 ${isDemoMode ? 'bg-yellow-400' : 'bg-[#cca695]'} rounded-full animate-pulse`}></div>
             <div>
               <h3 className="text-lg font-semibold text-white">
                 {isDemoMode ? '🎭 Demo Mode Active' : '🌐 Connected to Fi Money'}
@@ -405,7 +405,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   if (authState === 'waiting' || authState === 'polling') {
     return (
-      <Card className="p-6 bg-gradient-to-r from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.2)] bg-black">
+      <Card className="p-6 bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] bg-black">
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-white mb-2">
@@ -419,9 +419,9 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
             </p>
           </div>
 
-          <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4">
+          <div className="bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-4 h-4 border-2 border-[rgb(0,184,153)] border-t-transparent rounded-full animate-spin mr-3"></div>
+              <div className="w-4 h-4 border-2 border-[#cca695] border-t-transparent rounded-full animate-spin mr-3"></div>
               <span className="text-sm font-medium text-white">Authentication in progress</span>
             </div>
             <ol className="text-xs text-gray-300 space-y-1">
@@ -494,9 +494,9 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
   // Initial state
   return (
-    <Card className="p-6 bg-black border border-[rgba(0,184,153,0.2)]">
+    <Card className="p-6 bg-black border border-[rgba(204,166,149,0.2)]">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 mx-auto bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-full flex items-center justify-center">
           <span className="text-2xl">🌐</span>
         </div>
         
@@ -509,7 +509,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
           </p>
         </div>
 
-        <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4 text-left">
+        <div className="bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-lg p-4 text-left">
           <h4 className="font-medium text-white mb-2">What you'll get:</h4>
           <ul className="text-sm text-gray-300 space-y-1">
             <li>• Real-time net worth and asset allocation</li>
@@ -520,7 +520,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
           </ul>
         </div>
 
-        <div className="bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-lg p-4 text-left">
+        <div className="bg-[rgba(204,166,149,0.1)] border border-[rgba(204,166,149,0.2)] rounded-lg p-4 text-left">
           <h4 className="font-medium text-white mb-2">How it works:</h4>
           <ol className="text-sm text-gray-300 space-y-1">
             <li>1. Click "Connect to Fi Money" below</li>
@@ -544,7 +544,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[rgba(0,184,153,0.2)]"></div>
+              <div className="w-full border-t border-[rgba(204,166,149,0.2)]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-black text-gray-400">OR</span>
@@ -555,7 +555,7 @@ const FiMoneyWebAuth: React.FC<FiMoneyWebAuthProps> = ({ onAuthSuccess, onAuthEr
             onClick={startDemoMode}
             variant="secondary"
             size="lg"
-            className="w-full border-2 border-dashed border-[rgba(0,184,153,0.2)] hover:border-[rgba(0,184,153,0.5)]"
+            className="w-full border-2 border-dashed border-[rgba(204,166,149,0.2)] hover:border-[rgba(204,166,149,0.5)]"
           >
             🎭 Try Demo Mode
           </UnifiedButton>

@@ -43,7 +43,7 @@ const getCategoryColor = (category: string) => {
     'TRANSPORTATION': 'text-blue-400',
     'FOOD_BEVERAGE': 'text-yellow-400',
     'ENTERTAINMENT': 'text-pink-400',
-    'GROCERY': 'text-green-400',
+    'GROCERY': 'text-[#cca695]',
     'FUEL': 'text-red-400',
     'DEFAULT': 'text-gray-400'
   };
@@ -189,7 +189,7 @@ export default function CreditCardTransactions({ financialData }: CreditCardTran
                 {formatDate(transaction.transactionDate)}
               </p>
               <div className="flex items-center justify-end mt-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                <div className="w-2 h-2 bg-[#cca695] rounded-full mr-1"></div>
                 <span className="text-xs text-gray-400">{transaction.status}</span>
               </div>
             </div>

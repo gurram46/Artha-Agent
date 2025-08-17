@@ -21,10 +21,10 @@ const riskOptions = [
     label: 'Conservative',
     description: 'Low risk, stable returns',
     icon: '🛡️',
-    color: 'from-green-400 to-green-600',
-    textColor: 'text-green-700',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    color: 'from-[#cca695] to-[#b8956a]',
+    textColor: 'text-[#cca695]',
+    bgColor: 'bg-[#cca695]/10',
+    borderColor: 'border-[#cca695]/20',
   },
   {
     id: 'moderate',
@@ -53,7 +53,7 @@ const horizonOptions = [
     id: 'short',
     label: 'Short-term',
     description: '< 2 years',
-    icon: '⚡',
+    icon: 'Lightning',
     duration: '< 2 years',
   },
   {
@@ -67,7 +67,7 @@ const horizonOptions = [
     id: 'long',
     label: 'Long-term',
     description: '5+ years',
-    icon: '🎯',
+    icon: 'Target',
     duration: '5+ years',
   },
 ];
@@ -77,7 +77,7 @@ const goalOptions = [
     id: 'growth',
     label: 'Capital Growth',
     description: 'Focus on appreciation',
-    icon: '📊',
+    icon: 'Chart',
   },
   {
     id: 'income',
@@ -89,7 +89,7 @@ const goalOptions = [
     id: 'balanced',
     label: 'Balanced',
     description: 'Growth + Income',
-    icon: '🎯',
+    icon: 'Target',
   },
 ];
 

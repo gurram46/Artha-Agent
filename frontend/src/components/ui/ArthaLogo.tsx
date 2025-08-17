@@ -4,11 +4,13 @@ import Image from 'next/image';
 interface ArthaLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  src?: string;
 }
 
 export const ArthaLogo: React.FC<ArthaLogoProps> = ({ 
   className = '', 
-  size = 'md' 
+  size = 'md',
+  src = '/artha-logo.svg'
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -19,7 +21,7 @@ export const ArthaLogo: React.FC<ArthaLogoProps> = ({
 
   return (
     <Image
-      src="/artha-logo.svg"
+      src={src}
       alt="Artha AI Logo"
       width={24}
       height={24}

@@ -268,20 +268,29 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         self.security_bearer = HTTPBearer(auto_error=False)
     
     async def dispatch(self, request: Request, call_next):
-        """Main security middleware dispatch"""
+        """Main security middleware dispatch with CORS compatibility"""
         start_time = time.time()
         
         try:
-            # 1. Check user agent
+            # SKIP ALL SECURITY CHECKS FOR OPTIONS REQUESTS (CORS preflight)
+            if request.method == "OPTIONS":
+                response = await call_next(request)
+                # Add timing header for monitoring
+                process_time = time.time() - start_time
+                response.headers["X-Process-Time"] = str(process_time)
+                return response
+            
+            # 1. Check user agent (skip for browser requests)
             user_agent = request.headers.get('user-agent', '')
-            if self._is_blocked_user_agent(user_agent):
+            # Only block clearly malicious user agents, not browsers
+            if self._is_clearly_malicious_user_agent(user_agent):
                 logger.warning(f"Blocked request from suspicious user agent: {user_agent}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Access denied"
                 )
             
-            # 2. Rate limiting
+            # 2. Rate limiting (more lenient for browser requests)
             is_limited, limit_message = self.rate_limiter.is_rate_limited(request)
             if is_limited:
                 logger.warning(f"Rate limit exceeded: {limit_message}")
@@ -310,9 +319,11 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             # 4. Process request
             response = await call_next(request)
             
-            # 5. Add security headers
+            # 5. Add security headers (but don't override CORS headers)
             for header, value in self.config.security_headers.items():
-                response.headers[header] = value
+                # Don't override CORS headers that might already be set
+                if not header.startswith('Access-Control-'):
+                    response.headers[header] = value
             
             # 6. Add timing header for monitoring
             process_time = time.time() - start_time
@@ -332,6 +343,22 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     def _is_blocked_user_agent(self, user_agent: str) -> bool:
         """Check if user agent is blocked"""
         for pattern in self.config.compiled_user_agents:
+            if pattern.search(user_agent):
+                return True
+        return False
+    
+    def _is_clearly_malicious_user_agent(self, user_agent: str) -> bool:
+        """Check if user agent is clearly malicious (more selective than _is_blocked_user_agent)"""
+        # Only block clearly malicious patterns, not legitimate tools or browsers
+        malicious_patterns = [
+            r"(?i)(sqlmap|nikto|nmap|masscan|zap|burp|acunetix)",
+            r"(?i)(nessus|openvas|w3af|skipfish|wpscan)",
+            # Removed python-requests, curl, wget as they can be legitimate
+        ]
+        
+        compiled_malicious = [re.compile(pattern) for pattern in malicious_patterns]
+        
+        for pattern in compiled_malicious:
             if pattern.search(user_agent):
                 return True
         return False

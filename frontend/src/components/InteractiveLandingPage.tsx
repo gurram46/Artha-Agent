@@ -91,30 +91,27 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
 
   const features = [
     {
-      icon: "📊",
       title: "Real-Time Portfolio",
       description: "Live tracking with instant updates",
       color: "from-blue-500 to-cyan-500"
     },
     {
-      icon: "🤖",
       title: "AI Financial Advisor", 
       description: "Personalized investment recommendations",
       color: "from-purple-500 to-pink-500"
     },
     {
-      icon: "📈",
       title: "Smart Analytics",
       description: "Comprehensive financial insights",
-      color: "from-green-500 to-emerald-500"
+      color: "from-[#cca695] to-[#b8956a]"
     }
   ];
 
   const stats = [
-    { value: "10K+", label: "Active Users", icon: "👥" },
-    { value: "₹50Cr+", label: "Assets Tracked", icon: "💰" },
-    { value: "99.9%", label: "Uptime", icon: "⚡" },
-    { value: "24/7", label: "AI Support", icon: "🤖" }
+    { value: "10K+", label: "Active Users" },
+    { value: "₹50Cr+", label: "Assets Tracked" },
+    { value: "99.9%", label: "Uptime" },
+    { value: "24/7", label: "AI Support" }
   ];
 
   return (
@@ -244,7 +241,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                   transition={{ duration: 0.3 }}
                 />
                 <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
-                  <span className="mr-2 text-lg">🎭</span>
+                  <span className="mr-2 text-lg">Demo</span>
                   Try Demo
                 </span>
               </motion.button>
@@ -263,7 +260,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                   whileHover={{ opacity: 1 }}
                 />
                 <span className="relative z-10 flex items-center">
-                  <span className="mr-3 text-xl">👤</span>
+                  <span className="mr-3 text-xl">User</span>
                   Create Profile
                 </span>
               </motion.button>
@@ -292,7 +289,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="text-sm font-semibold text-[#cca695]">✨ AI-Powered Financial Intelligence</span>
+            <span className="text-sm font-semibold text-[#cca695]">AI-Powered Financial Intelligence</span>
           </motion.div>
 
           <motion.h1
@@ -353,7 +350,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                 whileHover={{ opacity: 1 }}
               />
               <span className="relative z-10 flex items-center">
-                <span className="mr-3 text-2xl">🚀</span>
+                <span className="mr-3 text-2xl">Launch</span>
                 Experience Demo
               </span>
             </motion.button>
@@ -373,7 +370,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                 transition={{ duration: 0.3 }}
               />
               <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
-                <span className="mr-3 text-xl">👤</span>
+                <span className="mr-3 text-xl">Profile</span>
                 Create Profile
               </span>
             </motion.button>
@@ -387,7 +384,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
             transition={{ delay: 1 }}
           >
             {[
-              { color: "bg-green-400", text: "Real-time Data" },
+              { color: "bg-[#cca695]", text: "Real-time Data" },
               { color: "bg-blue-400", text: "Bank-grade Security" },
               { color: "bg-purple-400", text: "AI-Powered Insights" }
             ].map((item, index) => (
@@ -458,11 +455,11 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
               
               <div className="relative">
                 <motion.div
-                  className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg text-3xl`}
-                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg`}
+                  whileHover={{ scale: 1.1 }}
                   transition={{ duration: 0.8 }}
                 >
-                  {feature.icon}
+                  <span className="text-white font-bold text-lg">{feature.title.split(' ')[0]}</span>
                 </motion.div>
                 
                 <motion.h3
@@ -508,7 +505,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                 onHoverStart={() => setIsHovering(true)}
                 onHoverEnd={() => setIsHovering(false)}
               >
-                <div className="text-6xl mb-2">{stat.icon}</div>
+                <div className="text-2xl font-bold text-[#cca695] mb-2">{stat.label}</div>
                 <motion.div
                   className="text-4xl font-black text-[#cca695] mb-2"
                   animate={{

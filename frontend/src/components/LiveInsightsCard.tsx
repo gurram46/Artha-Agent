@@ -149,13 +149,13 @@ export default function LiveInsightsCard() {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">🤖 Live AI Insights</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Live AI Insights</h2>
             <p className="text-sm text-gray-600 mt-1">Ask anything about your finances</p>
           </div>
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-1">
               <div className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
+                isConnected ? 'bg-[#cca695]' : 'bg-red-500'
               }`}></div>
               <span className="text-xs text-gray-500">
                 {isConnected ? 'Connected' : 'Disconnected'}
@@ -166,7 +166,7 @@ export default function LiveInsightsCard() {
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 isConnected 
                   ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                  : 'text-green-600 bg-green-50 hover:bg-green-100'
+                  : 'text-[#cca695] bg-[#cca695]/10 hover:bg-[#cca695]/20'
               }`}
             >
               {isConnected ? 'Disconnect' : 'Connect'}

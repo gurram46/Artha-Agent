@@ -40,17 +40,17 @@ const getSentimentConfig = (sentiment: string) => {
     'strong buy': {
       label: 'Strong Buy',
       color: '#10b981',
-      bgColor: 'from-emerald-500 to-green-600',
+      bgColor: 'from-[#cca695] to-[#b8956a]',
       textColor: 'text-emerald-700',
-      icon: '🚀',
+      icon: 'Rocket',
       range: [80, 100]
     },
     'buy': {
       label: 'Buy',
       color: '#22c55e', 
-      bgColor: 'from-green-400 to-green-600',
-      textColor: 'text-green-700',
-      icon: '📈',
+      bgColor: 'from-[#cca695] to-[#b8956a]',
+    textColor: 'text-[#cca695]',
+      icon: 'Chart',
       range: [60, 79]
     },
     'hold': {
@@ -58,7 +58,7 @@ const getSentimentConfig = (sentiment: string) => {
       color: '#f59e0b',
       bgColor: 'from-yellow-400 to-orange-500',
       textColor: 'text-yellow-700',
-      icon: '⚖️',
+      icon: 'Balance',
       range: [40, 59]
     },
     'sell': {
@@ -66,7 +66,7 @@ const getSentimentConfig = (sentiment: string) => {
       color: '#f97316',
       bgColor: 'from-orange-500 to-red-500',
       textColor: 'text-orange-700',
-      icon: '📉',
+      icon: 'Down',
       range: [20, 39]
     },
     'strong sell': {
@@ -74,7 +74,7 @@ const getSentimentConfig = (sentiment: string) => {
       color: '#ef4444',
       bgColor: 'from-red-500 to-red-700', 
       textColor: 'text-red-700',
-      icon: '🔻',
+      icon: 'Red',
       range: [0, 19]
     }
   };
@@ -316,7 +316,7 @@ export default function StockSpeedometer({
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-2xl">
-                <span className="text-3xl">🧠</span>
+                <span className="text-3xl">AI</span>
               </div>
               <div className="text-left">
                 <h1 className="text-4xl font-bold text-white bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent">
@@ -345,9 +345,9 @@ export default function StockSpeedometer({
             transition={{ delay: 0.6, duration: 0.5 }}
           >
             {[
-              { icon: '📊', title: 'Real-time Analysis', desc: 'Live market data processing' },
-              { icon: '🎯', title: 'Personalized Insights', desc: 'Tailored to your risk profile' },
-              { icon: '⚡', title: 'AI-Powered Research', desc: 'Advanced machine learning models' }
+              { icon: 'Chart', title: 'Real-time Analysis', desc: 'Live market data processing' },
+              { icon: 'Target', title: 'Personalized Insights', desc: 'Tailored to your risk profile' },
+              { icon: 'Lightning', title: 'AI-Powered Research', desc: 'Advanced machine learning models' }
             ].map((feature, index) => (
               <motion.div
                 key={index}
@@ -380,7 +380,7 @@ export default function StockSpeedometer({
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center space-x-4">
-                  <span className="text-3xl">🚀</span>
+                  <span className="text-3xl">Launch</span>
                   <div className="text-left">
                     <div>Start AI Analysis</div>
                     <div className="text-sm text-blue-200 font-normal">Analyze {symbol} stock</div>
@@ -411,7 +411,7 @@ export default function StockSpeedometer({
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="relative flex items-center space-x-4">
-                  <span className="text-3xl">⚙️</span>
+                  <span className="text-3xl">Settings</span>
                   <div className="text-left">
                     <div>Setup Profile First</div>
                     <div className="text-sm text-amber-200 font-normal">Configure your investment preferences</div>
@@ -460,7 +460,7 @@ export default function StockSpeedometer({
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     >
-                      🧠
+                      AI
                     </motion.div>
                   </div>
                   <div>
@@ -518,7 +518,7 @@ export default function StockSpeedometer({
               >
                 <div className="flex items-center space-x-3">
                   <motion.div
-                    className="w-3 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                    className="w-3 h-3 bg-gradient-to-r from-[#cca695] to-blue-500 rounded-full"
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 1, repeat: Infinity }}
                   />
@@ -541,17 +541,17 @@ export default function StockSpeedometer({
                     <div className="flex space-x-2">
                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                       <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-[#cca695] rounded-full"></div>
                     </div>
                     <span className="text-slate-300 font-mono text-sm">artha-ai-research-terminal</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <motion.div
-                      className="w-2 h-2 bg-green-400 rounded-full"
+                      className="w-2 h-2 bg-[#cca695] rounded-full"
                       animate={{ opacity: [1, 0.3, 1] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     />
-                    <span className="text-green-400 text-sm font-mono">LIVE</span>
+                    <span className="text-[#cca695] text-sm font-mono">LIVE</span>
                   </div>
                 </div>
               </div>
@@ -588,13 +588,13 @@ export default function StockSpeedometer({
                             className={`font-mono text-sm leading-relaxed ${
                               log.type === 'error' 
                                 ? 'text-red-300' 
-                                : 'text-green-300'
+                                : 'text-[#cca695]'
                             }`}
                           >
                             {log.content}
                             {index === logs.length - 1 && (
                               <motion.span
-                                className="inline-block w-2 h-4 bg-green-400 ml-1"
+                                className="inline-block w-2 h-4 bg-[#cca695] ml-1"
                                 animate={{ opacity: [0, 1, 0] }}
                                 transition={{ duration: 1, repeat: Infinity }}
                               />
@@ -619,7 +619,7 @@ export default function StockSpeedometer({
                 <div className="flex items-center justify-between text-white">
                   <div className="flex items-center space-x-3">
                     <motion.div
-                      className="w-3 h-3 bg-green-400 rounded-full"
+                      className="w-3 h-3 bg-[#cca695] rounded-full"
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     />
@@ -640,7 +640,7 @@ export default function StockSpeedometer({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Strengths */}
             <motion.div 
-              className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-100 shadow-sm"
+              className="bg-gradient-to-br from-[#cca695]/10 to-[#cca695]/5 rounded-2xl p-6 border border-[#cca695]/20 shadow-sm"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
@@ -737,7 +737,7 @@ export default function StockSpeedometer({
             >
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-lg">💡</span>
+                  <span className="text-white text-lg">Idea</span>
                 </div>
                 <h3 className="text-xl font-bold text-amber-800">Key Considerations</h3>
               </div>

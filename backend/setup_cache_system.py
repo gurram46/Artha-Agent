@@ -50,21 +50,21 @@ class PostgreSQLSetup:
                     import glob
                     matches = glob.glob(path_pattern)
                     if matches:
-                        logger.info(f"✅ Found PostgreSQL at: {matches[0]}")
+                        logger.info(f"Found PostgreSQL at: {matches[0]}")
                         return True
                 
                 # Try running psql command
                 result = subprocess.run(["psql", "--version"], 
                                       capture_output=True, text=True)
                 if result.returncode == 0:
-                    logger.info(f"✅ PostgreSQL found: {result.stdout.strip()}")
+                    logger.info(f"PostgreSQL found: {result.stdout.strip()}")
                     return True
             else:
                 # Unix-like systems
                 result = subprocess.run(["which", "psql"], 
                                       capture_output=True, text=True)
                 if result.returncode == 0:
-                    logger.info(f"✅ PostgreSQL found at: {result.stdout.strip()}")
+                    logger.info(f"PostgreSQL found at: {result.stdout.strip()}")
                     return True
             
             return False
@@ -75,7 +75,7 @@ class PostgreSQLSetup:
     
     def install_postgresql_windows(self) -> bool:
         """Install PostgreSQL on Windows"""
-        logger.info("🔽 Installing PostgreSQL on Windows...")
+        logger.info("Installing PostgreSQL on Windows...")
         
         try:
             # Check if chocolatey is available
@@ -90,13 +90,13 @@ class PostgreSQLSetup:
                 ], capture_output=True, text=True)
                 
                 if result.returncode == 0:
-                    logger.info("✅ PostgreSQL installed via Chocolatey")
+                    logger.info("PostgreSQL installed via Chocolatey")
                     return True
                 else:
-                    logger.warning("⚠️ Chocolatey installation failed, trying manual approach...")
+                    logger.warning("Chocolatey installation failed, trying manual approach...")
             
             # Manual installation instructions
-            logger.info("📋 Manual PostgreSQL installation required:")
+            logger.info("Manual PostgreSQL installation required:")
             logger.info("   1. Download PostgreSQL from: https://www.postgresql.org/download/windows/")
             logger.info("   2. Run the installer with default settings")
             logger.info(f"   3. Set password for 'postgres' user")
@@ -106,12 +106,12 @@ class PostgreSQLSetup:
             return False
             
         except Exception as e:
-            logger.error(f"❌ Windows PostgreSQL installation failed: {e}")
+            logger.error(f"Windows PostgreSQL installation failed: {e}")
             return False
     
     def install_postgresql_unix(self) -> bool:
         """Install PostgreSQL on Unix-like systems"""
-        logger.info("🔽 Installing PostgreSQL on Unix-like system...")
+        logger.info("Installing PostgreSQL on Unix-like system...")
         
         try:
             # Detect package manager and install
@@ -131,26 +131,26 @@ class PostgreSQLSetup:
                     ["brew", "services", "start", "postgresql"]
                 ]
             else:
-                logger.error("❌ Unsupported package manager")
+                logger.error("Unsupported package manager")
                 return False
             
             for cmd in commands:
                 logger.info(f"   Running: {' '.join(cmd)}")
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 if result.returncode != 0:
-                    logger.error(f"❌ Command failed: {result.stderr}")
+                    logger.error(f"Command failed: {result.stderr}")
                     return False
             
-            logger.info("✅ PostgreSQL installed successfully")
+            logger.info("PostgreSQL installed successfully")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Unix PostgreSQL installation failed: {e}")
+            logger.error(f"Unix PostgreSQL installation failed: {e}")
             return False
     
     def create_database_and_user(self) -> bool:
         """Create database and user for Artha AI"""
-        logger.info("👤 Creating database and user...")
+        logger.info("Creating database and user...")
         
         try:
             # SQL commands to create database and user
@@ -169,14 +169,14 @@ class PostgreSQLSetup:
                 
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 if result.returncode != 0 and "already exists" not in result.stderr:
-                    logger.warning(f"⚠️ SQL command may have failed: {sql}")
+                    logger.warning(f"SQL command may have failed: {sql}")
                     logger.debug(f"Error: {result.stderr}")
             
-            logger.info("✅ Database and user created successfully")
+            logger.info("Database and user created successfully")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Database creation failed: {e}")
+            logger.error(f"Database creation failed: {e}")
             return False
 
 class CacheSystemSetup:
@@ -188,7 +188,7 @@ class CacheSystemSetup:
     
     def install_python_dependencies(self) -> bool:
         """Install required Python packages"""
-        logger.info("📦 Installing Python dependencies...")
+        logger.info("Installing Python dependencies...")
         
         dependencies = [
             "psycopg2-binary>=2.9.0",
@@ -207,20 +207,20 @@ class CacheSystemSetup:
                 ], capture_output=True, text=True)
                 
                 if result.returncode != 0:
-                    logger.warning(f"⚠️ Failed to install {dep}: {result.stderr}")
+                    logger.warning(f"Failed to install {dep}: {result.stderr}")
                 else:
-                    logger.debug(f"✅ {dep} installed")
+                    logger.debug(f"{dep} installed")
             
-            logger.info("✅ Python dependencies installation completed")
+            logger.info("Python dependencies installation completed")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to install dependencies: {e}")
+            logger.error(f"Failed to install dependencies: {e}")
             return False
     
     def create_env_file(self) -> bool:
         """Create .env file with database configuration"""
-        logger.info("⚙️ Creating environment configuration...")
+        logger.info("Creating environment configuration...")
         
         try:
             import secrets
@@ -264,17 +264,17 @@ DEBUG=true
             with open(self.env_file, 'w') as f:
                 f.write(env_content)
             
-            logger.info(f"✅ Environment file created: {self.env_file}")
-            logger.info("⚠️ IMPORTANT: Update ENCRYPTION_KEY in production!")
+            logger.info(f"Environment file created: {self.env_file}")
+            logger.info("IMPORTANT: Update ENCRYPTION_KEY in production!")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to create .env file: {e}")
+            logger.error(f"Failed to create .env file: {e}")
             return False
     
     def setup_database_schema(self) -> bool:
         """Set up database tables and schema"""
-        logger.info("🗄️ Setting up database schema...")
+        logger.info("Setting up database schema...")
         
         try:
             # Import after dependencies are installed
@@ -282,50 +282,50 @@ DEBUG=true
             
             # Test database connection
             if test_connection():
-                logger.info("✅ Database connection successful")
+                logger.info("Database connection successful")
                 
                 # Create tables
                 if create_tables():
-                    logger.info("✅ Database tables created successfully")
+                    logger.info("Database tables created successfully")
                     return True
                 else:
-                    logger.error("❌ Failed to create database tables")
+                    logger.error("Failed to create database tables")
                     return False
             else:
-                logger.error("❌ Database connection failed")
+                logger.error("Database connection failed")
                 return False
                 
         except ImportError as e:
-            logger.error(f"❌ Failed to import database modules: {e}")
+            logger.error(f"Failed to import database modules: {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ Database schema setup failed: {e}")
+            logger.error(f"Database schema setup failed: {e}")
             return False
     
     def test_encryption_system(self) -> bool:
         """Test and verify encryption system"""
-        logger.info("🔐 Testing encryption system...")
+        logger.info("Testing encryption system...")
         
         try:
             from backend.utils.encryption import test_encryption_system
             
             if test_encryption_system():
-                logger.info("✅ Encryption system working correctly")
+                logger.info("Encryption system working correctly")
                 return True
             else:
-                logger.error("❌ Encryption system test failed")
+                logger.error("Encryption system test failed")
                 return False
                 
         except ImportError as e:
-            logger.error(f"❌ Failed to import encryption modules: {e}")
+            logger.error(f"Failed to import encryption modules: {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ Encryption test failed: {e}")
+            logger.error(f"Encryption test failed: {e}")
             return False
     
     def test_cache_service(self) -> bool:
         """Test cache service functionality"""
-        logger.info("🧪 Testing cache service...")
+        logger.info("Testing cache service...")
         
         try:
             from backend.services.cache_service import cache_service
@@ -339,27 +339,27 @@ DEBUG=true
             
             # Test store
             if cache_service.cache_financial_data(test_email, test_data):
-                logger.info("   ✅ Cache store test passed")
+                logger.info("   Cache store test passed")
                 
                 # Test retrieve
                 retrieved = cache_service.get_cached_financial_data(test_email)
                 if retrieved and retrieved.get("accounts"):
-                    logger.info("   ✅ Cache retrieve test passed")
+                    logger.info("   Cache retrieve test passed")
                     
                     # Test invalidate
                     if cache_service.invalidate_user_cache(test_email):
-                        logger.info("   ✅ Cache invalidate test passed")
-                        logger.info("✅ Cache service tests completed successfully")
+                        logger.info("   Cache invalidate test passed")
+                        logger.info("Cache service tests completed successfully")
                         return True
             
-            logger.error("❌ Cache service tests failed")
+            logger.error("Cache service tests failed")
             return False
             
         except ImportError as e:
-            logger.error(f"❌ Failed to import cache service: {e}")
+            logger.error(f"Failed to import cache service: {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ Cache service test failed: {e}")
+            logger.error(f"Cache service test failed: {e}")
             return False
 
 
@@ -368,7 +368,7 @@ DEBUG=true
 
 def main():
     """Main setup function"""
-    logger.info("🚀 Starting Artha AI PostgreSQL & Cache System Setup")
+    logger.info("Starting Artha AI PostgreSQL & Cache System Setup")
     logger.info("=" * 70)
     
     # Initialize setup classes
@@ -376,74 +376,74 @@ def main():
     cache_setup = CacheSystemSetup()
     
     # Step 1: Install Python dependencies first
-    logger.info("📋 Step 1: Installing Python Dependencies")
+    logger.info("Step 1: Installing Python Dependencies")
     if not cache_setup.install_python_dependencies():
-        logger.error("❌ Setup failed at Python dependencies installation")
+        logger.error("Setup failed at Python dependencies installation")
         return False
     
     # Step 2: Check/Install PostgreSQL
-    logger.info("📋 Step 2: PostgreSQL Installation")
+    logger.info("Step 2: PostgreSQL Installation")
     if not postgres_setup.check_postgresql_installed():
         logger.info("PostgreSQL not found. Installing...")
         
         if postgres_setup.is_windows:
             if not postgres_setup.install_postgresql_windows():
-                logger.error("❌ PostgreSQL installation failed")
+                logger.error("PostgreSQL installation failed")
                 logger.info("Please install PostgreSQL manually and re-run this script")
                 return False
         else:
             if not postgres_setup.install_postgresql_unix():
-                logger.error("❌ PostgreSQL installation failed")
+                logger.error("PostgreSQL installation failed")
                 return False
     
     # Step 3: Create database and user
-    logger.info("📋 Step 3: Database Configuration")
+    logger.info("Step 3: Database Configuration")
     if not postgres_setup.create_database_and_user():
-        logger.warning("⚠️ Database creation may have failed - continuing anyway")
+        logger.warning("Database creation may have failed - continuing anyway")
     
     # Step 4: Create environment configuration
-    logger.info("📋 Step 4: Environment Configuration")
+    logger.info("Step 4: Environment Configuration")
     if not cache_setup.create_env_file():
-        logger.error("❌ Setup failed at environment configuration")
+        logger.error("Setup failed at environment configuration")
         return False
     
     # Step 5: Setup database schema
-    logger.info("📋 Step 5: Database Schema Setup")
+    logger.info("Step 5: Database Schema Setup")
     if not cache_setup.setup_database_schema():
-        logger.error("❌ Setup failed at database schema creation")
+        logger.error("Setup failed at database schema creation")
         return False
     
     # Step 6: Test encryption system
-    logger.info("📋 Step 6: Encryption System Test")
+    logger.info("Step 6: Encryption System Test")
     if not cache_setup.test_encryption_system():
-        logger.error("❌ Setup failed at encryption system test")
+        logger.error("Setup failed at encryption system test")
         return False
     
     # Step 7: Test cache service
-    logger.info("📋 Step 7: Cache Service Test")
+    logger.info("Step 7: Cache Service Test")
     if not cache_setup.test_cache_service():
-        logger.error("❌ Setup failed at cache service test")
+        logger.error("Setup failed at cache service test")
         return False
     
     # Success!
     logger.info("=" * 70)
-    logger.info("🎉 Artha AI PostgreSQL & Cache System Setup Completed Successfully!")
+    logger.info("Artha AI PostgreSQL & Cache System Setup Completed Successfully!")
     logger.info("")
-    logger.info("📋 Setup Summary:")
-    logger.info("   ✅ PostgreSQL installed and configured")
-    logger.info("   ✅ Database and user created")
-    logger.info("   ✅ Environment configuration created")
-    logger.info("   ✅ Database schema initialized")
-    logger.info("   ✅ Encryption system verified")
-    logger.info("   ✅ Cache service tested")
+    logger.info("Setup Summary:")
+    logger.info("   PostgreSQL installed and configured")
+    logger.info("   Database and user created")
+    logger.info("   Environment configuration created")
+    logger.info("   Database schema initialized")
+    logger.info("   Encryption system verified")
+    logger.info("   Cache service tested")
     logger.info("")
-    logger.info("🔧 Next Steps for Team Deployment:")
+    logger.info("Next Steps for Team Deployment:")
     logger.info("   1. Share the .env file template with your team")
     logger.info("   2. Each developer should update ENCRYPTION_KEY")
     logger.info("   3. Configure production database settings")
     logger.info("   4. Set up automated cache cleanup (optional)")
     logger.info("")
-    logger.info("🎯 The system is ready for secure financial data caching!")
+    logger.info("The system is ready for secure financial data caching!")
     
     return True
 

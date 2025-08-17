@@ -153,7 +153,7 @@ class MCPDataService {
     try {
       console.log(this.isDemoMode 
         ? '🎭 Fetching demo financial data...'
-        : '🔄 Fetching real-time financial data from Fi Money MCP...');
+        : '🔄 Fetching real-time financial data from Artha AI...');
 
       // Check secure cache first (if user email is set and not in demo mode)
       if (!this.isDemoMode && this.currentUserEmail) {
@@ -187,7 +187,7 @@ class MCPDataService {
         };
       }
 
-      // Fetch from Fi Money MCP via backend (with demo mode support)
+      // Fetch from Artha AI via backend (with demo mode support)
       const url = this.isDemoMode 
         ? `${this.backendUrl}/financial-data?demo=true`
         : `${this.backendUrl}/financial-data`;
@@ -201,7 +201,7 @@ class MCPDataService {
       });
 
       if (!response.ok) {
-        throw new Error(`Fi Money MCP API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Artha AI API error: ${response.status} ${response.statusText}`);
       }
 
       const backendData: BackendFinancialData = await response.json();
@@ -217,7 +217,7 @@ class MCPDataService {
       }
 
       if (backendData.status !== 'success') {
-        throw new Error(backendData.message || 'Fi Money MCP server error');
+        throw new Error(backendData.message || 'Artha AI server error');
       }
 
       // Cache the successful response in memory
@@ -242,8 +242,8 @@ class MCPDataService {
 
       console.log(this.isDemoMode 
         ? '✅ Successfully loaded demo data'
-        : '✅ Successfully fetched real-time data from Fi Money MCP');
-      console.log(`📊 Data source: ${this.isDemoMode ? 'Demo Data' : backendData.summary?.data_source || 'Fi Money MCP'}`);
+        : '✅ Successfully fetched real-time data from Artha AI');
+      console.log(`📊 Data source: ${this.isDemoMode ? 'Demo Data' : backendData.summary?.data_source || 'Artha AI'}`);
 
       return {
         success: true,
@@ -252,12 +252,12 @@ class MCPDataService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to fetch real-time data from Fi Money MCP:', error);
+      console.error('❌ Failed to fetch real-time data from Artha AI:', error);
       
       // NO FALLBACKS - Production ready
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to connect to Fi Money MCP server',
+        error: error instanceof Error ? error.message : 'Failed to connect to Artha AI server',
         authRequired: error instanceof Error && (error.message.includes('authentication') || error.message.includes('expired'))
       };
     }
@@ -767,7 +767,7 @@ class MCPDataService {
         },
         metadata: {
           last_updated: new Date().toISOString(),
-          data_source: "Fi MCP Real Data from mcp-docs",
+          data_source: "Artha AI Real Data from mcp-docs",
           accuracy: "Real MCP response data structure",
           total_assets_inr: totalAssets,
           total_liabilities_inr: totalLiabilities,

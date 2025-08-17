@@ -2,8 +2,7 @@
 Database Models for Artha AI Secure Caching System
 """
 
-from sqlalchemy import Column, String, DateTime, Text, Boolean, Index
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, String, DateTime, Text, Boolean, Index, JSON
 from datetime import datetime, timedelta
 from database.config import Base
 import uuid
@@ -20,8 +19,8 @@ class CachedFinancialData(Base):
     # User identification (hashed email)
     user_id = Column(String, nullable=False, index=True)
     
-    # Encrypted financial data (JSONB for efficient querying)
-    encrypted_data = Column(JSONB, nullable=False)
+    # Encrypted financial data (JSON for efficient querying)
+    encrypted_data = Column(JSON, nullable=False)
     
     # Metadata
     cached_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -120,7 +119,7 @@ class CacheAuditLog(Base):
     
     # Operation details
     cache_id = Column(String, nullable=True)  # Reference to cached data
-    operation_details = Column(JSONB, nullable=True)  # Additional operation metadata
+    operation_details = Column(JSON, nullable=True)  # Additional operation metadata
     
     # Security context
     ip_address = Column(String, nullable=True)  # Encrypted

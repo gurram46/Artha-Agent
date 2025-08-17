@@ -170,7 +170,6 @@ backend/
 │   ├── fi_mcp/                     # Fi Money MCP integration
 │   │   ├── real_client.py          # Real Fi Money data client
 │   │   └── demo_client.py          # Demo data client
-│   ├── money_truth_engine.py       # Financial analysis engine
 │   └── local_llm_processor.py      # LLM processing utilities
 ├── agents/                         # AI agents for different analyses
 │   ├── enhanced_analyst.py         # Enhanced financial analyst

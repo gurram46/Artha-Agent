@@ -207,4 +207,4 @@ if __name__ == "__main__":
     # Generate minimal JSON for local LLM
     minimal = generate_local_llm_format()
     
-    print("\n✅ Files generated successfully for local LLM processing!")
+    print("\nFiles generated successfully for local LLM processing!")

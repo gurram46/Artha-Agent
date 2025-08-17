@@ -43,18 +43,18 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
   };
 
   const handleConnectToFiMoney = async () => {
-    console.log('🧹 Clearing previous Fi Money session before new authentication...');
+    console.log('Clearing previous Fi Money session before new authentication...');
     
     // Preserve user signup data while clearing Fi Money session data
     const existingUserData = localStorage.getItem('userData');
-    console.log('💾 Preserving user signup data:', existingUserData ? 'Found' : 'None');
+    console.log('Preserving user signup data:', existingUserData ? 'Found' : 'None');
     
     // Logout from any existing Fi Money session
     try {
       await mcpService.logout();
-      console.log('✅ Previous Fi Money session cleared');
+      console.log('Previous Fi Money session cleared');
     } catch (logoutError) {
-      console.log('⚠️ No previous session to clear or logout failed:', logoutError);
+      console.log('No previous session to clear or logout failed:', logoutError);
     }
     
     // Clear only Fi Money related session data, preserve user profile
@@ -102,21 +102,21 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Starting Fi Money logout process (preserving user profile)...');
+      console.log('Starting Fi Money logout process (preserving user profile)...');
       
       // Preserve user signup data
       const existingUserData = localStorage.getItem('userData');
-      console.log('💾 Preserving user signup data during logout:', existingUserData ? 'Found' : 'None');
+      console.log('Preserving user signup data during logout:', existingUserData ? 'Found' : 'None');
       
       // Logout from Fi Money backend session
       await mcpService.logout();
-      console.log('✅ Fi Money backend session cleared');
+      console.log('Fi Money backend session cleared');
       
       // Clear demo mode
       mcpService.setDemoMode(false);
       
       // Clear only Fi Money related session data, preserve user profile
-      console.log('🧹 Clearing Fi Money session data (preserving user profile)...');
+      console.log('Clearing Fi Money session data (preserving user profile)...');
       sessionStorage.removeItem('demoMode');
       // Note: We're NOT clearing localStorage to preserve user signup data
       
@@ -128,7 +128,7 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
       setPasscode('');
       setAuthError('');
       
-      console.log('✅ Fi Money logout successful - user profile preserved');
+      console.log('Fi Money logout successful - user profile preserved');
       
       // Notify parent component about logout
       if (onAuthError) {
@@ -136,10 +136,10 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
       }
       
     } catch (error) {
-      console.error('❌ Logout failed:', error);
+      console.error('Logout failed:', error);
       
       // Even if logout fails, clear Fi Money data but preserve user profile
-      console.log('🧹 Clearing Fi Money data despite logout error (preserving user profile)...');
+      console.log('Clearing Fi Money data despite logout error (preserving user profile)...');
       sessionStorage.removeItem('demoMode');
       setIsAuthenticated(false);
       setSessionInfo(null);
@@ -154,15 +154,15 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
 
   if (isAuthenticated) {
     return (
-      <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+      <Card className="p-6 bg-gradient-to-r from-[#cca695]/10 to-blue-50 border-[#cca695]/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="w-3 h-3 bg-[#cca695] rounded-full animate-pulse"></div>
             <div>
-              <h3 className="text-lg font-semibold text-green-800">
-                🔗 Connected to Fi Money
+              <h3 className="text-lg font-semibold text-[#cca695]">
+                Connected to Fi Money
               </h3>
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-[#cca695]">
                 Real-time financial data active
                 {sessionInfo?.expiresInMinutes && (
                   <span className="ml-2">
@@ -191,7 +191,7 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-blue-800 mb-2">
-              🔐 Connect to Fi Money
+              Connect to Fi Money
             </h3>
             <p className="text-sm text-blue-600 mb-4">
               Enter your Fi Money registered phone number and passcode
@@ -237,10 +237,10 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-xs text-yellow-800 mb-2">
-              📱 <strong>Get Passcode:</strong> Open Fi Money app → Net Worth Dashboard → Talk to AI → Get Passcode
+              <strong>Get Passcode:</strong> Open Fi Money app → Net Worth Dashboard → Talk to AI → Get Passcode
             </p>
             <p className="text-xs text-yellow-700">
-              💡 <strong>Tip:</strong> Copy the passcode from Fi Money app and paste it here for quick entry.
+              <strong>Tip:</strong> Copy the passcode from Fi Money app and paste it here for quick entry.
             </p>
           </div>
 
@@ -272,7 +272,7 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
     <Card className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200">
       <div className="text-center space-y-4">
         <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
-          <span className="text-2xl">🏦</span>
+          <span className="text-2xl">Bank</span>
         </div>
         
         <div>
@@ -301,7 +301,7 @@ const FiMoneyAuth: React.FC<FiMoneyAuthProps> = ({ onAuthSuccess, onAuthError })
           size="lg"
           className="w-full"
         >
-          🔗 Connect to Fi Money
+          Connect to Fi Money
         </UnifiedButton>
 
         <p className="text-xs text-gray-500">

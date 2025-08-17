@@ -116,11 +116,11 @@ export default function CacheManagement({ userEmail, onClose }: CacheManagementP
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${
                         cacheStatus.isExpired ? 'bg-red-400' : 
-                        cacheStatus.hasCache ? 'bg-green-400' : 'bg-gray-400'
+                        cacheStatus.hasCache ? 'bg-[#cca695]' : 'bg-gray-400'
                       }`}></div>
                       <span className={`text-sm font-medium ${
                         cacheStatus.isExpired ? 'text-red-400' : 
-                        cacheStatus.hasCache ? 'text-green-400' : 'text-gray-400'
+                        cacheStatus.hasCache ? 'text-[#cca695]' : 'text-gray-400'
                       }`}>
                         {cacheStatus.isExpired ? 'Expired' : 
                          cacheStatus.hasCache ? 'Active' : 'No Cache'}
@@ -169,10 +169,10 @@ export default function CacheManagement({ userEmail, onClose }: CacheManagementP
                     <span className="text-gray-300">Cache System:</span>
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${
-                        systemStatus.cacheEnabled ? 'bg-green-400' : 'bg-red-400'
+                        systemStatus.cacheEnabled ? 'bg-[#cca695]' : 'bg-red-400'
                       }`}></div>
                       <span className={`text-sm font-medium ${
-                        systemStatus.cacheEnabled ? 'text-green-400' : 'text-red-400'
+                        systemStatus.cacheEnabled ? 'text-[#cca695]' : 'text-red-400'
                       }`}>
                         {systemStatus.cacheEnabled ? 'Enabled' : 'Disabled'}
                       </span>
@@ -183,10 +183,10 @@ export default function CacheManagement({ userEmail, onClose }: CacheManagementP
                     <span className="text-gray-300">Scheduler:</span>
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${
-                        systemStatus.schedulerRunning ? 'bg-green-400' : 'bg-red-400'
+                        systemStatus.schedulerRunning ? 'bg-[#cca695]' : 'bg-red-400'
                       }`}></div>
                       <span className={`text-sm font-medium ${
-                        systemStatus.schedulerRunning ? 'text-green-400' : 'text-red-400'
+                        systemStatus.schedulerRunning ? 'text-[#cca695]' : 'text-red-400'
                       }`}>
                         {systemStatus.schedulerRunning ? 'Running' : 'Stopped'}
                       </span>

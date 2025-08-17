@@ -42,7 +42,7 @@ export default function UserProfileModal({ userData, onClose, onEdit, onLogout, 
       case 'conservative': return '🛡️';
       case 'moderate': return '⚖️';
       case 'aggressive': return '🚀';
-      default: return '📊';
+      default: return 'Chart';
     }
   };
 
@@ -154,7 +154,7 @@ export default function UserProfileModal({ userData, onClose, onEdit, onLogout, 
             {/* Investment Goals */}
             <div className="bg-[rgb(30,31,33)] rounded-2xl p-6 border border-[rgba(0,184,153,0.1)]">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <span>🎯</span>
+                <span>Target</span>
                 <span>Investment Goals</span>
               </h3>
               
@@ -173,7 +173,7 @@ export default function UserProfileModal({ userData, onClose, onEdit, onLogout, 
             {/* Account Stats */}
             <div className="bg-[rgb(30,31,33)] rounded-2xl p-6 border border-[rgba(0,184,153,0.1)]">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <span>📊</span>
+                <span>Chart</span>
                 <span>Account Statistics</span>
               </h3>
               

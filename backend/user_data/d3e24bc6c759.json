@@ -1,14 +1,14 @@
 {
   "user_id": "d3e24bc6c759",
   "personalInfo": {
-    "fullName": "Sandeep Gurram  ",
+    "fullName": "Sandeep  Gurram ",
     "email": "sandeepgurram456@gmail.com",
-    "phoneNumber": "9392609877 ",
+    "phoneNumber": " 9392609877  ",
     "dateOfBirth": "2003-05-11",
-    "occupation": " Founder"
+    "occupation": "Founder"
   },
   "professionalInfo": {
-    "occupation": " Founder",
+    "occupation": "Founder",
     "annualIncome": "50L+",
     "workExperience": null,
     "industry": null
@@ -16,18 +16,11 @@
   "investmentPreferences": {
     "riskTolerance": "moderate",
     "investmentGoals": [
-      "Retirement Planning",
-      "Wealth Building",
-      "Tax Saving",
-      "Travel Fund",
-      "Business Investment",
-      "Child Education",
-      "Emergency Fund",
-      "Home Purchase"
+      "Child Education"
     ],
     "investmentHorizon": null,
     "preferredAssets": null
   },
-  "created_at": "2025-08-12 12:52:38.288143",
-  "updated_at": "2025-08-12 12:56:03.523560"
+  "created_at": "2025-08-15 17:40:28.259977",
+  "updated_at": "2025-08-15 17:41:48.416810"
 }

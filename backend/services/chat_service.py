@@ -84,7 +84,7 @@ class ChatService:
         
         Args:
             user_id: User identifier
-            agent_mode: Agent mode (quick, comprehensive, research, etc.)
+            agent_mode: Agent mode (quick, comprehensive, research, investment, etc.)
             financial_context: User's financial context
             
         Returns:

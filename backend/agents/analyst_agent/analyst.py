@@ -1,5 +1,5 @@
 """
-Pure AI-Powered Financial Intelligence Analyst 🤖
+Pure AI-Powered Financial Intelligence Analyst
 Leverages Gemini AI reasoning with real financial data for comprehensive analysis
 No hardcoded calculations - Pure AI intelligence with Fi MCP data + Google Search Grounding
 """
@@ -28,7 +28,7 @@ class AnalystAgent(BaseFinancialAgent):
     
     def __init__(self):
         super().__init__("analyst")
-        logger.info("🤖 Pure AI Financial Intelligence Analyst initialized - Gemini powered with Fi MCP data")
+        logger.info("Pure AI Financial Intelligence Analyst initialized - Gemini powered with Fi MCP data")
     
     def get_system_prompt(self, user_query: str, financial_data: FinancialData) -> str:
         """Generate comprehensive system prompt for Gemini AI to analyze financial data"""
@@ -98,11 +98,11 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
             if 'netWorthResponse' in net_worth:
                 total_value = net_worth['netWorthResponse'].get('totalNetWorthValue', {})
                 net_worth_amount = float(total_value.get('units', '0'))
-                formatted_data += f"\n💰 **TOTAL NET WORTH**: ₹{self.format_currency(net_worth_amount)} (From connected accounts)\n\n"
+                formatted_data += f"\n**TOTAL NET WORTH**: ₹{self.format_currency(net_worth_amount)} (From connected accounts)\n\n"
                 
                 # Process REAL Assets from Fi MCP
                 assets = net_worth['netWorthResponse'].get('assetValues', [])
-                formatted_data += "📊 **ASSET BREAKDOWN** (Real-time data):\n"
+                formatted_data += "**ASSET BREAKDOWN** (Real-time data):\n"
                 liquid_funds = 0
                 mutual_funds = 0
                 securities = 0
@@ -115,16 +115,16 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
                     
                     if 'SAVINGS_ACCOUNTS' in asset_type:
                         liquid_funds += amount
-                        formatted_data += f"  💳 Bank Savings: ₹{self.format_currency(amount)} (LIQUID - immediate access)\n"
+                        formatted_data += f"  Bank Savings: ₹{self.format_currency(amount)} (LIQUID - immediate access)\n"
                     elif 'MUTUAL_FUND' in asset_type:
                         mutual_funds += amount
-                        formatted_data += f"  📈 Mutual Fund Portfolio: ₹{self.format_currency(amount)} (Can liquidate in 1-2 days)\n"
+                        formatted_data += f"  Mutual Fund Portfolio: ₹{self.format_currency(amount)} (Can liquidate in 1-2 days)\n"
                     elif 'INDIAN_SECURITIES' in asset_type:
                         securities += amount
-                        formatted_data += f"  📊 Stock Holdings: ₹{self.format_currency(amount)} (Can sell in T+2 days)\n"
+                        formatted_data += f"  Stock Holdings: ₹{self.format_currency(amount)} (Can sell in T+2 days)\n"
                     elif 'EPF' in asset_type:
                         epf_amount += amount
-                        formatted_data += f"  🏦 EPF Balance: ₹{self.format_currency(amount)} (RETIREMENT fund - restricted)\n"
+                        formatted_data += f"  EPF Balance: ₹{self.format_currency(amount)} (RETIREMENT fund - restricted)\n"
                     else:
                         formatted_data += f"  • {asset_type.replace('ASSET_TYPE_', '').replace('_', ' ').title()}: ₹{self.format_currency(amount)}\n"
                 
@@ -132,7 +132,7 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
                 liabilities = net_worth['netWorthResponse'].get('liabilityValues', [])
                 total_loans = 0
                 if liabilities:
-                    formatted_data += "\n❌ **OUTSTANDING LIABILITIES**:\n"
+                    formatted_data += "\n**OUTSTANDING LIABILITIES**:\n"
                     for liability in liabilities:
                         liability_type = liability.get('netWorthAttribute', 'Unknown')
                         value = liability.get('value', {})
@@ -142,20 +142,20 @@ You are an expert Indian Financial Intelligence Analyst powered by Gemini AI. Yo
                         formatted_data += f"  • {clean_type}: ₹{self.format_currency(amount)}\n"
                 
                 # FINANCIAL CAPACITY ANALYSIS
-                formatted_data += f"\n💡 **LIQUIDITY & CAPACITY ANALYSIS**:\n"
-                formatted_data += f"- 💳 **Immediate Liquid Funds**: ₹{self.format_currency(liquid_funds)} (Bank accounts)\n"
-                formatted_data += f"- 📈 **Liquidatable Investments**: ₹{self.format_currency(mutual_funds + securities)} (MF + Stocks)\n"
-                formatted_data += f"- 🏦 **Retirement Savings**: ₹{self.format_currency(epf_amount)} (EPF - long-term)\n"
-                formatted_data += f"- ❌ **Total Debt Burden**: ₹{self.format_currency(total_loans)} (EMI obligations)\n"
+                formatted_data += f"\n**LIQUIDITY & CAPACITY ANALYSIS**:\n"
+                formatted_data += f"- **Immediate Liquid Funds**: ₹{self.format_currency(liquid_funds)} (Bank accounts)\n"
+                formatted_data += f"- **Liquidatable Investments**: ₹{self.format_currency(mutual_funds + securities)} (MF + Stocks)\n"
+                formatted_data += f"- **Retirement Savings**: ₹{self.format_currency(epf_amount)} (EPF - long-term)\n"
+                formatted_data += f"- **Total Debt Burden**: ₹{self.format_currency(total_loans)} (EMI obligations)\n"
                 
                 # Calculate REAL financial metrics
                 total_accessible = liquid_funds + (mutual_funds * 0.8) + (securities * 0.8)  # 80% liquidity factor
-                formatted_data += f"- ⚡ **Accessible Funds**: ₹{self.format_currency(total_accessible)} (Emergency + purchases)\n"
+                formatted_data += f"- **Accessible Funds**: ₹{self.format_currency(total_accessible)} (Emergency + purchases)\n"
                 
                 # Income estimation from REAL EPF and investment patterns  
                 estimated_income = self._estimate_monthly_income_from_data(epf_amount, mutual_funds, liquid_funds)
                 if estimated_income > 0:
-                    formatted_data += f"- 💰 **Estimated Monthly Income**: ₹{self.format_currency(estimated_income)} (Based on EPF/investment patterns)\n"
+                    formatted_data += f"- **Estimated Monthly Income**: ₹{self.format_currency(estimated_income)} (Based on EPF/investment patterns)\n"
         
         # Mutual Fund Holdings
         if hasattr(financial_data, 'net_worth') and financial_data.net_worth and 'mfSchemeAnalytics' in financial_data.net_worth:
@@ -444,12 +444,12 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         summary_prompt = f"""
 Generate a VERY brief executive summary for this financial query. Use exactly this format:
 
-🎯 **QUICK ANSWER: [ONE WORD RECOMMENDATION]**
+**QUICK ANSWER: [ONE WORD RECOMMENDATION]**
 
-✅ **Feasible**: [Yes/No/Partially] - [brief reason]
-⚠️ **Risk Level**: [Low/Medium/High] - [key concern]
-💡 **Best Approach**: [one key strategy]
-🚀 **Timeline**: [timeframe needed]
+**Feasible**: [Yes/No/Partially] - [brief reason]
+**Risk Level**: [Low/Medium/High] - [key concern]
+**Best Approach**: [one key strategy]
+**Timeline**: [timeframe needed]
 
 Query: {user_query}
 Keep it under 100 words total.
@@ -467,11 +467,11 @@ Keep it under 100 words total.
             return response.text.strip()
         except:
             # Simple fallback without hardcoded specifics
-            return """🎯 **QUICK ANALYSIS COMPLETE**
+            return """**QUICK ANALYSIS COMPLETE**
 
-✅ **Assessment**: Analyzing your situation...
-💡 **Strategy**: Personalized recommendations below  
-🚀 **Next Steps**: Review detailed analysis"""
+**Assessment**: Analyzing your situation...
+**Strategy**: Personalized recommendations below
+**Next Steps**: Review detailed analysis"""
 
     async def generate_response(self, user_query: str, financial_data: FinancialData, grounded_intelligence: Dict[str, Any]) -> str:
         """Generate response using Gemini with Google Search grounding"""
@@ -556,7 +556,7 @@ Create comprehensive Google search query for India market 2025.
 Return ONLY search query (max 20 words):"""
 
         try:
-            logger.info(f"🤖 Using Gemini 2.5 Flash for intelligent query generation: {user_query[:50]}...")
+            logger.info(f"Using Gemini 2.5 Flash for intelligent query generation: {user_query[:50]}...")
             
             ai_response = self.gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
@@ -576,21 +576,21 @@ Return ONLY search query (max 20 words):"""
                 # Remove any leading/trailing punctuation
                 comprehensive_query = comprehensive_query.strip('.,!?;:')
                 
-                logger.info(f"✅ AI Generated Query: {comprehensive_query}")
-                logger.info(f"📊 Query Length: {len(comprehensive_query.split())} words")
+                logger.info(f"AI Generated Query: {comprehensive_query}")
+                logger.info(f"Query Length: {len(comprehensive_query.split())} words")
                 return comprehensive_query
             else:
-                logger.error(f"❌ CRITICAL: Gemini returned empty response for query generation")
+                logger.error(f"CRITICAL: Gemini returned empty response for query generation")
                 if hasattr(ai_response, 'candidates') and ai_response.candidates:
                     candidate = ai_response.candidates[0]
                     logger.error(f"Finish reason: {candidate.finish_reason}")
                     if hasattr(candidate, 'safety_ratings'):
                         logger.error(f"Safety ratings: {candidate.safety_ratings}")
-                logger.warning("🔄 Using enhanced fallback query generation")
+                logger.warning("Using enhanced fallback query generation")
                 return self._generate_enhanced_fallback_query(user_query, financial_summary)
                 
         except Exception as e:
-            logger.error(f"❌ Enhanced AI query generation failed: {e}")
-            logger.warning(f"🔄 Using enhanced fallback query generation approach")
+            logger.error(f"Enhanced AI query generation failed: {e}")
+            logger.warning(f"Using enhanced fallback query generation approach")
             return self._generate_enhanced_fallback_query(user_query, financial_summary)
     

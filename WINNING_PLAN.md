@@ -162,38 +162,45 @@ Let me show you what their money is REALLY telling us..."
 
 ### Backend Architecture
 ```python
-# Core Analysis Engine
-class MoneyTruthEngine:
+# Multi-Agent Analysis System
+class ArthaAISystem:
     def __init__(self):
-        self.analyst = FinancialAnalystAgent()
-        self.researcher = MarketResearchAgent()
-        self.risk_advisor = RiskAdvisorAgent()
+        self.enhanced_analyst = EnhancedAnalystAgent()
+        self.enhanced_researcher = EnhancedResearchAgent()
+        self.enhanced_risk_advisor = EnhancedRiskAdvisorAgent()
+        self.quick_agent = QuickResponseAgent()
+        self.stock_analyst = StockAnalysisAgent()
     
-    async def analyze_complete(self, mcp_data):
-        # Parallel analysis by all agents
-        hidden_truths = await self.find_hidden_truths(mcp_data)
-        future_projection = await self.project_future(mcp_data)
-        portfolio_health = await self.diagnose_portfolio(mcp_data)
-        goal_reality = await self.check_goals(mcp_data)
-        personality = await self.analyze_behavior(mcp_data)
+    async def analyze_complete(self, mcp_data, query):
+        # Parallel analysis by specialized agents
+        financial_insights = await self.enhanced_analyst.analyze(mcp_data)
+        market_research = await self.enhanced_researcher.research(query)
+        risk_assessment = await self.enhanced_risk_advisor.assess(mcp_data)
+        quick_response = await self.quick_agent.respond(query)
         
-        return self.generate_unified_insights(all_results)
+        return self.generate_comprehensive_insights(all_results)
 ```
 
 ### API Endpoints
 ```python
-# Main insights endpoint
-@app.post("/api/money-truth")
-async def get_money_truth(user_id: str):
+# Financial insights endpoint
+@app.get("/api/financial-insights")
+async def get_financial_insights():
     mcp_data = load_fi_mcp_data()
-    insights = await money_truth_engine.analyze_complete(mcp_data)
+    insights = await enhanced_analyst.analyze(mcp_data)
     return insights
 
-# Real-time analysis
-@app.websocket("/ws/live-analysis")
-async def live_analysis(websocket: WebSocket):
-    # Stream insights as agents think
-    pass
+# AI investment recommendations
+@app.post("/api/ai-investment-recommendations")
+async def get_investment_recommendations(request: InvestmentRequest):
+    recommendations = await enhanced_analyst.get_recommendations(request)
+    return recommendations
+
+# Interactive chat streaming
+@app.post("/api/stream/query")
+async def stream_query(request: StreamRequest):
+    # Stream AI responses in real-time
+    return StreamingResponse(generate_stream_response(request))
 ```
 
 ### Frontend Components

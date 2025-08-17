@@ -180,7 +180,7 @@ export default function StocksList({}: StocksListProps = {}) {
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-600 text-center">
                   <div className="text-xs">
-                    <span className="text-green-600">{formatPrice(stock.dayHigh)}</span>
+                    <span className="text-[#cca695]">{formatPrice(stock.dayHigh)}</span>
                     <span className="mx-1">-</span>
                     <span className="text-red-600">{formatPrice(stock.dayLow)}</span>
                   </div>

@@ -5,8 +5,7 @@ Chat Conversation Models for Artha AI
 Database models for storing user chat conversations, messages, and chat analytics.
 """
 
-from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer, Float, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer, Float, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from database.config import Base
@@ -43,11 +42,11 @@ class ChatConversation(Base):
     total_tokens_used = Column(Integer, default=0, nullable=False)
     
     # Financial context (encrypted)
-    financial_context = Column(JSONB, nullable=True)  # Encrypted financial data snapshot
+    financial_context = Column(JSON, nullable=True)  # Encrypted financial data snapshot
     
     # Conversation summary (AI-generated)
     summary = Column(Text, nullable=True)
-    tags = Column(JSONB, nullable=True)  # Array of tags for categorization
+    tags = Column(JSON, nullable=True)  # Array of tags for categorization
     
     # Relationships
     messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan")
@@ -103,10 +102,10 @@ class ChatMessage(Base):
     processing_time = Column(Float, default=0.0, nullable=False)  # Response time in seconds
     
     # Message metadata
-    message_metadata = Column(JSONB, nullable=True)  # Additional message data (sources, confidence, etc.)
+    message_metadata = Column(JSON, nullable=True)  # Additional message data (sources, confidence, etc.)
     
     # Financial context at time of message
-    financial_snapshot = Column(JSONB, nullable=True)  # Encrypted financial data at message time
+    financial_snapshot = Column(JSON, nullable=True)  # Encrypted financial data at message time
     
     # Message status
     is_edited = Column(Boolean, default=False, nullable=False)
@@ -157,7 +156,7 @@ class ChatAnalytics(Base):
     max_response_time = Column(Float, default=0.0, nullable=False)
     
     # Popular topics/tags
-    popular_topics = Column(JSONB, nullable=True)
+    popular_topics = Column(JSON, nullable=True)
     
     # Session data
     total_session_time = Column(Float, default=0.0, nullable=False)  # Total time spent in chat
@@ -189,7 +188,7 @@ class ChatFeedback(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Metadata
-    feedback_metadata = Column(JSONB, nullable=True)  # Additional feedback context
+    feedback_metadata = Column(JSON, nullable=True)  # Additional feedback context
     
     def __repr__(self):
         return f"<ChatFeedback(id={self.id}, message_id={self.message_id}, rating={self.rating})>"

@@ -1,4 +1,4 @@
-export type AgentMode = 'quick' | 'research';
+export type AgentMode = 'normal' | 'think' | 'investment';
 
 export interface AgentDetail {
   title: string;

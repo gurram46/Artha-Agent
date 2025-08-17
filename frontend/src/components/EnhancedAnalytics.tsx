@@ -422,7 +422,7 @@ const EnhancedAnalytics = () => {
             </div>
             <div className="border-t border-[rgba(0,184,153,0.2)] pt-4">
               <div className="p-4 bg-[rgba(0,184,153,0.1)] rounded-xl">
-                <p className="text-sm text-white font-semibold mb-2">💼 EPF Balance</p>
+                <p className="text-sm text-white font-semibold mb-2">EPF Balance</p>
                 <p className="font-bold text-[rgb(0,184,153)] text-lg">
                   {formatCurrency(analyticsData.epfBalance)}
                 </p>

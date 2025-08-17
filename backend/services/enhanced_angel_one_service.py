@@ -123,23 +123,23 @@ class EnhancedAngelOneService:
                 # Market API for real-time data
                 if self.market_api_key:
                     self.market_api = SmartConnect(api_key=self.market_api_key)
-                    logger.info("✅ Market API initialized")
+                    logger.info("Market API initialized")
                 
                 # Trading API for trade execution
                 if self.trading_api_key:
                     self.trading_api = SmartConnect(api_key=self.trading_api_key)
-                    logger.info("✅ Trading API initialized")
+                    logger.info("Trading API initialized")
                     
                 # Historical API for historical data
                 if self.historical_api_key:
                     self.historical_api = SmartConnect(api_key=self.historical_api_key)
-                    logger.info("✅ Historical API initialized")
+                    logger.info("Historical API initialized")
                     
             except ImportError:
                 logger.warning("SmartApi not installed - using simulated data")
                 
         except Exception as e:
-            logger.error(f"❌ Error initializing APIs: {e}")
+            logger.error(f"Error initializing APIs: {e}")
     
     def is_configured(self) -> bool:
         """Check if Angel One API is properly configured."""
@@ -182,10 +182,10 @@ class EnhancedAngelOneService:
             if data['status']:
                 self.auth_token = data['data']['jwtToken']
                 self.refresh_token = data['data']['refreshToken']
-                logger.info("✅ Trading API authenticated successfully")
+                logger.info("Trading API authenticated successfully")
                 return True
             else:
-                logger.error(f"❌ Trading API authentication failed: {data.get('message', 'Unknown error')}")
+                logger.error(f"Trading API authentication failed: {data.get('message', 'Unknown error')}")
                 return False
                 
         except Exception as e:

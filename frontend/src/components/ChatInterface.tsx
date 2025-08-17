@@ -58,7 +58,7 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
           </div>
           <div>
             <h4 className="font-semibold text-white text-base">
-              {isComplete ? '✅ AI Analysis Complete' : '🧠 AI Agents Working...'}
+              {isComplete ? 'AI Analysis Complete' : 'AI Agents Working...'}
             </h4>
             <p className="text-xs text-[rgb(0,184,153)] font-medium">
               {activeAgents.length} {activeAgents.length === 1 ? 'agent' : 'agents'} {isComplete ? 'completed' : 'analyzing'}
@@ -90,7 +90,7 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
             const colors = [
               { bg: 'bg-blue-500', border: 'border-blue-200', bgLight: 'bg-blue-50/30' },
               { bg: 'bg-purple-500', border: 'border-purple-200', bgLight: 'bg-purple-50/30' },
-              { bg: 'bg-green-500', border: 'border-green-200', bgLight: 'bg-green-50/30' },
+              { bg: 'bg-[#cca695]', border: 'border-[#cca695]/20', bgLight: 'bg-[#cca695]/10' },
               { bg: 'bg-orange-500', border: 'border-orange-200', bgLight: 'bg-orange-50/30' },
               { bg: 'bg-pink-500', border: 'border-pink-200', bgLight: 'bg-pink-50/30' }
             ];
@@ -118,7 +118,7 @@ const AIThinkingProcess = ({ agentDetails, isComplete }: { agentDetails: Record<
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="text-xs bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] text-[rgb(0,184,153)] px-2 py-0.5 rounded-full font-semibold">
-                      ✅ Done
+                      Done
                     </div>
                     <svg
                       className={`w-5 h-5 text-gray-300 transform transition-transform ${
@@ -168,7 +168,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [agentMode, setAgentMode] = useState<AgentMode>('quick');
+  const [agentMode, setAgentMode] = useState<AgentMode>('normal');
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -384,10 +384,10 @@ export default function ChatInterface() {
 
   // Hackathon example queries from your submitted idea
   const exampleQueries = [
-    { icon: '🔮', text: "How much money will I have at 40?", category: 'Planning' },
-    { icon: '🏠', text: "Can I afford a ₹50L home loan?", category: 'Loans' },
-    { icon: '📊', text: "Which SIPs underperformed the market?", category: 'Analysis' },
-    { icon: '🚗', text: "Should I buy a car worth 20 lakhs?", category: 'Purchase' }
+    { icon: 'Plan', text: "How much money will I have at 40?", category: 'Planning' },
+    { icon: 'Home', text: "Can I afford a ₹50L home loan?", category: 'Loans' },
+    { icon: 'Chart', text: "Which SIPs underperformed the market?", category: 'Analysis' },
+    { icon: 'Car', text: "Should I buy a car worth 20 lakhs?", category: 'Purchase' }
   ];
 
   // System default answers for basic questions
@@ -401,10 +401,10 @@ export default function ChatInterface() {
       return `I'm powered by **Artha V 0.1**, a specialized financial AI model designed specifically for Indian financial markets and personal finance management.
 
 **Key Features:**
-• 🧠 **Advanced Financial Analysis** - Deep understanding of Indian financial instruments
-• 📊 **Real-time Market Data** - Live integration with stock markets and mutual funds
-• 💡 **Personalized Insights** - Tailored advice based on your financial profile
-• 🔒 **Secure & Private** - Your financial data is processed securely
+• **Advanced Financial Analysis** - Deep understanding of Indian financial instruments
+• **Real-time Market Data** - Live integration with stock markets and mutual funds
+• **Personalized Insights** - Tailored advice based on your financial profile
+• **Secure & Private** - Your financial data is processed securely
 
 **Capabilities:**
 • Portfolio analysis and optimization
@@ -442,11 +442,11 @@ This version includes significant improvements in financial data processing and 
 To democratize financial intelligence and make sophisticated financial analysis accessible to every Indian investor.
 
 **Key Features:**
-• 📊 **Real-time Portfolio Tracking** - Monitor your investments across all platforms
-• 🤖 **AI-Powered Analysis** - Get insights powered by Artha V 0.1
-• 📈 **Market Intelligence** - Stay updated with live market data
-• 💡 **Personalized Advice** - Recommendations tailored to your goals
-• 🔒 **Secure Integration** - Safe connection with your financial accounts
+• **Real-time Portfolio Tracking** - Monitor your investments across all platforms
+• **AI-Powered Analysis** - Get insights powered by Artha V 0.1
+• **Market Intelligence** - Stay updated with live market data
+• **Personalized Advice** - Recommendations tailored to your goals
+• **Secure Integration** - Safe connection with your financial accounts
 
 Artha combines cutting-edge AI technology with deep understanding of Indian financial markets to help you make smarter investment decisions.`;
     }
@@ -456,31 +456,31 @@ Artha combines cutting-edge AI technology with deep understanding of Indian fina
         lowerQuery.includes('features') || lowerQuery.includes('help me with')) {
       return `I can help you with a wide range of financial tasks using **Artha V 0.1**:
 
-**📊 Portfolio Management:**
+**Portfolio Management:**
 • Analyze your current investments
 • Track performance across all assets
 • Identify underperforming investments
 • Suggest portfolio rebalancing
 
-**💡 Investment Advice:**
+**Investment Advice:**
 • Recommend suitable mutual funds and stocks
 • Assess investment risks
 • Plan SIP strategies
 • Evaluate new investment opportunities
 
-**📈 Market Analysis:**
+**Market Analysis:**
 • Provide real-time stock analysis
 • Research company fundamentals
 • Track market trends and news
 • Compare investment options
 
-**🎯 Financial Planning:**
+**Financial Planning:**
 • Goal-based investment planning
 • Retirement planning calculations
 • Tax optimization strategies
 • Emergency fund planning
 
-**🔍 Research & Insights:**
+**Research & Insights:**
 • Deep dive analysis on specific stocks
 • Sector and industry research
 • Economic trend analysis
@@ -510,7 +510,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
           const userMessage: Message = {
             id: Date.now().toString(),
             type: 'user',
-            content: `${currentMessage}\n\n📄 Uploaded files: ${fileNames}`,
+            content: `${currentMessage}\n\nUploaded files: ${fileNames}`,
             timestamp: new Date(),
             mode: agentMode
           };
@@ -579,7 +579,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
     let messageContent = currentMessage;
     if (uploadedFiles.length > 0) {
       const fileNames = uploadedFiles.map(f => f.name).join(', ');
-      messageContent = `${currentMessage}\n\n📄 Uploaded files: ${fileNames}`;
+      messageContent = `${currentMessage}\n\nUploaded files: ${fileNames}`;
     }
 
     const userMessage: Message = {
@@ -812,14 +812,14 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
-            console.log('📥 Received streaming data:', data); // Debug log
+            console.log('Received streaming data:', data); // Debug log
             
             if (data === '[DONE]') {
               // Flush any pending updates before marking as done
               flushPendingUpdate();
               if (updateTimeoutId) clearTimeout(updateTimeoutId);
               
-              console.log('✅ Stream completed, marking as done');
+              console.log('Stream completed, marking as done');
               setMessages(prev => 
                 prev.map(msg => {
                   if (msg.id === messageId) {
@@ -846,19 +846,19 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
 
             try {
               const parsed: StreamMessage = JSON.parse(data);
-              console.log('📊 Parsed message:', parsed); // Debug log
+              console.log('Parsed message:', parsed); // Debug log
               
               if (parsed.type === 'log' && parsed.content) {
-                console.log('🤖 AI Log:', parsed.content);
+                console.log('AI Log:', parsed.content);
                 // Skip adding logs to message content - they'll be handled separately
               } else if (parsed.type === 'content' && parsed.content) {
-                console.log('💬 Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
+                console.log('Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
                 
                 // Filter out unwanted footer text and dividers while preserving spacing
                 const filteredContent = parsed.content
                   .replace(/─{30,}.*?─{30,}/gs, ' ') // Remove lines of dashes with content, add space
-                  .replace(/──────────────────────────────────────── 📊 DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, ' ')
-                  .replace(/📊 DETAILED AGENT ANALYSIS \(Click to expand\)/g, ' ')
+                  .replace(/──────────────────────────────────────── DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, ' ')
+                  .replace(/DETAILED AGENT ANALYSIS \(Click to expand\)/g, ' ')
                   .replace(/\s+/g, ' ') // Replace multiple spaces with single space
                   .trim();
                 
@@ -882,7 +882,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                   );
                 }
               } else if (parsed.type === 'status' && parsed.content) {
-                console.log('📋 Status update:', parsed.content);
+                console.log('Status update:', parsed.content);
                 
                 setMessages(prev => 
                   prev.map(msg => 
@@ -892,7 +892,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                   )
                 );
               } else if (parsed.type === 'agent_details') {
-                console.log('📊 Real-time agent details received:', parsed.agent, parsed.title);
+                console.log('Real-time agent details received:', parsed.agent, parsed.title);
                 
                 // Update agent details in real-time as they complete
                 setMessages(prev => 
@@ -913,15 +913,15 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                   )
                 );
               } else if (parsed.type === 'error') {
-                console.error('❌ Streaming error:', parsed.content);
+                console.error('Streaming error:', parsed.content);
                 throw new Error(parsed.content);
               }
             } catch (e) {
               if (e instanceof Error && e.message !== data) {
-                console.error('🔥 JSON parse error:', e);
+                console.error('JSON parse error:', e);
                 throw e; // Re-throw actual errors
               }
-              console.warn('⚠️ Skipping invalid JSON:', data);
+              console.warn('Skipping invalid JSON:', data);
               // Skip invalid JSON
             }
           }
@@ -1108,14 +1108,23 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
             {/* Centered Input Box */}
             <div className="w-full max-w-3xl mb-8">
               <div className="relative">
-                <input
-                  type="text"
+                <textarea
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask Artha anything..."
-                  className="w-full pl-16 pr-36 py-4 bg-[rgb(24,25,27)] border border-[rgba(255,255,255,0.1)] rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] text-lg"
+                  className="w-full pl-16 pr-36 py-4 bg-[rgb(24,25,27)] border border-[rgba(255,255,255,0.1)] rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] text-lg resize-none min-h-[56px] max-h-32 overflow-y-auto"
                   disabled={isLoading}
+                  rows={1}
+                  style={{
+                    height: 'auto',
+                    minHeight: '56px'
+                  }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+                  }}
                 />
                 <div className="absolute left-5 top-1/2 transform -translate-y-1/2">
                   {/* PDF Upload Button */}
@@ -1139,17 +1148,43 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                   />
                 </div>
                 <div className="absolute right-5 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
+                  {/* Investment Agent Toggle */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setAgentMode(agentMode === 'investment' ? 'normal' : 'investment')}
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        agentMode === 'investment'
+                          ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+                      } border border-[rgba(255,255,255,0.2)] focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)]`}
+                      title="Investment Agent"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                          <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        <span>Money</span>
+                      </div>
+                    </button>
+                  </div>
+                  
                   {/* Think Button */}
                   <button
-                    onClick={() => setAgentMode(agentMode === 'quick' ? 'research' : 'quick')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      agentMode === 'research'
-                        ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
-                        : 'bg-[rgba(255,255,255,0.1)] text-gray-300 hover:bg-[rgba(255,255,255,0.2)]'
-                    }`}
-                    title={agentMode === 'research' ? 'Think Mode Active' : 'Enable Think Mode'}
+                    onClick={() => setAgentMode(agentMode === 'think' ? 'normal' : 'think')}
+                    className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      agentMode === 'think'
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+                    } border border-[rgba(255,255,255,0.2)] focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                    title="Think Mode (Gemini 2.5 Pro)"
                   >
-                    Think
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span>AI</span>
+                    </div>
                   </button>
                   
                   {/* Send Button */}
@@ -1339,14 +1374,23 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                 )}
                 
                 <div className="relative">
-                  <input
-                    type="text"
+                  <textarea
                     value={currentMessage}
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask Artha anything..."
-                    className="w-full pl-16 pr-36 py-4 bg-[rgb(24,25,27)] border border-[rgba(255,255,255,0.1)] rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] text-lg"
+                    className="w-full pl-16 pr-36 py-4 bg-[rgb(24,25,27)] border border-[rgba(255,255,255,0.1)] rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)] focus:border-[rgb(0,184,153)] text-lg resize-none min-h-[56px] max-h-32 overflow-y-auto"
                     disabled={isLoading}
+                    rows={1}
+                    style={{
+                      height: 'auto',
+                      minHeight: '56px'
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+                    }}
                   />
                   <div className="absolute left-5 top-1/2 transform -translate-y-1/2">
                     {/* PDF Upload Button */}
@@ -1369,18 +1413,42 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                       className="hidden"
                     />
                   </div>
-                  <div className="absolute right-5 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
+                  <div className="absolute right-5 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                    {/* Investment Agent Toggle */}
+                    <button
+                      onClick={() => setAgentMode(agentMode === 'investment' ? 'normal' : 'investment')}
+                      className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 ${
+                        agentMode === 'investment'
+                          ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+                      } border border-[rgba(255,255,255,0.2)] focus:outline-none focus:ring-2 focus:ring-[rgb(0,184,153)]`}
+                      title="Investment Agent"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                          <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        <span>Money</span>
+                      </div>
+                    </button>
+                    
                     {/* Think Button */}
                     <button
-                      onClick={() => setAgentMode(agentMode === 'quick' ? 'research' : 'quick')}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                        agentMode === 'research'
-                          ? 'bg-[rgb(0,184,153)] text-white shadow-lg'
-                          : 'bg-[rgba(255,255,255,0.1)] text-gray-300 hover:bg-[rgba(255,255,255,0.2)]'
-                      }`}
-                      title={agentMode === 'research' ? 'Think Mode Active' : 'Enable Think Mode'}
+                      onClick={() => setAgentMode(agentMode === 'think' ? 'normal' : 'think')}
+                      className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 ${
+                        agentMode === 'think'
+                          ? 'bg-purple-600 text-white shadow-lg'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+                      } border border-[rgba(255,255,255,0.2)] focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      title="Think Mode (Gemini 2.5 Pro)"
                     >
-                      Think
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <span>AI</span>
+                      </div>
                     </button>
                     
                     {/* Send Button */}

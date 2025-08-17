@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import Dashboard from '@/components/Dashboard';
 import ChatInterface from '@/components/ChatInterface';
 import FinancialOverview from '@/components/FinancialOverview';
-import MoneyTruthEngine from '@/components/MoneyTruthEngine';
 import HydrationProvider from '@/components/HydrationProvider';
 import EnhancedFinancialStats from '@/components/EnhancedFinancialStats';
 import EnhancedLandingPage from '@/components/EnhancedLandingPage';
@@ -403,16 +402,12 @@ function HomeContent() {
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-20">
                 <div className="flex items-center space-x-4 group">
-                  <div className="relative w-14 h-14 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl group-hover:shadow-[rgba(0,184,153,0.3)] transition-all duration-300 group-hover:scale-105">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[rgb(0,204,173)] to-[rgb(0,144,113)] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <ArthaLogo className="relative text-white" size="lg" />
-                  </div>
                   <div className="group-hover:translate-x-1 transition-transform duration-300">
                     <h1 className="text-2xl font-black bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent tracking-tight">
                       Artha AI
                     </h1>
                     <p className="text-xs text-[rgb(0,184,153)] font-semibold tracking-wide">
-                      ✨ AI Financial Intelligence
+                      AI Financial Intelligence
                     </p>
                   </div>
                 </div>
@@ -479,7 +474,7 @@ function HomeContent() {
               <div className="flex items-center justify-between h-20">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl flex items-center justify-center shadow-xl">
-                    <ArthaLogo className="text-white" size="md" />
+                    <ArthaLogo className="text-white" size="md" src="/ArthaAi.svg" />
                   </div>
                   <div>
                     <h1 className="text-2xl font-black text-white tracking-tight">Artha AI</h1>
@@ -545,8 +540,7 @@ function HomeContent() {
 
   const navigationItems = [
     { id: 'portfolio', label: 'Portfolio', icon: 'M4 7v10c0 2.21 3.79 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.79 4 8 4s8-1.79 8-4M4 7c0-2.21 3.79-4 8-4s8 1.79 8 4' },
-    { id: 'advisory', label: 'AI Chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
-    { id: 'insights', label: 'Agents', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
+    { id: 'advisory', label: 'AI Chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' }
   ];
 
   console.log('🏠 Rendering main dashboard - isAuthenticated:', isAuthenticated, 'isLoggedIn:', isLoggedIn, 'financialData:', !!financialData);
@@ -568,7 +562,7 @@ function HomeContent() {
                   <div>
                     <h1 className="text-2xl font-black text-white tracking-tight">Artha</h1>
                     <p className="text-xs text-[rgb(0,184,153)] font-semibold">
-                      {isDemoMode ? '🎭 Demo Mode • AI Financial Intelligence' : 'AI Financial Intelligence'}
+                      {isDemoMode ? 'Demo Mode • AI Financial Intelligence' : 'AI Financial Intelligence'}
                     </p>
                   </div>
                 </div>
@@ -599,14 +593,14 @@ function HomeContent() {
                 <div className="hidden lg:flex items-center space-x-2 bg-[rgba(30,30,30,0.8)] rounded-xl px-3 py-2 border border-[rgba(70,68,68,0.3)]">
                   <div className={`w-2 h-2 rounded-full ${
                     cacheStatus.isExpired ? 'bg-red-400' : 
-                    cacheStatus.hasCache ? 'bg-green-400' : 'bg-gray-400'
+                    cacheStatus.hasCache ? 'bg-[#cca695]' : 'bg-gray-400'
                   } animate-pulse`}></div>
                   <div className="text-xs">
                     <p className="text-gray-300 font-medium">
                       {cacheStatus.hasCache ? 'Cached Data' : 'No Cache'}
                     </p>
                     {cacheStatus.timeRemaining && !cacheStatus.isExpired && (
-                      <p className="text-[rgb(0,184,153)]">
+                      <p className="text-[#cca695]">
                         {cacheStatus.timeRemaining} left
                       </p>
                     )}
@@ -751,7 +745,7 @@ function HomeContent() {
                   <>
                     <button
                       onClick={() => {
-                        console.log('🎭 Activating demo mode from mobile...');
+                        console.log(' Activating demo mode from mobile...');
                         sessionStorage.setItem('demoMode', 'true');
                         dispatch({ type: 'SET_DEMO_MODE', payload: true });
                         dispatch({ type: 'SET_AUTHENTICATED', payload: true });
@@ -868,7 +862,6 @@ function HomeContent() {
           <div className="space-y-5">
             {activeTab === 'portfolio' && <Dashboard financialData={financialData} />}
             {activeTab === 'advisory' && <ChatInterface />}
-            {activeTab === 'insights' && <MoneyTruthEngine financialData={financialData} />}
           </div>
         </main>
 

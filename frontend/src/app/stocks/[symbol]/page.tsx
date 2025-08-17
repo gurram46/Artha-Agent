@@ -271,7 +271,7 @@ export default function StockDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Open', value: formatPrice(stockData.open || 0), icon: '🔄' },
-            { label: 'Previous Close', value: formatPrice(stockData.previousClose || 0), icon: '📊' },
+            { label: 'Previous Close', value: formatPrice(stockData.previousClose || 0), icon: 'Chart' },
             { label: 'Day Range', value: `${formatPrice(stockData.dayLow)} - ${formatPrice(stockData.dayHigh)}`, icon: '📈' },
             { label: 'Volume', value: formatVolume(stockData.volume), icon: '📦' }
           ].map((stat, index) => (
@@ -292,7 +292,7 @@ export default function StockDetailPage() {
         <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-6 mb-8 shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
-              <span>📊</span>
+              <span>Chart</span>
               <span>Price Chart</span>
             </h2>
             <div className="flex items-center space-x-2 px-4 py-2 bg-[rgba(0,184,153,0.1)] border border-[rgba(0,184,153,0.2)] rounded-xl">
@@ -349,7 +349,7 @@ export default function StockDetailPage() {
             <div className="space-y-4">
               {[
                 { label: 'Dividend Rate', value: stockData.dividend ? formatPrice(stockData.dividend) : 'N/A', icon: '💎' },
-                { label: 'Dividend Yield', value: stockData.dividendYield ? `${stockData.dividendYield.toFixed(2)}%` : 'N/A', icon: '📊' },
+                { label: 'Dividend Yield', value: stockData.dividendYield ? `${stockData.dividendYield.toFixed(2)}%` : 'N/A', icon: 'Chart' },
                 { label: 'Sector', value: stockData.sector, icon: '🏭' },
                 { label: 'Exchange', value: 'NSE', icon: '🏦' },
                 { label: 'Currency', value: 'INR', icon: '₹' }

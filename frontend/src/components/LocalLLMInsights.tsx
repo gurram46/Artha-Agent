@@ -206,7 +206,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full border border-green-200">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#cca695]/10 text-[#cca695] rounded-full border border-[#cca695]/20">
             <Shield className="w-4 h-4" />
             <span className="text-sm font-semibold">100% Private</span>
           </div>
@@ -253,7 +253,7 @@ export default function LocalLLMInsights({ className = '' }: LocalLLMInsightsPro
           value="100%"
           subtitle="Data stays on device"
           icon={<Shield className="w-5 h-5 text-white" />}
-          color="bg-gradient-to-br from-green-500 to-green-600"
+          color="bg-gradient-to-br from-[#cca695] to-[#b8956a]"
         />
         <MetricCard
           title="Ultra Fast"
