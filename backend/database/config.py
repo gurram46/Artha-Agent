@@ -130,9 +130,12 @@ def get_database_url():
     # Fallback to old DATABASE_URL if new variables not set
     return os.getenv('DATABASE_URL', new_url)
 
-# Create SQLAlchemy engine with connection pooling
+# Import enhanced connection manager
+from .connection_manager import get_connection_manager, get_db_session, test_db_connection as test_conn_manager
+
+# Create SQLAlchemy engine with connection pooling (legacy support)
 def create_engine_instance():
-    """Create SQLAlchemy engine with optimized settings"""
+    """Create SQLAlchemy engine with optimized settings (legacy)"""
     database_url = get_database_url()
     
     return create_engine(
@@ -146,38 +149,33 @@ def create_engine_instance():
         future=True
     )
 
-# Create engine instance
-engine = create_engine_instance()
+# Enhanced connection manager (recommended)
+connection_manager = get_connection_manager()
+engine = connection_manager.engine
 
-# Create SessionLocal class
+# Create SessionLocal class (legacy support)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
     """
-    Database dependency for FastAPI
+    Database dependency for FastAPI with enhanced connection management
     """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    with connection_manager.get_session() as session:
+        try:
+            yield session
+        except Exception as e:
+            logger.error(f"❌ Database session error in FastAPI dependency: {e}")
+            raise
 
 def get_session():
-    """Get database session"""
-    return SessionLocal()
+    """Get database session with enhanced connection management"""
+    return connection_manager.get_session()
 
 def test_connection() -> bool:
     """
-    Test database connection
+    Test database connection with retry logic
     """
-    try:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT 1"))
-            logger.info("✅ Database connection successful")
-            return True
-    except Exception as e:
-        logger.error(f"❌ Database connection failed: {e}")
-        return False
+    return connection_manager.test_connection()
 
 def create_tables():
     """
@@ -204,66 +202,66 @@ def drop_tables():
         logger.error(f"❌ Failed to drop database tables: {e}")
         return False
 
+@connection_manager.with_retry()
 def cleanup_expired_cache():
-    """Clean up expired cache entries"""
+    """Clean up expired cache entries with retry logic"""
     try:
-        session = get_session()
-        
-        # Find expired entries
-        expired_entries = session.query(SecureCache).filter(
-            SecureCache.expires_at < datetime.utcnow()
-        ).all()
-        
-        count = len(expired_entries)
-        
-        if count > 0:
-            # Delete expired entries
-            session.query(SecureCache).filter(
+        with connection_manager.get_session() as session:
+            # Find expired entries
+            expired_entries = session.query(SecureCache).filter(
                 SecureCache.expires_at < datetime.utcnow()
-            ).delete()
+            ).all()
             
-            session.commit()
-            logger.info(f"🧹 Cleaned up {count} expired cache entries")
-        else:
-            logger.info("🧹 No expired cache entries to clean up")
-        
-        session.close()
-        return count
+            count = len(expired_entries)
+            
+            if count > 0:
+                # Delete expired entries
+                session.query(SecureCache).filter(
+                    SecureCache.expires_at < datetime.utcnow()
+                ).delete()
+                
+                logger.info(f"🧹 Cleaned up {count} expired cache entries")
+            else:
+                logger.info("🧹 No expired cache entries to clean up")
+            
+            return count
         
     except Exception as e:
         logger.error(f"❌ Cache cleanup failed: {e}")
         return 0
 
+@connection_manager.with_retry()
 def get_cache_stats():
-    """Get cache system statistics"""
+    """Get cache system statistics with retry logic"""
     try:
-        session = get_session()
-        
-        # Total cached users
-        total_users = session.query(SecureCache).count()
-        
-        # Active (non-expired) users
-        active_users = session.query(SecureCache).filter(
-            SecureCache.expires_at > datetime.utcnow()
-        ).count()
-        
-        # Expired users
-        expired_users = total_users - active_users
-        
-        # Recent activity (last 24 hours)
-        recent_activity = session.query(CacheAuditLog).filter(
-            CacheAuditLog.timestamp > datetime.utcnow() - timedelta(hours=24)
-        ).count()
-        
-        session.close()
-        
-        return {
-            'total_users': total_users,
-            'active_users': active_users,
-            'expired_users': expired_users,
-            'recent_activity_24h': recent_activity,
-            'cache_enabled': os.getenv('CACHE_ENABLED', 'true').lower() == 'true'
-        }
+        with connection_manager.get_session() as session:
+            # Total cached users
+            total_users = session.query(SecureCache).count()
+            
+            # Active (non-expired) users
+            active_users = session.query(SecureCache).filter(
+                SecureCache.expires_at > datetime.utcnow()
+            ).count()
+            
+            # Expired users
+            expired_users = total_users - active_users
+            
+            # Recent activity (last 24 hours)
+            recent_activity = session.query(CacheAuditLog).filter(
+                CacheAuditLog.timestamp > datetime.utcnow() - timedelta(hours=24)
+            ).count()
+            
+            # Get connection pool stats
+            pool_stats = connection_manager.get_pool_status()
+            
+            return {
+                'total_users': total_users,
+                'active_users': active_users,
+                'expired_users': expired_users,
+                'recent_activity_24h': recent_activity,
+                'cache_enabled': os.getenv('CACHE_ENABLED', 'true').lower() == 'true',
+                'connection_pool': pool_stats
+            }
         
     except Exception as e:
         logger.error(f"❌ Failed to get cache stats: {e}")
@@ -273,6 +271,7 @@ def get_cache_stats():
             'expired_users': 0,
             'recent_activity_24h': 0,
             'cache_enabled': False,
+            'connection_pool': {},
             'error': str(e)
         }
 

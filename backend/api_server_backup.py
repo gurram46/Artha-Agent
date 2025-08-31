@@ -845,7 +845,7 @@ async def get_cache_status(email: str):
             has_cache=status.get("has_cache", False),
             expires_at=status.get("expires_at"),
             time_remaining=status.get("time_remaining"),
-            cached_at=status.get("cached_at"),
+            cached_at=status.get("created_at"),
             message="Cache status retrieved successfully"
         )
     except Exception as e:

@@ -68,12 +68,21 @@ export default function UserProfileModal({ userData, onClose, onEdit, onLogout, 
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-gradient-to-br from-[rgb(34,197,94)] to-[rgb(22,163,74)] rounded-2xl flex items-center justify-center shadow-lg">
                 <span className="text-xl font-bold text-white">
-                  {userData.firstName.charAt(0)}{userData.lastName.charAt(0)}
+                  {(() => {
+                    // Safe user initials function
+                    if (userData?.full_name) {
+                      const names = userData.full_name.split(' ');
+                      return names.length >= 2 ? `${names[0].charAt(0)}${names[1].charAt(0)}` : names[0].charAt(0);
+                    } else if (userData?.firstName && userData?.lastName) {
+                      return `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`;
+                    }
+                    return 'U';
+                  })()}
                 </span>
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  {userData.firstName} {userData.lastName}
+                  {userData?.full_name || (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : 'User')}
                 </h2>
                 <p className="text-[rgb(0,184,153)] font-semibold">Premium Member</p>
               </div>
@@ -159,7 +168,7 @@ export default function UserProfileModal({ userData, onClose, onEdit, onLogout, 
               </h3>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {userData.investmentGoals.map((goal, index) => (
+                {(userData.investmentGoals || []).map((goal, index) => (
                   <div
                     key={index}
                     className="bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] rounded-xl p-3 text-center"

@@ -685,6 +685,10 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
           }
         }, DEFAULT_STREAMING_CONFIG.timeout);
 
+        // Debug log user data before sending
+        console.log('🔍 Sending user data:', userData);
+        console.log('🔍 Demo mode:', isDemoMode);
+        
         // Try streaming first
         const streamResponse = await fetch('http://localhost:8000/api/stream/query', {
           method: 'POST',
@@ -695,7 +699,8 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
             query,
             mode: agentMode,
             demo_mode: isDemoMode,
-            user_data: userData // Include user data in the request
+            user_data: userData, 
+            user_id: userData?.email || userData?.user_id || 'demo-user'
           }),
           signal: controller.signal
         });
@@ -854,11 +859,22 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
               } else if (parsed.type === 'content' && parsed.content) {
                 console.log('Adding content chunk:', parsed.content.substring(0, 50) + '...'); // Debug log
                 
-                // Filter out unwanted footer text and dividers while preserving spacing
+                // Comprehensive content filtering to remove verbose backend content
                 const filteredContent = parsed.content
-                  .replace(/─{30,}.*?─{30,}/gs, ' ') // Remove lines of dashes with content, add space
-                  .replace(/──────────────────────────────────────── DETAILED AGENT ANALYSIS \(Click to expand\) ────────────────────────────────────────/g, ' ')
-                  .replace(/DETAILED AGENT ANALYSIS \(Click to expand\)/g, ' ')
+                  // Remove all dash separators and verbose headers
+                  .replace(/─{10,}.*?─{10,}/gs, ' ') // Remove lines of dashes with any content
+                  .replace(/━{10,}.*?━{10,}/gs, ' ') // Remove lines of double dashes
+                  .replace(/DETAILED AGENT ANALYSIS.*?\n/gi, ' ') // Remove detailed analysis headers
+                  .replace(/\*\*📊 DETAILED AGENT ANALYSIS\*\*.*?\n/gi, ' ') // Remove markdown headers
+                  .replace(/\(Click to expand\)/gi, ' ') // Remove expand instructions
+                  .replace(/\*\*🤖 ANALYST AGENT FINDINGS:\*\*.*?(?=\*\*|$)/gs, ' ') // Remove agent findings sections
+                  .replace(/\*\*🎯 RESEARCH AGENT ANALYSIS:\*\*.*?(?=\*\*|$)/gs, ' ') // Remove research sections
+                  .replace(/\*\*⚠️ RISK AGENT ASSESSMENT:\*\*.*?(?=\*\*|$)/gs, ' ') // Remove risk sections
+                  .replace(/Market Intelligence Sources:.*?\n/gi, ' ') // Remove source counts
+                  .replace(/Search Queries Executed:.*?\n/gi, ' ') // Remove query counts
+                  .replace(/Key Market Data:.*?\n/gi, ' ') // Remove market data headers
+                  .replace(/\*\*ARTHA AI SYSTEM ACTIVATED\*\*.*?\n/gi, ' ') // Remove system activation messages
+                  .replace(/🚀.*?ACTIVATED.*?\n/gi, ' ') // Remove activation messages
                   .replace(/\s+/g, ' ') // Replace multiple spaces with single space
                   .trim();
                 
@@ -875,6 +891,13 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                           newContent += ' ';
                         }
                         newContent += filteredContent;
+                        
+                        // Limit content length to prevent overly verbose responses
+                        const maxContentLength = 2000; // Reasonable limit for chat responses
+                        if (newContent.length > maxContentLength) {
+                          newContent = newContent.substring(0, maxContentLength) + '... [Response truncated for readability]';
+                        }
+                        
                         return { ...msg, content: newContent, streaming: true };
                       }
                       return msg;
@@ -912,9 +935,22 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                       : msg
                   )
                 );
+              } else if (parsed.type === 'complete') {
+                console.log('Stream completion signal received');
+                // Handle completion - could update final content or trigger completion actions
+                if (parsed.content) {
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === messageId
+                        ? { ...msg, content: parsed.content, streaming: false }
+                        : msg
+                    )
+                  );
+                }
               } else if (parsed.type === 'error') {
-                console.error('Streaming error:', parsed.content);
-                throw new Error(parsed.content);
+                const errorMessage = parsed.message || parsed.content || 'Unknown error occurred';
+                console.error('Streaming error:', errorMessage);
+                throw new Error(errorMessage);
               }
             } catch (e) {
               if (e instanceof Error && e.message !== data) {
@@ -1101,7 +1137,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
             {/* Centered Greeting */}
             <div className="text-center mb-12">
               <h1 className="text-4xl font-normal text-white mb-2">
-                {isDemoMode ? 'Hello, Demo User' : (userData?.firstName ? `Hello, ${userData.firstName}` : 'Hello')}
+                {isDemoMode ? 'Hello, Demo User' : (userData?.full_name ? `Hello, ${userData.full_name.split(' ')[0]}` : 'Hello')}
               </h1>
             </div>
 
@@ -1164,7 +1200,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                           <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
                           <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
-                        <span>Money</span>
+                        <span>Investment Agent</span>
                       </div>
                     </button>
                   </div>
@@ -1265,8 +1301,8 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                   <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] ${
                       message.type === 'user' 
-                        ? 'bg-[rgb(0,184,153)] text-white rounded-2xl px-4 py-3' 
-                        : 'text-white'
+                        ? 'bg-[rgb(0,184,153)] text-white rounded-2xl px-4 py-3 break-words overflow-wrap-anywhere whitespace-pre-wrap' 
+                        : 'text-white break-words overflow-wrap-anywhere whitespace-pre-wrap'
                     }`}>
                       {message.processing ? (
                         <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-[rgba(0,184,153,0.08)] to-[rgba(0,164,133,0.12)] rounded-2xl border border-[rgba(0,184,153,0.15)]">
@@ -1429,7 +1465,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                           <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
                           <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
-                        <span>Money</span>
+                        <span>Investment Agent</span>
                       </div>
                     </button>
                     
@@ -1447,7 +1483,7 @@ Just ask me anything about your finances, and I'll provide detailed, personalize
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
-                        <span>AI</span>
+                        <span>Think Mode</span>
                       </div>
                     </button>
                     

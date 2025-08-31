@@ -11,8 +11,10 @@ interface SessionData {
   conversationId?: string;
 }
 
+import { getApiUrl } from '../config/environment';
+
 class SessionService {
-  private readonly API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  private readonly API_BASE = getApiUrl();
   private sessionId: string | null = null;
 
   constructor() {

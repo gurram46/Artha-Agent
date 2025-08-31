@@ -201,10 +201,10 @@ class AuthService:
             salt = self._generate_salt()
             password_hash = self._hash_password(password, salt)
             
-            # Encrypt sensitive data
-            full_name_enc = self.encryption.encrypt_data(full_name.strip())
-            phone_enc = self.encryption.encrypt_data(phone) if phone else None
-            dob_enc = self.encryption.encrypt_data(date_of_birth) if date_of_birth else None
+            # Encrypt sensitive data using GCM mode
+            full_name_enc = self.encryption.encrypt_data_gcm(full_name.strip())
+            phone_enc = self.encryption.encrypt_data_gcm(phone) if phone else None
+            dob_enc = self.encryption.encrypt_data_gcm(date_of_birth) if date_of_birth else None
             
             with self._get_db_connection() as conn:
                 with conn.cursor() as cursor:
@@ -275,7 +275,8 @@ class AuthService:
                     "id": user_id,
                     "email": email,
                     "full_name": full_name,
-                    "is_verified": True
+                    "is_verified": True,
+                    "last_login": None
                 },
                 "tokens": {
                     "access_token": access_token,
@@ -372,7 +373,7 @@ class AuthService:
                     conn.commit()
                     
                     # Decrypt full name for response
-                    full_name = self.encryption.decrypt_data({
+                    full_name = self.encryption.decrypt_data_gcm({
                         'encrypted_data': user_dict['full_name_encrypted'],
                         'nonce': user_dict['full_name_nonce'],
                         'auth_tag': user_dict['full_name_auth_tag']
@@ -439,7 +440,7 @@ class AuthService:
                     user_dict = dict(user)
                     
                     # Decrypt full name
-                    full_name = self.encryption.decrypt_data({
+                    full_name = self.encryption.decrypt_data_gcm({
                         'encrypted_data': user_dict['full_name_encrypted'],
                         'nonce': user_dict['full_name_nonce'],
                         'auth_tag': user_dict['full_name_auth_tag']
@@ -586,21 +587,21 @@ class AuthService:
                     
                     # Decrypt personal info
                     if user_dict['full_name_encrypted']:
-                        profile['full_name'] = self.encryption.decrypt_data({
+                        profile['full_name'] = self.encryption.decrypt_data_gcm({
                             'encrypted_data': user_dict['full_name_encrypted'],
                             'nonce': user_dict['full_name_nonce'],
                             'auth_tag': user_dict['full_name_auth_tag']
                         })
                     
                     if user_dict['phone_encrypted']:
-                        profile['phone'] = self.encryption.decrypt_data({
+                        profile['phone'] = self.encryption.decrypt_data_gcm({
                             'encrypted_data': user_dict['phone_encrypted'],
                             'nonce': user_dict['phone_nonce'],
                             'auth_tag': user_dict['phone_auth_tag']
                         })
                     
                     if user_dict['date_of_birth_encrypted']:
-                        profile['date_of_birth'] = self.encryption.decrypt_data({
+                        profile['date_of_birth'] = self.encryption.decrypt_data_gcm({
                             'encrypted_data': user_dict['date_of_birth_encrypted'],
                             'nonce': user_dict['date_of_birth_nonce'],
                             'auth_tag': user_dict['date_of_birth_auth_tag']

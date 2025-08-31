@@ -155,58 +155,60 @@ export default function StockDetailPage() {
     return volume.toString();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[rgb(0,26,30)] flex items-center justify-center">
-        <div className="text-center space-y-8 max-w-md">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-[rgba(0,184,153,0.2)] border-t-[rgb(0,184,153)] rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-[rgba(0,184,153,0.3)] rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
-          </div>
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-white">Loading Stock Data</h2>
-            <p className="text-gray-300 text-lg">Fetching real-time information for {symbol}...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !stockData) {
-    return (
-      <div className="min-h-screen bg-[rgb(0,26,30)]">
-        <div className="container mx-auto px-4 pt-8">
-          <button
-            onClick={handleBack}
-            className="mb-6 flex items-center text-[rgb(0,184,153)] hover:text-white transition-all duration-200 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Dashboard
-          </button>
-          
-          <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-center shadow-xl">
-            <div className="w-16 h-16 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Stock Not Found</h3>
-            <p className="text-red-400 mb-4">{error || 'Unable to load stock details'}</p>
-            <button
-              onClick={loadStockData}
-              className="px-6 py-2 bg-[rgb(0,184,153)] text-white rounded-lg hover:bg-[rgb(0,164,133)] transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // SINGLE RETURN WITH CONDITIONAL RENDERING - NO EARLY RETURNS
   return (
+    <div>
+      {/* Loading State */}
+      {loading && (
+        <div className="min-h-screen bg-[rgb(0,26,30)] flex items-center justify-center">
+          <div className="text-center space-y-8 max-w-md">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-[rgba(0,184,153,0.2)] border-t-[rgb(0,184,153)] rounded-full animate-spin mx-auto"></div>
+              <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-[rgba(0,184,153,0.3)] rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-white">Loading Stock Data</h2>
+              <p className="text-gray-300 text-lg">Fetching real-time information for {symbol}...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {!loading && (error || !stockData) && (
+        <div className="min-h-screen bg-[rgb(0,26,30)]">
+          <div className="container mx-auto px-4 pt-8">
+            <button
+              onClick={handleBack}
+              className="mb-6 flex items-center text-[rgb(0,184,153)] hover:text-white transition-all duration-200 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] px-4 py-2 rounded-xl shadow-md hover:shadow-lg"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Dashboard
+            </button>
+            
+            <div className="bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-8 text-center shadow-xl">
+              <div className="w-16 h-16 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Stock Not Found</h3>
+              <p className="text-red-400 mb-4">{error || 'Unable to load stock details'}</p>
+              <button
+                onClick={loadStockData}
+                className="px-6 py-2 bg-[rgb(0,184,153)] text-white rounded-lg hover:bg-[rgb(0,164,133)] transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Stock Details */}
+      {!loading && !error && stockData && (
     <div className="min-h-screen bg-[rgb(0,26,30)]">
       <div className="container mx-auto px-4 pt-8 pb-8">
         {/* Enhanced Header */}
@@ -367,5 +369,7 @@ export default function StockDetailPage() {
         </div>
       </div>
     </div>
-  );
+      )}
+     </div>
+   );
 }

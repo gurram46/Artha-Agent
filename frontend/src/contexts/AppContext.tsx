@@ -40,7 +40,9 @@ export interface AppState {
   authError: string;
   activeTab: string;
   showSignupForm: boolean;
+  showLoginForm: boolean;
   showUserProfile: boolean;
+  authMode: 'login' | 'signup';
 }
 
 type AppAction =
@@ -58,7 +60,9 @@ type AppAction =
   | { type: 'SET_AUTH_ERROR'; payload: string }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'SET_SHOW_SIGNUP_FORM'; payload: boolean }
+  | { type: 'SET_SHOW_LOGIN_FORM'; payload: boolean }
   | { type: 'SET_SHOW_USER_PROFILE'; payload: boolean }
+  | { type: 'SET_AUTH_MODE'; payload: 'login' | 'signup' }
   | { type: 'CLEAR_ALL_DATA' }
   | { type: 'CLEAR_USER_PROFILE' }
   | { type: 'LOGOUT' }
@@ -80,7 +84,9 @@ const initialState: AppState = {
   authError: '',
   activeTab: 'portfolio',
   showSignupForm: false,
+  showLoginForm: false,
   showUserProfile: false,
+  authMode: 'signup',
 };
 
 // Reducer
@@ -108,7 +114,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         authToken: action.payload,
-        isAuthenticated: !!action.payload,
+        // Don't automatically set isAuthenticated - let Fi Money auth flow control this
       };
     case 'SET_DEMO_MODE':
       return {
@@ -161,10 +167,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         showSignupForm: action.payload,
       };
+    case 'SET_SHOW_LOGIN_FORM':
+      return {
+        ...state,
+        showLoginForm: action.payload,
+      };
     case 'SET_SHOW_USER_PROFILE':
       return {
         ...state,
         showUserProfile: action.payload,
+      };
+    case 'SET_AUTH_MODE':
+      return {
+        ...state,
+        authMode: action.payload,
       };
     case 'CLEAR_ALL_DATA':
       return {
@@ -203,7 +219,7 @@ const AppContext = createContext<{
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load persisted state on mount
+  // Load persisted state on mount - but don't automatically set authentication states
   useEffect(() => {
     const loadPersistedState = async () => {
       try {
@@ -214,40 +230,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
           loading: state.loading 
         });
         
-        dispatch({ type: 'SET_LOADING', payload: true });
-
-        // Load demo mode from sessionStorage (non-sensitive)
-        const savedDemoMode = sessionStorage.getItem('demoMode');
-        if (savedDemoMode) {
-          dispatch({ type: 'SET_DEMO_MODE', payload: JSON.parse(savedDemoMode) });
-        }
-
-        // Migrate existing localStorage data to secure sessions
-        // await sessionService.migrateFromLocalStorage();
-
-        // Load user data from localStorage if we don't already have it in state
-        // This ensures user data is restored after signup or page refresh
-        if (!state.userData) {
-          console.log('🔄 AppContext: No current user data, checking localStorage...');
-          const userData = localStorage.getItem('userData');
-          if (userData) {
-            const parsedUserData = JSON.parse(userData);
-            dispatch({ type: 'SET_USER_DATA', payload: parsedUserData });
-            dispatch({ type: 'SET_LOGGED_IN', payload: true });
-            console.log('🔄 AppContext: Loaded userData from localStorage and set isLoggedIn to true');
-          } else {
-            console.log('🔄 AppContext: No userData found in localStorage');
-          }
+        // Check if we have userData in localStorage
+        const userData = localStorage.getItem('userData');
+        const hasUserData = !!userData;
+        
+        // Load user data from localStorage and set isLoggedIn if userData exists
+        if (hasUserData) {
+          console.log('🔄 AppContext: Loading userData from localStorage...');
+          const parsedUserData = JSON.parse(userData);
+          
+          // Always update state with localStorage data to ensure sync
+          dispatch({ type: 'SET_USER_DATA', payload: parsedUserData });
+          dispatch({ type: 'SET_LOGGED_IN', payload: true });
+          
+          console.log('🔄 AppContext: Loaded userData from localStorage and set isLoggedIn to true');
+          console.log('🔄 AppContext: User name from localStorage:', parsedUserData.full_name);
         } else {
-          console.log('🔄 AppContext: User data already exists in state, skipping localStorage load');
+          console.log('🔄 AppContext: No userData found in localStorage');
+          // Ensure logged out state if no userData
+          dispatch({ type: 'SET_LOGGED_IN', payload: false });
+          dispatch({ type: 'SET_USER_DATA', payload: null });
         }
 
-        // Load auth token from localStorage temporarily
+        // Load auth token from localStorage but don't set authentication state
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
           dispatch({ type: 'SET_AUTH_TOKEN', payload: authToken });
+          console.log('🔄 AppContext: Auth token loaded but authentication state not set automatically');
         }
 
+        // Ensure loading is false after initialization
         dispatch({ type: 'SET_LOADING', payload: false });
       } catch (error) {
         console.error('Error loading persisted state:', error);
@@ -337,6 +349,8 @@ export function useUI() {
   return {
     activeTab: state.activeTab,
     showSignupForm: state.showSignupForm,
+    showLoginForm: state.showLoginForm,
     showUserProfile: state.showUserProfile,
+    authMode: state.authMode,
   };
 }

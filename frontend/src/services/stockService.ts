@@ -169,7 +169,13 @@ class StockService {
       if (!response.ok) {
         if (response.status === 429) {
           console.warn('Rate limit exceeded, using cached data if available');
-          throw new Error('Rate limit exceeded. Using cached data.');
+          // Return cached data instead of throwing error
+          if (this.cachedData.length > 0) {
+            console.log('Returning cached data due to rate limit');
+            return this.cachedData;
+          }
+          // If no cached data, throw error with better message
+          throw new Error('Rate limit exceeded and no cached data available');
         }
         throw new Error(`Proxy API returned ${response.status} ${response.statusText}`);
       }

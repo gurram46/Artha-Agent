@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Dashboard from '@/components/Dashboard';
 import ChatInterface from '@/components/ChatInterface';
 import FinancialOverview from '@/components/FinancialOverview';
@@ -12,10 +12,37 @@ import UnifiedButton from '@/components/ui/UnifiedButton';
 import FiMoneyWebAuth from '@/components/FiMoneyWebAuth';
 import SignupForm from '@/components/SignupForm';
 import UserProfileModal from '@/components/UserProfileModal';
+
 import { designSystem } from '@/styles/designSystem';
 import { AppProvider, useAppContext, useAuth, useFinancialData, useUI } from '@/contexts/AppContext';
 import MCPDataService from '@/services/mcpDataService';
 import { ArthaLogo } from '@/components/ui/ArthaLogo';
+
+// Helper function to get user initials from full_name
+const getInitials = (userData: any): string => {
+  if (userData?.full_name) {
+    const nameParts = userData.full_name.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`;
+    } else {
+      return nameParts[0].charAt(0);
+    }
+  }
+  return 'U';
+};
+
+// Helper function to get user's first name from full_name
+const getFirstName = (userData: any): string => {
+  if (userData?.full_name) {
+    return userData.full_name.split(' ')[0];
+  }
+  return 'User';
+};
+
+// Helper function to get user's full name
+const getFullName = (userData: any): string => {
+  return userData?.full_name || 'User';
+};
 
 // Main component wrapped with Context Provider
 function HomeContent() {
@@ -43,9 +70,69 @@ function HomeContent() {
 
   const mcpService = MCPDataService.getInstance();
 
+  // Force landing page on fresh visits - track if user has visited in this session
+  const [hasVisited, setHasVisited] = useState(true);
+  
+  // Fresh start detection - check if this is a completely new session (client-side only)
+  const [isFreshStart, setIsFreshStart] = useState(false);
+
+  // Force landing page logic for fresh visits
+  useEffect(() => {
+    const visitFlag = sessionStorage.getItem('hasVisited');
+    if (!visitFlag) {
+      console.log('🆕 First time visit in this session - ensuring landing page shows');
+      // First time visit in this session - ensure landing page shows
+      sessionStorage.setItem('hasVisited', 'true');
+      setHasVisited(false);
+      // Clear any stale auth states
+      dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+      dispatch({ type: 'SET_LOGGED_IN', payload: false });
+      dispatch({ type: 'SET_DEMO_MODE', payload: false });
+    }
+  }, [dispatch]);
+  
+  useEffect(() => {
+    // Only run on client-side to avoid SSR issues
+    if (typeof window !== 'undefined') {
+      const freshStart = !localStorage.getItem('userData') && 
+                        !sessionStorage.getItem('demoMode') && 
+                        !sessionStorage.getItem('isAuthenticated');
+      setIsFreshStart(freshStart);
+    }
+  }, []);
+
+  // Clear session storage on fresh loads to ensure clean state
+  useEffect(() => {
+    const isFirstLoad = sessionStorage.getItem('isFirstLoad') !== 'true';
+    if (isFirstLoad) {
+      console.log('🧹 Fresh load detected - clearing session storage for clean state');
+      // Clear all session storage on first load to ensure clean state
+      sessionStorage.clear();
+      // Don't clear localStorage as it contains user profile data
+      sessionStorage.setItem('isFirstLoad', 'true');
+    }
+  }, []);
+
   useEffect(() => {
     checkAuthenticationAndFetchData();
   }, []);
+
+  // Comprehensive debug logging to track authentication state flow
+  useEffect(() => {
+    console.log('=== AUTH STATE DEBUG ===');
+    console.log('isLoggedIn:', isLoggedIn);
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('isDemoMode:', isDemoMode);
+    console.log('isCheckingAuth:', isCheckingAuth);
+    console.log('userData exists:', !!userData);
+    console.log('userData:', userData);
+    console.log('sessionStorage demoMode:', sessionStorage.getItem('demoMode'));
+    console.log('sessionStorage isAuthenticated:', sessionStorage.getItem('isAuthenticated'));
+    console.log('sessionStorage hasVisited:', sessionStorage.getItem('hasVisited'));
+    console.log('localStorage userData:', localStorage.getItem('userData'));
+    console.log('hasVisited state:', hasVisited);
+    console.log('========================');
+  }, [isLoggedIn, isAuthenticated, isDemoMode, isCheckingAuth, userData, hasVisited]);
 
   useEffect(() => {
     if (userData?.email && isAuthenticated && !isDemoMode) {
@@ -60,6 +147,19 @@ function HomeContent() {
       fetchFinancialData();
     }
   }, [isDemoMode, isAuthenticated, financialData]);
+
+  // Ensure state consistency - if userData exists but isLoggedIn is false, fix it
+  // Add a small delay to prevent rapid state changes during initialization
+  useEffect(() => {
+    if (userData && !isLoggedIn && !isDemoMode && !isCheckingAuth) {
+      const timeoutId = setTimeout(() => {
+        console.log('🔧 State consistency fix: userData exists but isLoggedIn is false, setting isLoggedIn to true');
+        dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      }, 50); // Small delay to ensure stable state
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [userData, isLoggedIn, isDemoMode, isCheckingAuth]);
 
   const checkAuthenticationAndFetchData = async () => {
     dispatch({ type: 'SET_CHECKING_AUTH', payload: true });
@@ -262,42 +362,97 @@ function HomeContent() {
     console.error('❌ Fi Money authentication failed:', error);
     dispatch({ type: 'SET_AUTH_ERROR', payload: error });
     dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+    
+    // Don't automatically enable demo mode on auth errors
+    // Let user choose what to do next
+    console.log('⚠️ Authentication error - user can choose to retry or try demo mode');
   };
 
   const handleSignupSuccess = async (newUserData: any) => {
     try {
-      console.log('🎯 handleSignupSuccess called with data:', newUserData);
+      console.log('🎯 handleSignupSuccess called with authenticated user:', newUserData);
       console.log('🔍 Current state before signup success:', { isLoggedIn, userData, isAuthenticated });
       
       // Save new user data to localStorage for persistence FIRST
       localStorage.setItem('userData', JSON.stringify(newUserData));
-      console.log('💾 Saved to localStorage:', JSON.stringify(newUserData));
+      console.log('💾 Saved authenticated user to localStorage:', JSON.stringify(newUserData));
+      
+      // Set hasVisited to true to prevent landing page from showing
+      sessionStorage.setItem('hasVisited', 'true');
+      setHasVisited(true);
       
       // Dispatch state updates in the correct order
       console.log('🔄 Dispatching state updates...');
       dispatch({ type: 'SET_USER_DATA', payload: newUserData });
       dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false });
       
-      // Clear any previous authentication state (but keep user data)
-      dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+      // Set both logged in AND authenticated since user is now properly registered
+      dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      dispatch({ type: 'SET_AUTHENTICATED', payload: true }); // User is now authenticated
       dispatch({ type: 'SET_FINANCIAL_DATA', payload: null });
       dispatch({ type: 'SET_AUTH_ERROR', payload: '' });
       
-      // Set logged in to trigger the correct conditional rendering
-      dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      console.log('✅ User registered and authenticated successfully! Proceeding to dashboard...');
       
-      console.log('✅ Profile created successfully! User should now see Fi Money authentication screen');
+      // Since user is now authenticated, fetch financial data
+      await fetchFinancialData();
       
     } catch (error) {
       console.error('⚠️ Error during signup success handling:', error);
       // Continue with signup even if cleanup fails
       localStorage.setItem('userData', JSON.stringify(newUserData));
+      // Set hasVisited to true to prevent landing page from showing
+      sessionStorage.setItem('hasVisited', 'true');
+      setHasVisited(true);
       dispatch({ type: 'SET_USER_DATA', payload: newUserData });
       dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false });
       dispatch({ type: 'SET_AUTHENTICATED', payload: false });
       dispatch({ type: 'SET_FINANCIAL_DATA', payload: null });
       dispatch({ type: 'SET_AUTH_ERROR', payload: '' });
       dispatch({ type: 'SET_LOGGED_IN', payload: true });
+    }
+  };
+
+  const handleLoginSuccess = async (userData: any) => {
+    try {
+      console.log('🎯 handleLoginSuccess called with user:', userData);
+      console.log('🔍 Current state before login success:', { isLoggedIn, isAuthenticated });
+      
+      // Save user data to localStorage for persistence
+      localStorage.setItem('userData', JSON.stringify(userData));
+      console.log('💾 Saved logged in user to localStorage:', JSON.stringify(userData));
+      
+      // Set hasVisited to true to prevent landing page from showing
+      sessionStorage.setItem('hasVisited', 'true');
+      setHasVisited(true);
+      
+      // Dispatch state updates
+      console.log('🔄 Dispatching login state updates...');
+      dispatch({ type: 'SET_USER_DATA', payload: userData });
+      dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false });
+      dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      
+      // Important: Do NOT set authenticated to true here
+      // User needs to authenticate with Fi Money first
+      dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+      dispatch({ type: 'SET_FINANCIAL_DATA', payload: null });
+      dispatch({ type: 'SET_AUTH_ERROR', payload: '' });
+      
+      console.log('✅ User logged in successfully! Redirecting to Fi Money authentication...');
+      
+    } catch (error) {
+      console.error('⚠️ Error during login success handling:', error);
+      // Continue with login even if there are errors
+      localStorage.setItem('userData', JSON.stringify(userData));
+      // Set hasVisited to true to prevent landing page from showing
+      sessionStorage.setItem('hasVisited', 'true');
+      setHasVisited(true);
+      dispatch({ type: 'SET_USER_DATA', payload: userData });
+      dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false });
+      dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+      dispatch({ type: 'SET_FINANCIAL_DATA', payload: null });
+      dispatch({ type: 'SET_AUTH_ERROR', payload: '' });
     }
   };
 
@@ -363,6 +518,39 @@ function HomeContent() {
     }
   };
 
+  // Force reset to landing page function
+  const forceResetToLandingPage = () => {
+    console.log('🔄 Force resetting to landing page...');
+    
+    // Clear all storage
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // Clear MCP service state
+    mcpService.setDemoMode(false);
+    
+    // Reset all state to initial values
+    dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+    dispatch({ type: 'SET_LOGGED_IN', payload: false });
+    dispatch({ type: 'SET_USER_DATA', payload: null });
+    dispatch({ type: 'SET_FINANCIAL_DATA', payload: null });
+    dispatch({ type: 'SET_SHOW_USER_PROFILE', payload: false });
+    dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false });
+    dispatch({ type: 'SET_CACHE_STATUS', payload: null });
+    dispatch({ type: 'SET_DEMO_MODE', payload: false });
+    dispatch({ type: 'SET_AUTH_ERROR', payload: '' });
+    dispatch({ type: 'SET_ACTIVE_TAB', payload: 'portfolio' });
+    dispatch({ type: 'SET_LOADING', payload: false });
+    dispatch({ type: 'SET_CHECKING_AUTH', payload: false });
+    
+    // Force page reload to clear any cached state
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+    
+    console.log('✅ Force reset complete - reloading page to show landing page');
+  };
+
   const handleEditProfile = () => {
     dispatch({ type: 'SET_SHOW_USER_PROFILE', payload: false });
     dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: true });
@@ -387,11 +575,23 @@ function HomeContent() {
   }
 
   // Show landing page only if user is not logged in AND not authenticated with Fi Money AND not in demo mode
+  // Also ensure we're not in the middle of checking auth to prevent flickering
+  // More explicit and robust landing page condition
+  const shouldShowLandingPage = (
+    !hasVisited || // First visit in session
+    isFreshStart || // Fresh start detection
+    (!isLoggedIn && !isAuthenticated && !isDemoMode && !isCheckingAuth && !userData) || // Standard condition - check userData state
+    (!localStorage.getItem('userData') && !sessionStorage.getItem('demoMode')) // No stored data
+  );
+
   console.log('🔍 Conditional rendering check - isLoggedIn:', isLoggedIn, 'isAuthenticated:', isAuthenticated, 'isDemoMode:', isDemoMode, 'userData:', !!userData, 'isLoading:', isLoading, 'isCheckingAuth:', isCheckingAuth);
   console.log('🔍 showSignupForm:', showSignupForm, 'showUserProfile:', showUserProfile);
-  console.log('🎯 DECISION POINT 1: Landing page condition (!isLoggedIn && !isAuthenticated && !isDemoMode):', (!isLoggedIn && !isAuthenticated && !isDemoMode));
+  console.log('🔍 isFreshStart:', isFreshStart, 'hasVisited:', hasVisited);
+  console.log('🎯 DECISION POINT 1: shouldShowLandingPage:', shouldShowLandingPage);
   
-  if (!isLoggedIn && !isAuthenticated && !isDemoMode) {
+  // Prevent flickering by ensuring we're not in the middle of auth checks
+  // Updated condition to be more explicit and robust
+  if (shouldShowLandingPage) {
     console.log('📄 ✅ SHOWING LANDING PAGE - user can choose demo mode or create profile');
     return (
       <HydrationProvider>
@@ -446,13 +646,17 @@ function HomeContent() {
 
           {/* Enhanced Interactive Landing Page */}
           <EnhancedLandingPage />
+          
+
         </div>
 
         {/* Signup Form Modal */}
         {showSignupForm && (
           <SignupForm
             onSignupSuccess={handleSignupSuccess}
+            onLoginSuccess={handleLoginSuccess}
             onClose={() => dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false })}
+            authMode={state.authMode}
           />
         )}
       </HydrationProvider>
@@ -460,9 +664,9 @@ function HomeContent() {
   }
 
   // Show Fi Money authentication screen if user is logged in but not authenticated with Fi Money
-  console.log('🔍 Checking Fi Money auth condition - isLoggedIn:', isLoggedIn, '!isAuthenticated:', !isAuthenticated, '!isDemoMode:', !isDemoMode);
-  console.log('🎯 DECISION POINT 2: Fi Money auth condition (isLoggedIn && !isAuthenticated && !isDemoMode):', (isLoggedIn && !isAuthenticated && !isDemoMode));
-  if (isLoggedIn && !isAuthenticated && !isDemoMode) {
+  console.log('🔍 Checking Fi Money auth condition - isLoggedIn:', isLoggedIn, '!isAuthenticated:', !isAuthenticated, '!isDemoMode:', !isDemoMode, '!isCheckingAuth:', !isCheckingAuth);
+  console.log('🎯 DECISION POINT 2: Fi Money auth condition (isLoggedIn && !isAuthenticated && !isDemoMode && !isCheckingAuth):', (isLoggedIn && !isAuthenticated && !isDemoMode && !isCheckingAuth));
+  if (isLoggedIn && !isAuthenticated && !isDemoMode && !isCheckingAuth) {
     console.log('🔐 ✅ SHOWING FI MONEY AUTH SCREEN - logged in user needs Fi Money authentication');
     console.log('🔐 Auth screen state - isAuthenticated:', isAuthenticated, 'isLoggedIn:', isLoggedIn, 'isLoading:', isLoading, 'financialData:', !!financialData);
     return (
@@ -485,12 +689,12 @@ function HomeContent() {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.3)] rounded-xl flex items-center justify-center">
                       <span className="text-sm font-bold text-[rgb(0,184,153)]">
-                        {userData ? `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}` : 'U'}
+                        {userData ? getInitials(userData) : 'U'}
                       </span>
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white">
-                        {userData ? `${userData.firstName} ${userData.lastName}` : 'User'}
+                        {userData ? getFullName(userData) : 'User'}
                       </p>
                       <p className="text-xs text-[rgb(0,184,153)]">Premium Member</p>
                     </div>
@@ -504,7 +708,7 @@ function HomeContent() {
           <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-black text-white mb-6">
-                Welcome {userData?.firstName}! Connect to Fi Money
+                Welcome {getFirstName(userData)}! Connect to Fi Money
               </h2>
               <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
                 Connect your Fi Money account to get real-time financial data and AI-powered insights on your complete portfolio
@@ -543,7 +747,17 @@ function HomeContent() {
     { id: 'advisory', label: 'AI Chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' }
   ];
 
-  console.log('🏠 Rendering main dashboard - isAuthenticated:', isAuthenticated, 'isLoggedIn:', isLoggedIn, 'financialData:', !!financialData);
+  console.log('🚨 CRITICAL DEBUG - Why are we showing dashboard instead of landing page?');
+  console.log('🔍 Current state values:');
+  console.log('  - isLoggedIn:', isLoggedIn);
+  console.log('  - isAuthenticated:', isAuthenticated);
+  console.log('  - isDemoMode:', isDemoMode);
+  console.log('  - userData:', !!userData);
+  console.log('  - isLoading:', isLoading);
+  console.log('  - isCheckingAuth:', isCheckingAuth);
+  console.log('🎯 Landing page condition (!isLoggedIn && !isAuthenticated && !isDemoMode):', (!isLoggedIn && !isAuthenticated && !isDemoMode));
+  console.log('🎯 Fi Money auth condition (isLoggedIn && !isAuthenticated && !isDemoMode):', (isLoggedIn && !isAuthenticated && !isDemoMode));
+  console.log('🏠 Rendering main dashboard - this should NOT happen if landing page should show');
   console.log('✅ All conditions passed - showing dashboard');
 
   return (
@@ -588,28 +802,43 @@ function HomeContent() {
                 </nav>
               </div>
               
-              {/* Cache Status Indicator */}
-              {!isDemoMode && cacheStatus && (
-                <div className="hidden lg:flex items-center space-x-2 bg-[rgba(30,30,30,0.8)] rounded-xl px-3 py-2 border border-[rgba(70,68,68,0.3)]">
-                  <div className={`w-2 h-2 rounded-full ${
-                    cacheStatus.isExpired ? 'bg-red-400' : 
-                    cacheStatus.hasCache ? 'bg-[#cca695]' : 'bg-gray-400'
-                  } animate-pulse`}></div>
-                  <div className="text-xs">
-                    <p className="text-gray-300 font-medium">
-                      {cacheStatus.hasCache ? 'Cached Data' : 'No Cache'}
-                    </p>
-                    {cacheStatus.timeRemaining && !cacheStatus.isExpired && (
-                      <p className="text-[#cca695]">
-                        {cacheStatus.timeRemaining} left
+              {/* User Actions */}
+              <div className="flex items-center space-x-4">
+                {/* Reset to Landing Page Button */}
+                <button
+                  onClick={forceResetToLandingPage}
+                  className="group relative px-4 py-2 bg-transparent border border-[rgba(0,184,153,0.5)] text-[rgb(0,184,153)] font-medium rounded-lg overflow-hidden transition-all duration-300 hover:bg-[rgba(0,184,153,0.1)] hover:border-[rgb(0,204,173)] hover:text-[rgb(0,204,173)] text-sm"
+                  title="Return to Landing Page"
+                >
+                  <span className="relative flex items-center">
+                    <span className="mr-2">🏠</span>
+                    Home
+                  </span>
+                </button>
+                
+                {/* Cache Status Indicator */}
+                {!isDemoMode && cacheStatus && (
+                  <div className="hidden lg:flex items-center space-x-2 bg-[rgba(30,30,30,0.8)] rounded-xl px-3 py-2 border border-[rgba(70,68,68,0.3)]">
+                    <div className={`w-2 h-2 rounded-full ${
+                      cacheStatus.isExpired ? 'bg-red-400' : 
+                      cacheStatus.hasCache ? 'bg-[#cca695]' : 'bg-gray-400'
+                    } animate-pulse`}></div>
+                    <div className="text-xs">
+                      <p className="text-gray-300 font-medium">
+                        {cacheStatus.hasCache ? 'Cached Data' : 'No Cache'}
                       </p>
-                    )}
-                    {cacheStatus.isExpired && (
-                      <p className="text-red-400">Expired</p>
-                    )}
+                      {cacheStatus.timeRemaining && !cacheStatus.isExpired && (
+                        <p className="text-[#cca695]">
+                          {cacheStatus.timeRemaining} left
+                        </p>
+                      )}
+                      {cacheStatus.isExpired && (
+                        <p className="text-red-400">Expired</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Authentication Section */}
               <div className="flex items-center space-x-3">
@@ -655,7 +884,7 @@ function HomeContent() {
                       <div className="w-10 h-10 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.3)] rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-sm font-bold text-[rgb(0,184,153)]">
                           {isLoggedIn && userData 
-                            ? `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`
+                            ? getInitials(userData)
                             : isDemoMode ? 'DM' : 'GU'
                           }
                         </span>
@@ -663,7 +892,7 @@ function HomeContent() {
                       <div className="hidden lg:block">
                         <p className="text-sm font-bold text-white">
                           {isLoggedIn && userData 
-                            ? `${userData.firstName} ${userData.lastName}`
+                            ? getFullName(userData)
                             : isDemoMode ? 'Demo Mode' : 'Guest User'
                           }
                         </p>
@@ -725,14 +954,14 @@ function HomeContent() {
                     <div className="w-8 h-8 bg-[rgb(24,25,27)] border border-[rgba(0,184,153,0.3)] rounded-lg flex items-center justify-center">
                       <span className="text-xs font-bold text-[rgb(0,184,153)]">
                         {isLoggedIn && userData 
-                          ? `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`
+                          ? getInitials(userData)
                           : isDemoMode ? 'DM' : 'GU'
                         }
                       </span>
                     </div>
                     <span className="text-sm text-white">
                       {isLoggedIn && userData 
-                        ? `${userData.firstName}`
+                        ? getFirstName(userData)
                         : isDemoMode ? 'Demo' : 'Guest'
                       }
                     </span>
@@ -848,8 +1077,8 @@ function HomeContent() {
             </div>
           )}
           
-          {/* Compact Auth Status - Only show if not authenticated */}
-          {!isDemoMode && !isAuthenticated && (
+          {/* Compact Auth Status - Only show if logged in but not authenticated */}
+          {!isDemoMode && isLoggedIn && !isAuthenticated && (
             <div className="mb-4">
               <FiMoneyWebAuth
                 onAuthSuccess={handleAuthSuccess}
@@ -869,7 +1098,9 @@ function HomeContent() {
         {showSignupForm && (
           <SignupForm
             onSignupSuccess={handleSignupSuccess}
+            onLoginSuccess={handleLoginSuccess}
             onClose={() => dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: false })}
+            authMode={state.authMode}
           />
         )}
 

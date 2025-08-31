@@ -580,19 +580,47 @@ const InteractiveDemoPreview = ({ onDemoClick }: { onDemoClick: () => void }) =>
 
 
 // Main Enhanced Landing Page Component
-const EnhancedLandingPage = () => {
+const EnhancedLandingPage = ({ 
+  onDemoActivate, 
+  setHasVisited 
+}: { 
+  onDemoActivate?: () => void;
+  setHasVisited?: (visited: boolean) => void;
+}) => {
   const { dispatch } = useAppContext();
   const mcpService = MCPDataService.getInstance();
 
-  const handleDemoMode = () => {
-    console.log('🎭 Activating demo mode...');
+  const handleDemoMode = async () => {
+    console.log('🎭 DEMO MODE ACTIVATION - SETTING UP DEMO STATE');
+    
+    // Set demo mode in session storage
     sessionStorage.setItem('demoMode', 'true');
+    sessionStorage.setItem('hasVisited', 'true');
+    
+    // Update parent component's hasVisited state
+    setHasVisited?.(true);
+
+    // Dispatch demo mode and authentication states
     dispatch({ type: 'SET_DEMO_MODE', payload: true });
     dispatch({ type: 'SET_AUTHENTICATED', payload: true });
+    dispatch({ type: 'SET_LOGGED_IN', payload: false }); // Demo users are not logged in
+    
+    // Configure MCP service for demo mode
     mcpService.setDemoMode(true);
+    
+    // Make sure to update the parent state through the callback
+    onDemoActivate?.();
+
+    console.log('🎭 DEMO MODE FULLY ACTIVATED - SHOULD SHOW DASHBOARD');
   };
 
   const handleCreateProfile = () => {
+    dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: true });
+  };
+
+  const handleSignIn = () => {
+    // Set auth mode to login and show the signup form in login mode
+    dispatch({ type: 'SET_AUTH_MODE', payload: 'login' });
     dispatch({ type: 'SET_SHOW_SIGNUP_FORM', payload: true });
   };
 
@@ -628,25 +656,37 @@ const EnhancedLandingPage = () => {
           </p>
           
           {/* Enhanced CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-fade-in delay-500">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-fade-in delay-500">
             <button
               onClick={handleDemoMode}
-              className="group relative px-10 py-5 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white font-bold text-lg rounded-2xl overflow-hidden transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-[rgba(0,184,153,0.3)]"
+              className="group relative px-8 py-4 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] text-white font-bold text-lg rounded-2xl overflow-hidden transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-[rgba(0,184,153,0.3)]"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-[rgb(0,164,133)] to-[rgb(0,144,113)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <span className="relative flex items-center">
-                      Experience Demo
-                    </span>
+                <span className="mr-3 text-xl">🎭</span>
+                Experience Demo
+              </span>
+            </button>
+
+            <button
+              onClick={handleCreateProfile}
+              className="group px-8 py-4 bg-transparent border-2 border-[rgb(0,184,153)] text-[rgb(0,184,153)] font-bold text-lg rounded-2xl transition-all duration-500 hover:bg-[rgba(0,184,153,0.1)] hover:border-[rgb(0,204,173)] hover:text-[rgb(0,204,173)] hover:shadow-lg hover:shadow-[rgba(0,184,153,0.2)]"
+            >
+              <span className="flex items-center">
+                <span className="mr-3 text-xl">👤</span>
+                Create Profile
+              </span>
             </button>
             
             <button
-              onClick={handleCreateProfile}
-              className="group px-10 py-5 bg-transparent border-2 border-[rgb(0,184,153)] text-[rgb(0,184,153)] font-bold text-lg rounded-2xl transition-all duration-500 hover:bg-[rgba(0,184,153,0.1)] hover:border-[rgb(0,204,173)] hover:text-[rgb(0,204,173)] hover:shadow-lg hover:shadow-[rgba(0,184,153,0.2)]"
+              onClick={handleSignIn}
+              className="group px-8 py-4 bg-transparent border-2 border-blue-400 text-blue-400 font-bold text-lg rounded-2xl transition-all duration-500 hover:bg-[rgba(59,130,246,0.1)] hover:border-blue-300 hover:text-blue-300 hover:shadow-lg hover:shadow-[rgba(59,130,246,0.2)]"
             >
               <span className="flex items-center">
-                    Create Profile
-                  </span>
+                <span className="mr-3 text-xl">🔑</span>
+                Sign In
+              </span>
             </button>
           </div>
 
@@ -715,63 +755,15 @@ const EnhancedLandingPage = () => {
       {/* Interactive Demo Preview */}
       <InteractiveDemoPreview onDemoClick={handleDemoMode} />
 
-      {/* Fi Money MCP Integration Section */}
+      {/* Artha AI Image Section */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-            Powered by 
-            <span className="bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] bg-clip-text text-transparent">
-              Fi Money MCP
-            </span>
-          </h2>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-12">
-            Artha leverages the power of Fi Money's Model Context Protocol (MCP) to provide you with real-time, 
-            accurate financial data and insights. This collaboration enables seamless integration with your existing 
-            financial accounts and delivers personalized investment strategies.
-          </p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-[rgba(0,184,153,0.1)] to-[rgba(0,164,133,0.1)] border border-[rgba(0,184,153,0.2)] rounded-3xl p-12 backdrop-blur-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-            <div className="lg:col-span-1 text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-[rgb(0,184,153)] to-[rgb(0,164,133)] rounded-2xl mb-6">
-                <span className="text-3xl font-bold text-white">Fi</span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Fi Money</h3>
-              <p className="text-gray-300">India's first personal finance MCP</p>
-            </div>
-            
-            <div className="lg:col-span-1 flex justify-center">
-              <div className="flex items-center space-x-4">
-                <div className="w-8 h-0.5 bg-gradient-to-r from-[rgb(0,184,153)] to-transparent"></div>
-                <span className="text-[rgb(0,184,153)] font-semibold">MCP Integration</span>
-                <div className="w-8 h-0.5 bg-gradient-to-l from-[rgb(0,184,153)] to-transparent"></div>
-              </div>
-            </div>
-            
-            <div className="lg:col-span-1 text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-[rgb(34,197,94)] to-[rgb(16,185,129)] rounded-2xl mb-6">
-                <img src="/Untitled(1).svg" alt="Artha AI Symbol" className="w-12 h-12" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Artha AI</h3>
-              <p className="text-gray-300">Your preferred AI assistant</p>
-            </div>
-          </div>
-          
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-[rgba(0,184,153,0.05)] rounded-2xl border border-[rgba(0,184,153,0.1)]">
-              <h4 className="text-lg font-semibold text-white mb-2">Secure</h4>
-              <p className="text-gray-300 text-sm">Bank-grade security for all your financial data</p>
-            </div>
-            <div className="text-center p-6 bg-[rgba(0,184,153,0.05)] rounded-2xl border border-[rgba(0,184,153,0.1)]">
-              <h4 className="text-lg font-semibold text-white mb-2">Portfolio Analysis</h4>
-              <p className="text-gray-300 text-sm">Comprehensive analysis of your investment portfolio</p>
-            </div>
-            <div className="text-center p-6 bg-[rgba(0,184,153,0.05)] rounded-2xl border border-[rgba(0,184,153,0.1)]">
-              <h4 className="text-lg font-semibold text-white mb-2">AI Agents</h4>
-              <p className="text-gray-300 text-sm">Intelligent agents working 24/7 for your financial goals</p>
-            </div>
-          </div>
+        <div className="flex justify-center">
+          <img 
+            src="/ArthaAi.svg" 
+            alt="Artha AI" 
+            className="max-w-full h-auto rounded-3xl shadow-2xl hover:scale-105 transition-transform duration-500"
+            style={{ maxHeight: '600px' }}
+          />
         </div>
       </div>
 
@@ -785,8 +777,9 @@ const EnhancedLandingPage = () => {
             </span>
           </h2>
           <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            Artha is an innovative AI-powered financial intelligence platform designed to democratize wealth management. 
-            Our mission is to provide intelligent, personalized financial insights that help you make informed investment decisions.
+            Artha AI is your intelligent financial companion that connects with Fi Money to provide real-time portfolio analysis, 
+            personalized investment recommendations, and AI-powered financial insights. Get comprehensive wealth management 
+            with automated portfolio tracking, risk assessment, and strategic investment guidance tailored to your goals.
           </p>
         </div>
         

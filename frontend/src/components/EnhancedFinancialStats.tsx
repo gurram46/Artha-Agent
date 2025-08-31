@@ -1,76 +1,98 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import MCPDataService from '@/services/mcpDataService';
-import StatCard from '@/components/ui/StatCard';
-import UnifiedButton from '@/components/ui/UnifiedButton';
+import React, { useState, useEffect } from 'react';
 import { designSystem } from '@/styles/designSystem';
+import UnifiedButton from '@/components/ui/UnifiedButton';
+import StatCard from '@/components/ui/StatCard';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 
 interface FinancialStats {
   totalNetWorth: number;
   totalNetWorthFormatted: string;
+  totalAssets: number;
+  totalLiabilities: number;
+  growthRate: number;
   mutualFunds: number;
   mutualFundsFormatted: string;
   liquidFunds: number;
   liquidFundsFormatted: string;
+  creditScore: string;
   epf: number;
   epfFormatted: string;
-  creditScore: string;
-  totalAssets: number;
-  totalLiabilities: number;
-  growthRate: number;
-  riskScore: string;
   portfolioHealth: string;
+  riskScore: string;
 }
 
-
-const EnhancedFinancialStats = () => {
+const EnhancedFinancialStats = ({ financialData }: { financialData: any }) => {
   const [stats, setStats] = useState<FinancialStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadFinancialStats();
-  }, []);
+  // Transform financial data to stats format
+  const transformFinancialData = (data: any): FinancialStats => {
+    if (!data?.summary) {
+      return {
+        totalNetWorth: 0,
+        totalNetWorthFormatted: '₹0',
+        totalAssets: 0,
+        totalLiabilities: 0,
+        growthRate: 0,
+        mutualFunds: 0,
+        mutualFundsFormatted: '₹0',
+        liquidFunds: 0,
+        liquidFundsFormatted: '₹0',
+        creditScore: 'N/A',
+        epf: 0,
+        epfFormatted: '₹0',
+        portfolioHealth: 'Loading',
+        riskScore: 'Medium'
+      };
+    }
 
+    return {
+      totalNetWorth: data.summary.total_net_worth || 0,
+      totalNetWorthFormatted: data.summary.total_net_worth_formatted || '₹0',
+      totalAssets: data.summary.total_assets || 0,
+      totalLiabilities: data.summary.total_liabilities || 0,
+      growthRate: data.summary.growth_rate || 0,
+      mutualFunds: data.summary.mutual_funds || 0,
+      mutualFundsFormatted: data.summary.mutual_funds_formatted || '₹0',
+      liquidFunds: data.summary.liquid_funds || 0,
+      liquidFundsFormatted: data.summary.liquid_funds_formatted || '₹0',
+      creditScore: data.summary.credit_score || 'N/A',
+      epf: data.summary.epf || 0,
+      epfFormatted: data.summary.epf_formatted || '₹0',
+      portfolioHealth: data.summary.portfolio_health || 'Loading',
+      riskScore: data.summary.risk_score || 'Medium'
+    };
+  };
+
+  // Format growth rate with sign
+  const formatGrowthRate = (rate: number): string => {
+    if (rate > 0) return `+${rate.toFixed(2)}%`;
+    if (rate < 0) return `${rate.toFixed(2)}%`;
+    return '0.00%';
+  };
+
+  // Determine trend direction
+  const getTrendDirection = (rate: number): 'up' | 'down' | 'neutral' => {
+    if (rate > 0) return 'up';
+    if (rate < 0) return 'down';
+    return 'neutral';
+  };
+
+  // Load financial stats
   const loadFinancialStats = async () => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      const mcpService = MCPDataService.getInstance();
-      const result = await mcpService.loadMCPData();
-
-      if (result.success && result.data) {
-        const transformedData = mcpService.transformToPortfolioFormat(result.data);
-        
-        // Get additional insights
-        const [portfolioInsights, riskAssessment] = await Promise.all([
-          mcpService.getPortfolioInsights(),
-          mcpService.getRiskAssessment()
-        ]);
-
-        // Calculate growth rate (example: based on performance metrics)
-        const growthRate = transformedData.data.performance_metrics.total_gains_percentage || 0;
-        const riskScore = riskAssessment.success ? riskAssessment.assessment?.risk_level || 'Medium' : 'N/A';
-        const portfolioHealth = portfolioInsights.success ? portfolioInsights.insights?.health_score || 'Good' : 'N/A';
-
-        setStats({
-          totalNetWorth: transformedData.summary.total_net_worth,
-          totalNetWorthFormatted: transformedData.summary.total_net_worth_formatted,
-          mutualFunds: transformedData.summary.mutual_funds,
-          mutualFundsFormatted: transformedData.summary.mutual_funds_formatted,
-          liquidFunds: transformedData.summary.liquid_funds,
-          liquidFundsFormatted: transformedData.summary.liquid_funds_formatted,
-          epf: transformedData.summary.epf,
-          epfFormatted: transformedData.summary.epf_formatted,
-          creditScore: transformedData.summary.credit_score,
-          totalAssets: transformedData.summary.total_assets,
-          totalLiabilities: transformedData.summary.total_liabilities,
-          growthRate,
-          riskScore,
-          portfolioHealth
-        });
-
-        setLastUpdated(new Date().toLocaleTimeString());
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      if (financialData) {
+        const transformedStats = transformFinancialData(financialData);
+        setStats(transformedStats);
+        setLastUpdated(formatDate(new Date()));
       }
     } catch (error) {
       console.error('Failed to load financial stats:', error);
@@ -79,15 +101,10 @@ const EnhancedFinancialStats = () => {
     }
   };
 
-  const getTrendDirection = (value: number): 'up' | 'down' | 'neutral' => {
-    if (value > 5) return 'up';
-    if (value < -2) return 'down';
-    return 'neutral';
-  };
-
-  const formatGrowthRate = (rate: number): string => {
-    return `${rate > 0 ? '+' : ''}${rate.toFixed(1)}%`;
-  };
+  // Initialize stats on mount and when financialData changes
+  useEffect(() => {
+    loadFinancialStats();
+  }, [financialData]);
 
   return (
     <div className="space-y-6">
@@ -223,15 +240,7 @@ const EnhancedFinancialStats = () => {
         <div className="bg-[rgb(24,25,27)] border border-[rgba(204,166,149,0.2)] rounded-lg p-6">
           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
           <span>Live data from backend API</span>
-          <div className="bg-[rgba(204,166,149,0.05)] rounded-lg p-4 mb-6">
-            <div className="text-[#cca695] font-semibold">
-              <div className="text-2xl font-bold text-[#cca695]">
-                <div className="text-2xl font-bold text-[#cca695]">
-                  <div className="bg-[#cca695] h-2 rounded-full transition-all duration-300" style={{ width: `${item.percentage}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
+        </div>
       </div>
     </div>
   );

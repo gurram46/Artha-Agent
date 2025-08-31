@@ -3,6 +3,8 @@
  * Handles both HTTP and HTTPS environments dynamically
  */
 
+import { getApiUrl as getEnvironmentApiUrl, getWebSocketUrl as getEnvironmentWebSocketUrl, isHttpsEnabled as getEnvironmentHttpsEnabled } from './environment';
+
 interface ApiConfig {
   baseUrl: string;
   wsUrl: string;
@@ -13,33 +15,10 @@ interface ApiConfig {
  * Get API configuration based on environment
  */
 export function getApiConfig(): ApiConfig {
-  // Check if we're in browser environment
-  if (typeof window === 'undefined') {
-    // Server-side rendering - use environment variables or defaults
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
-    return {
-      baseUrl,
-      wsUrl,
-      isHttps: baseUrl.startsWith('https://')
-    };
-  }
-
-  // Client-side - detect protocol from current page
-  const protocol = window.location.protocol;
-  const isHttps = protocol === 'https:';
-  
-  // Use environment variables if available, otherwise construct from current protocol
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
-    `${isHttps ? 'https' : 'http'}://localhost:8000`;
-  
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 
-    `${isHttps ? 'wss' : 'ws'}://localhost:8000`;
-
   return {
-    baseUrl,
-    wsUrl,
-    isHttps
+    baseUrl: getEnvironmentApiUrl(),
+    wsUrl: getEnvironmentWebSocketUrl(),
+    isHttps: getEnvironmentHttpsEnabled()
   };
 }
 
@@ -54,14 +33,14 @@ export function getApiBaseUrl(): string {
  * Get the WebSocket URL
  */
 export function getWebSocketUrl(): string {
-  return getApiConfig().wsUrl;
+  return getEnvironmentWebSocketUrl();
 }
 
 /**
  * Check if HTTPS is enabled
  */
 export function isHttpsEnabled(): boolean {
-  return getApiConfig().isHttps;
+  return getEnvironmentHttpsEnabled();
 }
 
 /**

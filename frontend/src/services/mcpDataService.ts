@@ -5,6 +5,7 @@
  */
 
 import CacheService from './cacheService';
+import { getApiUrl } from '../config/environment';
 
 interface MCPAsset {
   netWorthAttribute: string;
@@ -63,7 +64,7 @@ interface BackendFinancialData {
   status: string;
   data: {
     net_worth: MCPNetWorthResponse;
-    credit_report: MCPCreditReport;
+    credit_report: MCPCreditReport | null;
     epf_details: MCPEPFDetails;
   };
   summary: {
@@ -85,8 +86,8 @@ class MCPDataService {
   private currentUserEmail: string | null = null;
 
   private constructor() {
-    // Default to localhost backend, can be configured via environment
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    // Use centralized environment configuration
+    this.backendUrl = getApiUrl();
     this.cacheService = CacheService.getInstance();
     console.log(`🔗 MCPDataService initialized with backend URL: ${this.backendUrl}`);
   }
@@ -96,6 +97,54 @@ class MCPDataService {
     // Clear cache when switching modes
     this.cachedData = null;
     this.lastFetch = 0;
+    console.log(`🎭 Demo mode ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  async testConnectivity(): Promise<{ available: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/test-connectivity`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      return {
+        available: result.server_reachable || false,
+        message: result.message || 'Unknown connectivity status'
+      };
+    } catch (error) {
+      console.error('Connectivity test failed:', error);
+      return {
+        available: false,
+        message: 'Failed to test Fi Money service connectivity'
+      };
+    }
+  }
+
+  async enableFallbackMode(): Promise<void> {
+    console.log('🔄 Enabling fallback mode due to Fi Money service unavailability');
+    this.setDemoMode(true);
+    
+    // Store fallback mode in session storage
+    sessionStorage.setItem('fallbackMode', 'true');
+    sessionStorage.setItem('fallbackReason', 'Fi Money service unavailable');
+  }
+
+  isFallbackMode(): boolean {
+    return sessionStorage.getItem('fallbackMode') === 'true';
+  }
+
+  getFallbackReason(): string {
+    return sessionStorage.getItem('fallbackReason') || 'Service unavailable';
+  }
+
+  clearFallbackMode(): void {
+    sessionStorage.removeItem('fallbackMode');
+    sessionStorage.removeItem('fallbackReason');
+    this.setDemoMode(false);
   }
 
   setUserEmail(email: string): void {
@@ -142,7 +191,7 @@ class MCPDataService {
     success: boolean;
     data?: {
       net_worth: MCPNetWorthResponse;
-      credit_report: MCPCreditReport;
+      credit_report: MCPCreditReport | null;
       epf_details: MCPEPFDetails;
     };
     error?: string;
@@ -197,7 +246,7 @@ class MCPDataService {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(15000) // 15 second timeout for real API
+        signal: AbortSignal.timeout(30000) // 30 second timeout for real API (increased from 15s)
       });
 
       if (!response.ok) {
@@ -270,18 +319,22 @@ class MCPDataService {
     loginUrl?: string;
     sessionId?: string;
     message: string;
+    fallbackEnabled?: boolean;
   }> {
     try {
       console.log('🌐 Initiating Fi Money web authentication...');
       console.log(`🔗 Backend URL: ${this.backendUrl}`);
       console.log(`🔗 Full URL: ${this.backendUrl}/api/fi-auth/initiate`);
       
+      // Skip connectivity test - let the actual authentication attempt handle failures
+      console.log('🚀 Proceeding directly to Fi Money authentication...');
+      
       const response = await fetch(`${this.backendUrl}/api/fi-auth/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(120000) // 120 seconds (2 minutes) timeout for authentication initiation
       });
 
       console.log(`📡 Response status: ${response.status}`);
@@ -290,6 +343,10 @@ class MCPDataService {
       if (!response.ok) {
         const errorText = await response.text();
         console.log(`❌ Response error text: ${errorText}`);
+        
+        // Don't auto-enable fallback mode - let user choose
+        console.warn(`⚠️ Fi Money service error: ${response.status}`);
+        
         throw new Error(`Authentication initiation failed: ${response.status} - ${errorText}`);
       }
 
@@ -298,6 +355,8 @@ class MCPDataService {
       
       if (result.status === 'login_required') {
         console.log('🔗 Fi Money login URL received');
+        // Clear any previous fallback mode since service is working
+        this.clearFallbackMode();
         return {
           success: true,
           loginRequired: true,
@@ -307,6 +366,8 @@ class MCPDataService {
         };
       } else if (result.status === 'already_authenticated') {
         console.log('✅ Already authenticated with Fi Money');
+        // Clear any previous fallback mode since service is working
+        this.clearFallbackMode();
         return {
           success: true,
           loginRequired: false,
@@ -322,9 +383,14 @@ class MCPDataService {
       
     } catch (error) {
       console.error('❌ Fi Money authentication initiation error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Authentication initiation error';
+      
+      // Don't auto-enable fallback mode for network errors
+      console.warn(`⚠️ Network/timeout error: ${errorMsg}`);
+      
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Authentication initiation error'
+        message: errorMsg
       };
     }
   }
@@ -343,7 +409,7 @@ class MCPDataService {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(60000) // 60 seconds timeout for status checks
       });
 
       console.log(`📡 Status response: ${response.status}`);
@@ -394,7 +460,7 @@ class MCPDataService {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(30000) // 30 seconds timeout for authentication completion
       });
 
       console.log(`📡 Complete response: ${response.status}`);
@@ -427,6 +493,44 @@ class MCPDataService {
       return {
         authenticated: false,
         message: 'Auth completion failed'
+      };
+    }
+  }
+
+  async clearCachedSession(): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('🧹 Clearing cached Fi Money session to force fresh authentication...');
+      
+      const response = await fetch(`${this.backendUrl}/api/fi-auth/clear-cache`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      const result = await response.json();
+      
+      // Clear local memory cache regardless of response
+      this.cachedData = null;
+      this.lastFetch = 0;
+      
+      console.log('✅ Local cache cleared, server response:', result.message);
+      
+      return {
+        success: result.success || false,
+        message: result.message || 'Cache cleared locally'
+      };
+      
+    } catch (error) {
+      console.error('❌ Clear cache error:', error);
+      // Still clear local cache even if server request fails
+      this.cachedData = null;
+      this.lastFetch = 0;
+      
+      return {
+        success: true, // Return success since local cache was cleared
+        message: 'Local cache cleared (server clear failed)'
       };
     }
   }
@@ -596,15 +700,16 @@ class MCPDataService {
 
   transformToPortfolioFormat(mcpData: {
     net_worth: MCPNetWorthResponse;
-    credit_report: MCPCreditReport;
+    credit_report: MCPCreditReport | null;
     epf_details: MCPEPFDetails;
     mf_transactions?: any;
     bank_transactions?: any;
   }) {
     try {
       const { net_worth, credit_report, epf_details } = mcpData;
-      const assets = net_worth.netWorthResponse.assetValues || [];
-      const liabilities = net_worth.netWorthResponse.liabilityValues || [];
+      // Add defensive checks for net_worth data structure
+      const assets = (net_worth && net_worth.netWorthResponse && net_worth.netWorthResponse.assetValues) || [];
+      const liabilities = (net_worth && net_worth.netWorthResponse && net_worth.netWorthResponse.liabilityValues) || [];
 
       // Calculate totals from real MCP data
       let totalAssets = 0;
@@ -638,7 +743,7 @@ class MCPDataService {
 
       // Get credit score
       let creditScore = 'N/A';
-      if (credit_report.creditReports && credit_report.creditReports.length > 0) {
+      if (credit_report && credit_report.creditReports && credit_report.creditReports.length > 0) {
         const creditData = credit_report.creditReports[0].creditReportData;
         creditScore = creditData?.score?.bureauScore || 'N/A';
       }

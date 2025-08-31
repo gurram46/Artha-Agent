@@ -23,12 +23,14 @@ interface CacheSystemStatus {
   message: string;
 }
 
+import { getApiUrl } from '../config/environment';
+
 class CacheService {
   private static instance: CacheService;
   private backendUrl: string;
 
   private constructor() {
-    this.backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    this.backendUrl = getApiUrl();
   }
 
   static getInstance(): CacheService {
@@ -280,11 +282,34 @@ class CacheService {
     if (!timeRemaining) return true;
     
     try {
-      const hours = parseFloat(timeRemaining);
+      const hours = this.parseTimeRemainingToHours(timeRemaining);
       return hours <= 1;
     } catch {
       return true;
     }
+  }
+
+  /**
+   * Parse time remaining string to hours
+   * Handles both timedelta format ("2:30:45") and float format ("2.5")
+   */
+  private parseTimeRemainingToHours(timeRemaining: string): number {
+    // Try parsing as float first (hours)
+    const floatValue = parseFloat(timeRemaining);
+    if (!isNaN(floatValue) && !timeRemaining.includes(':')) {
+      return floatValue;
+    }
+    
+    // Parse timedelta format ("H:MM:SS" or "HH:MM:SS")
+    const timeParts = timeRemaining.split(':');
+    if (timeParts.length === 3) {
+      const hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      const seconds = parseInt(timeParts[2], 10);
+      return hours + (minutes / 60) + (seconds / 3600);
+    }
+    
+    throw new Error('Invalid time format');
   }
 
   /**
@@ -294,7 +319,7 @@ class CacheService {
     if (!timeRemaining) return null;
     
     try {
-      const hours = parseFloat(timeRemaining);
+      const hours = this.parseTimeRemainingToHours(timeRemaining);
       if (hours <= 0.5) {
         return 'Your cached data will expire in less than 30 minutes. Please re-login to refresh.';
       } else if (hours <= 1) {

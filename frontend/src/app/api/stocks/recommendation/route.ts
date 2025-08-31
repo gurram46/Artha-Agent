@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { getApiUrl } from '../../../../config/environment';
 
 // Integration with Stock AI Agents backend - REAL DATA ONLY  
-const STOCK_AI_URL = process.env.STOCK_AI_URL || 'http://localhost:8000';
+const STOCK_AI_URL = process.env.STOCK_AI_URL || getApiUrl();
 
 // Helper function to call stock AI agents - NO FALLBACKS
 async function callStockAIAgent(endpoint: string, data: any) {

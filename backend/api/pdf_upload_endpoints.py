@@ -319,36 +319,31 @@ async def generate_ai_financial_analysis(extraction_result: Dict[str, Any], user
         - Only the above data was extracted from the document
         """
         
-        # AI prompt for financial analysis with strict fact-checking
+        # Simplified prompt to reduce hallucinations
         prompt = f"""
-        You are a financial advisor analyzing uploaded financial documents. You MUST be extremely accurate and only use the exact data provided.
+        Analyze this financial document data. Be factual and precise.
         
-        CRITICAL INSTRUCTIONS:
-        - ONLY analyze the data that is explicitly provided below
-        - DO NOT make assumptions or add information not present in the extracted data
-        - If data is missing or unclear, explicitly state "Data not available" or "Cannot determine from provided information"
-        - DO NOT hallucinate financial figures, account details, or transaction information
-        - If the confidence score is low, mention data quality concerns
+        Document contains:
+        - {len(accounts_data)} accounts
+        - {len(transactions_data)} transactions
+        - Confidence: {confidence:.1f}/1.0
         
-        User Query: {user_query}
+        {format_accounts_for_ai(accounts_data)}
         
-        ACTUAL EXTRACTED DATA (confidence: {extraction_result['confidence_score']:.2f}):
-        {data_summary}
+        Recent transactions:
+        {format_transactions_for_ai(transactions_data[:5])}
         
-        Please provide an analysis that:
-        1. States exactly what data was found in the document
-        2. Identifies any data quality issues or gaps
-        3. Provides insights ONLY based on the actual extracted data
-        4. Clearly distinguishes between facts from the document vs. general recommendations
-        5. Warns if the data appears incomplete or unreliable
+        Financial summary:
+        {format_summary_for_ai(summary_data)}
         
-        Start your response by confirming what specific data was extracted from the document.
-        If the confidence score is below 0.8, mention potential data extraction issues.
+        User question: {user_query}
+        
+        Provide a brief, factual analysis based only on this data. If confidence is low, mention data quality issues.
         """
         
-        # Generate AI response using Gemini 2.5 Pro for advanced PDF analysis
+        # Generate AI response using Gemini 2.0 Flash Experimental for better PDF analysis
         response = client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-2.0-flash-exp",
             contents=prompt
         )
         

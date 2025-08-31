@@ -7,11 +7,13 @@ import { ArthaLogo } from './ui/ArthaLogo';
 interface InteractiveLandingPageProps {
   onDemoClick: () => void;
   onCreateProfileClick: () => void;
+  onSignInClick: () => void;
 }
 
 const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
   onDemoClick,
-  onCreateProfileClick
+  onCreateProfileClick,
+  onSignInClick
 }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
@@ -225,10 +227,10 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
               </div>
             </motion.div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <motion.button
                 onClick={onDemoClick}
-                className="group relative px-6 py-3 bg-transparent border-2 border-[#cca695] text-[#cca695] font-semibold rounded-xl overflow-hidden"
+                className="group relative px-4 py-2 bg-transparent border-2 border-[#cca695] text-[#cca695] font-semibold rounded-xl overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onHoverStart={() => setIsHovering(true)}
@@ -241,14 +243,34 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                   transition={{ duration: 0.3 }}
                 />
                 <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
-                  <span className="mr-2 text-lg">Demo</span>
+                  <span className="mr-2 text-sm">🎭</span>
                   Try Demo
                 </span>
               </motion.button>
               
               <motion.button
+                onClick={onSignInClick}
+                className="group relative px-4 py-2 bg-transparent border-2 border-blue-400 text-blue-400 font-semibold rounded-xl overflow-hidden"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onHoverStart={() => setIsHovering(true)}
+                onHoverEnd={() => setIsHovering(false)}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-blue-400"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
+                  <span className="mr-2 text-sm">🔑</span>
+                  Sign In
+                </span>
+              </motion.button>
+              
+              <motion.button
                 onClick={onCreateProfileClick}
-                className="group relative px-6 py-3 bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white font-semibold rounded-xl overflow-hidden"
+                className="group relative px-4 py-2 bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white font-semibold rounded-xl overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onHoverStart={() => setIsHovering(true)}
@@ -260,7 +282,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                   whileHover={{ opacity: 1 }}
                 />
                 <span className="relative z-10 flex items-center">
-                  <span className="mr-3 text-xl">User</span>
+                  <span className="mr-2 text-sm">👤</span>
                   Create Profile
                 </span>
               </motion.button>
@@ -331,14 +353,14 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
           </motion.p>
 
           <motion.div
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
             initial={{ y: 50, opacity: 0 }}
             animate={isHeroInView ? { y: 0, opacity: 1 } : {}}
             transition={{ delay: 0.8 }}
           >
             <motion.button
               onClick={onDemoClick}
-              className="group relative px-10 py-5 bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white font-bold text-lg rounded-2xl overflow-hidden"
+              className="group relative px-8 py-4 bg-gradient-to-r from-[#cca695] to-[#b8956a] text-white font-bold text-lg rounded-2xl overflow-hidden"
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
               onHoverStart={() => setIsHovering(true)}
@@ -350,14 +372,34 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                 whileHover={{ opacity: 1 }}
               />
               <span className="relative z-10 flex items-center">
-                <span className="mr-3 text-2xl">Launch</span>
+                <span className="mr-3 text-xl">🎭</span>
                 Experience Demo
               </span>
             </motion.button>
             
             <motion.button
+              onClick={onSignInClick}
+              className="group relative px-8 py-4 bg-transparent border-2 border-blue-400 text-blue-400 font-bold text-lg rounded-2xl overflow-hidden"
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              onHoverStart={() => setIsHovering(true)}
+              onHoverEnd={() => setIsHovering(false)}
+            >
+              <motion.div
+                className="absolute inset-0 bg-blue-400"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+              <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
+                <span className="mr-3 text-xl">🔑</span>
+                Sign In
+              </span>
+            </motion.button>
+            
+            <motion.button
               onClick={onCreateProfileClick}
-              className="group relative px-6 py-3 bg-transparent border-2 border-[#cca695] text-[#cca695] font-bold text-lg rounded-2xl relative overflow-hidden"
+              className="group relative px-8 py-4 bg-transparent border-2 border-[#cca695] text-[#cca695] font-bold text-lg rounded-2xl overflow-hidden"
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
               onHoverStart={() => setIsHovering(true)}
@@ -370,7 +412,7 @@ const InteractiveLandingPage: React.FC<InteractiveLandingPageProps> = ({
                 transition={{ duration: 0.3 }}
               />
               <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
-                <span className="mr-3 text-xl">Profile</span>
+                <span className="mr-3 text-xl">👤</span>
                 Create Profile
               </span>
             </motion.button>

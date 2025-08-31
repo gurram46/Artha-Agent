@@ -17,10 +17,11 @@ export interface Message {
 }
 
 export interface StreamMessage {
-  type: 'content' | 'status' | 'error' | 'log' | 'agent_details';
+  type: 'content' | 'status' | 'error' | 'log' | 'agent_details' | 'complete';
   content: string;
   agent?: string;
   title?: string;
+  message?: string; // For error messages
 }
 
 export interface QueryResponse {
